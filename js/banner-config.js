@@ -271,11 +271,12 @@ const BANNER_CONFIG = {
       console.warn(`⚠️ Could not decode URL from filename ${filename}, using fallback:`, urlError);
     }
     
-    // Return banner with decoded URL
+    // Return banner with decoded URL and project name
     return {
       ...banner,
       link: decodedUrl,
-      linkUrl: decodedUrl
+      linkUrl: decodedUrl,
+      projectName: this.extractProjectNameFromFilename(filename) || banner.projectName || 'Advertiser'
     };
   },
 
@@ -338,8 +339,13 @@ const BANNER_CONFIG = {
       const bannerData = {
         imageUrl: banner.url,
         link: decodedUrl,
+        linkUrl: decodedUrl, // Add for compatibility
         position: banner.name.toLowerCase().includes('top') ? 'top' : 'bottom',
-        isDefault: false
+        isDefault: false,
+        filename: banner.name,
+        projectName: this.extractProjectNameFromFilename(banner.name), // Extract project name
+        id: `proxy_${banner.name}`, // Add unique ID
+        active: true
       };
       
       if (bannerData.position === 'top') {
