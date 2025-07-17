@@ -1440,17 +1440,42 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Note: Ad banner click functionality is now handled by banner-rotation.js
   
-  // Initialize Banner Rotation System
-  console.log('🎯 Starting banner rotation system...');
-  
-  if (window.bannerRotationManager) {
-    window.bannerRotationManager.init().then(() => {
-      console.log('✅ Banner rotation system initialized');
-    }).catch(error => {
-      console.error('❌ Banner rotation system initialization failed:', error);
-    });
+  // Initialize Secure Configuration System
+  console.log('🔒 Initializing secure configuration...');
+  if (window.SECURE_CONFIG) {
+    console.log('✅ SECURE_CONFIG already available');
   } else {
-    console.error('❌ Banner rotation manager not found');
+    console.log('⏳ Waiting for SECURE_CONFIG to load...');
+    // Wait a moment for SECURE_CONFIG to initialize
+    setTimeout(() => {
+      if (window.SECURE_CONFIG) {
+        console.log('✅ SECURE_CONFIG loaded successfully');
+        initializeBannerSystem();
+      } else {
+        console.warn('⚠️ SECURE_CONFIG not available, banner system may have limited functionality');
+        initializeBannerSystem();
+      }
+    }, 100);
+  }
+  
+  function initializeBannerSystem() {
+    // Initialize Banner Rotation System
+    console.log('🎯 Starting banner rotation system...');
+    
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.init().then(() => {
+        console.log('✅ Banner rotation system initialized');
+      }).catch(error => {
+        console.error('❌ Banner rotation system initialization failed:', error);
+      });
+    } else {
+      console.error('❌ Banner rotation manager not found');
+    }
+  }
+  
+  // If SECURE_CONFIG is already available, initialize immediately
+  if (window.SECURE_CONFIG) {
+    initializeBannerSystem();
   }
 });
   </script>
