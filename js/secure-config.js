@@ -11,6 +11,7 @@ class SecureConfig {
     console.log('  - window.SECURE_CONFIG exists:', !!window.SECURE_CONFIG);
     console.log('  - window.ENV_CONFIG exists:', !!window.ENV_CONFIG);
     console.log('  - window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
+    console.log('  - PRODUCTION_CONFIG.token available:', !!(window.PRODUCTION_CONFIG && window.PRODUCTION_CONFIG.token));
     console.log('  - Available window properties:', Object.keys(window).filter(k => k.includes('CONFIG') || k.includes('TOKEN')));
     
     this.config = this.loadConfig();
