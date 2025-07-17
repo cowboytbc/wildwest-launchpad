@@ -18,8 +18,10 @@ async function deleteBottomBanners() {
     }
     
     console.log('🔍 Fetching bottom banners to delete...');
+    console.log('📍 Repository:', `${githubConfig.owner}/${githubConfig.repo}`);
+    console.log('📍 Folder:', 'banners/bottom');
     
-    // Fetch current bottom banners
+    // Fetch current bottom banners from the banner storage repository
     const bottomBannersUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/banners/bottom`;
     
     const response = await fetch(bottomBannersUrl, {
