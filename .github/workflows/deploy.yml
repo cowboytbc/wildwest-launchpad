@@ -35,7 +35,7 @@ jobs:
         SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
       run: |
-        echo "🔧 Injecting production token with simple Node.js approach..."
+        echo "🔧 Injecting production token with simple Node.js approach (using wtfdude token)..."
         
         # Create a simple, reliable Node.js injection script
         cat > inject-token.js << 'EOF'
