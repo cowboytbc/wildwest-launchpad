@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wild West Launchpad - File Upload</title>
+    <script src="js/github-actions-uploader.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .upload-section { margin: 30px 0; padding: 20px; border: 2px solid #ccc; border-radius: 10px; }
+        button { background: #007cba; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #005a87; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        input[type="file"] { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%; }
+        #status { margin: 20px 0; padding: 15px; border-radius: 5px; min-height: 20px; font-weight: bold; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .info { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; margin: 20px 0; padding: 15px; border-radius: 5px; }
+        h1 { text-align: center; color: #333; }
+        h3 { color: #555; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1> Wild West Launchpad - File Upload</h1>
+    
+    <div class="info">
+        <strong> ONE-CLICK UPLOAD:</strong> Select your file and click upload. That is it. No bullshit, no extra steps. Files go straight to GitHub automatically!
+    </div>
+    
+    <div class="upload-section">
+        <h3> Upload Project Banner</h3>
+        <input type="file" id="projectBanner" accept="image/*">
+        <button onclick="uploadProjectBanner()"> UPLOAD PROJECT BANNER</button>
+    </div>
+    
+    <div class="upload-section">
+        <h3> Upload Top Banner</h3>
+        <input type="file" id="topBanner" accept="image/*">
+        <button onclick="uploadTopBanner()"> UPLOAD TOP BANNER</button>
+    </div>
+
+    <div class="upload-section">
+        <h3> Upload Bottom Banner</h3>
+        <input type="file" id="bottomBanner" accept="image/*">
+        <button onclick="uploadBottomBanner()"> UPLOAD BOTTOM BANNER</button>
+    </div>
+
+    <div class="upload-section">
+        <h3> Upload Trader PFP</h3>
+        <input type="file" id="traderPfp" accept="image/*">
+        <button onclick="uploadTraderPfp()"> UPLOAD TRADER PFP</button>
+    </div>
+
+    <div class="upload-section">
+        <h3> Upload Project Logo</h3>
+        <input type="file" id="projectLogo" accept="image/*">
+        <button onclick="uploadProjectLogo()"> UPLOAD PROJECT LOGO</button>
+    </div>
+    
+    <div id="status"></div>
+
+    <script>
+        let uploader;
+        
+        // Initialize uploader after page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            uploader = new GitHubActionsUploader();
+            console.log(' Upload system ready - Server-side endpoint active');
+        });
+        
+        function updateStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.innerHTML = message;
+        }
+        
+        function disableAllButtons(disabled = true) {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = disabled);
+        }
+        
+        async function uploadProjectBanner() {
+            const file = document.getElementById('projectBanner').files[0];
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            
+            try {
+                disableAllButtons(true);
+                updateStatus(' Uploading project banner to GitHub...', 'loading');
+                const result = await uploader.uploadProjectBanner(file);
+                updateStatus(' SUCCESS! ' + result.message + '<br> URL: <a href="' + result.url + '" target="_blank">' + result.url + '</a>', 'success');
+            } catch (error) {
+                updateStatus(' UPLOAD FAILED: ' + error.message, 'error');
+            } finally {
+                disableAllButtons(false);
+            }
+        }
+        
+        async function uploadTopBanner() {
+            const file = document.getElementById('topBanner').files[0];
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            
+            try {
+                disableAllButtons(true);
+                updateStatus(' Uploading top banner to GitHub...', 'loading');
+                const result = await uploader.uploadTopBanner(file);
+                updateStatus(' SUCCESS! ' + result.message + '<br> URL: <a href="' + result.url + '" target="_blank">' + result.url + '</a>', 'success');
+            } catch (error) {
+                updateStatus(' UPLOAD FAILED: ' + error.message, 'error');
+            } finally {
+                disableAllButtons(false);
+            }
+        }
+
+        async function uploadTraderPfp() {
+            const file = document.getElementById('traderPfp').files[0];
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            
+            try {
+                disableAllButtons(true);
+                updateStatus(' Uploading trader PFP to GitHub...', 'loading');
+                const result = await uploader.uploadTraderPfp(file);
+                updateStatus(' SUCCESS! ' + result.message + '<br> URL: <a href="' + result.url + '" target="_blank">' + result.url + '</a>', 'success');
+            } catch (error) {
+                updateStatus(' UPLOAD FAILED: ' + error.message, 'error');
+            } finally {
+                disableAllButtons(false);
+            }
+        }
+
+        async function uploadBottomBanner() {
+            const file = document.getElementById('bottomBanner').files[0];
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            
+            try {
+                disableAllButtons(true);
+                updateStatus(' Uploading bottom banner to GitHub...', 'loading');
+                const result = await uploader.uploadBottomBanner(file);
+                updateStatus(' SUCCESS! ' + result.message + '<br> URL: <a href="' + result.url + '" target="_blank">' + result.url + '</a>', 'success');
+            } catch (error) {
+                updateStatus(' UPLOAD FAILED: ' + error.message, 'error');
+            } finally {
+                disableAllButtons(false);
+            }
+        }
+
+        async function uploadProjectLogo() {
+            const file = document.getElementById('projectLogo').files[0];
+            if (!file) {
+                alert('Please select a file first!');
+                return;
+            }
+            
+            try {
+                disableAllButtons(true);
+                updateStatus(' Uploading project logo to GitHub...', 'loading');
+                const result = await uploader.uploadProjectLogo(file);
+                updateStatus(' SUCCESS! ' + result.message + '<br> URL: <a href="' + result.url + '" target="_blank">' + result.url + '</a>', 'success');
+            } catch (error) {
+                updateStatus(' UPLOAD FAILED: ' + error.message, 'error');
+            } finally {
+                disableAllButtons(false);
+            }
+        }
+    </script>
+</body>
+</html>

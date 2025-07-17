@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Furnace</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+  <script src="../js/rpc-config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nosifer&family=Orbitron:wght@900&family=Bangers&family=Creepster&family=UnifrakturMaguntia&family=MedievalSharp&family=Ewert&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      background: radial-gradient(ellipse at 60% 120%, #ff1a1a 0%, #0a0000 60%, #000 100%),
+                  linear-gradient(180deg, #2d0000 0%, #0a0000 100%);
+      color: #fffbe7;
+      text-shadow: 0 0 4px #000, 0 0 2px #ffae00;
+      font-family: 'Orbitron', Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.6;
+      /* Add a subtle vignette for depth */
+      box-shadow: 0 0 0 100vw #000a inset;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 80%, #ffae0033 0%, #ff1a1a11 40%, transparent 80%),
+        radial-gradient(circle at 80% 90%, #ff1a1a22 0%, #ffae0011 40%, transparent 80%),
+        /* stripes removed */
+        linear-gradient(180deg, #ff1a1a22 0%, transparent 100%);
+      animation: emberBG 6s linear infinite;
+      filter: blur(1.5px) brightness(1.1);
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 60% 10%, #fff2 0%, transparent 60%),
+        radial-gradient(circle at 40% 20%, #ffae0033 0%, transparent 70%),
+        linear-gradient(180deg, transparent 80%, #ff1a1a22 100%),
+        url('https://svgshare.com/i/14kA.svg') repeat-x bottom/100vw 120px;
+      mix-blend-mode: lighten;
+      opacity: 0.32;
+      animation: smokeBG 8s linear infinite alternate;
+    }
+    @keyframes emberBG {
+      0% { filter: blur(0.5px) brightness(1); }
+      50% { filter: blur(2.5px) brightness(1.2); }
+      100% { filter: blur(0.5px) brightness(1); }
+    }
+    @keyframes smokeBG {
+      0% { filter: blur(0.5px) brightness(1); opacity: 0.22; }
+      100% { filter: blur(2.5px) brightness(1.1); opacity: 0.32; }
+    }
+    .header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: linear-gradient(90deg, #1a0909 60%, #ff1a1a 100%);
+      padding: 48px 0 24px 0;
+      margin-bottom: 32px;
+      padding-bottom: 0;
+      position: relative;
+      box-shadow: 0 0 64px 16px #ff1a1a99, 0 0 32px #ffae00cc;
+      z-index: 10;
+    }
+    .header::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 60px;
+      background: url('https://svgshare.com/i/14kA.svg') repeat-x bottom/320px 60px;
+      opacity: 0.7;
+      pointer-events: none;
+      animation: fireBanner 2.5s linear infinite;
+      z-index: 2;
+    }
+    @keyframes fireBanner {
+      0% { background-position-x: 0; }
+      100% { background-position-x: 320px; }
+    }
+    .logo {
+      font-family: 'Nosifer', 'Bangers', 'Orbitron', Arial, sans-serif;
+      font-size: 2.7em;
+      letter-spacing: 0.08em;
+      color: #fffbe7;
+      margin-bottom: 0.3em;
+      margin-top: 0.2em;
+      padding: 0 32px;
+      background: rgba(30,0,0,0.92);
+      border-radius: 16px;
+      /* border: 3px solid #ffae00; */
+      box-shadow: 0 0 64px #ffae00, 0 0 32px #ff1a1a, 0 0 8px #fffbe7;
+      text-align: center;
+      display: block;
+      filter: drop-shadow(0 0 16px #ff1a1a) drop-shadow(0 0 8px #ffae00);
+      animation: flicker 2.5s infinite alternate;
+    }
+    @keyframes flicker {
+      0% { text-shadow: 0 0 32px #ff1a1a, 0 0 16px #ffae00, 0 0 2px #000; filter: brightness(1.1); }
+      50% { text-shadow: 0 0 48px #ffae00, 0 0 32px #ff1a1a, 0 0 8px #fffbe7; filter: brightness(1.3); }
+      100% { text-shadow: 0 0 32px #ff1a1a, 0 0 16px #ffae00, 0 0 2px #000; filter: brightness(1.1); }
+    }
+    .connect-btn {
+      margin: 0 auto 0 auto;
+      display: block;
+      align-self: center;
+      font-size: 1.2em;
+      padding: 14px 32px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #ff1a1a 60%, #ffae00 100%);
+      color: #fffbe7;
+      border: 2.5px solid #ffae00;
+      font-weight: 900;
+      box-shadow: 0 0 32px #ff1a1a, 0 0 16px #ffae00, 0 0 8px #fffbe7;
+      text-shadow: 0 0 8px #ffae00, 0 0 2px #000;
+      transition: box-shadow 0.2s, background 0.2s, transform 0.1s;
+      cursor: pointer;
+      z-index: 20;
+      animation: pulseBtn 2.2s infinite alternate;
+      text-transform: uppercase;
+      font-family: 'Bangers', 'Ewert', 'Orbitron', cursive, sans-serif;
+      letter-spacing: 2.5px;
+    }
+    @keyframes pulseBtn {
+      0% { box-shadow: 0 0 16px #ff1a1a, 0 0 8px #ffae00; }
+      100% { box-shadow: 0 0 48px #ffae00, 0 0 24px #ff1a1a; }
+    }
+    .connect-btn:active {
+      transform: scale(0.97);
+      background: linear-gradient(90deg, #ffae00 60%, #ff1a1a 100%);
+    }
+    .connect-btn.connected {
+      background: linear-gradient(90deg, #ff4500 60%, #ffae00 100%);
+      box-shadow: 0 0 48px #ff1a1a, 0 0 24px #ffae00;
+    }
+    .burn-container {
+      background: linear-gradient(120deg, #1a0909ee 80%, #2d0000ee 100%);
+      border-radius: 32px;
+      box-shadow: 0 0 96px 24px #ff1a1acc, 0 0 48px #ffae00, 0 0 24px #fffbe7;
+      padding: 48px 36px 36px 36px;
+      max-width: 440px;
+      width: 100%;
+      margin: 0 auto 64px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 3px solid #ffae00;
+      gap: 28px;
+      position: relative;
+      z-index: 2;
+      /* Fire reflection */
+      overflow: visible;
+    }
+    .burn-container::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 50%;
+      bottom: -32px;
+      transform: translateX(-50%) scaleY(-1);
+      width: 90%;
+      height: 40px;
+      background: url('https://svgshare.com/i/14kA.svg') repeat-x bottom/100% 40px;
+      opacity: 0.18;
+      filter: blur(2.5px) brightness(1.2);
+      pointer-events: none;
+      z-index: 1;
+      animation: fireBanner 2.5s linear infinite;
+    }
+    .logo, .modal-title, .wallet-chain-title, .burn-title {
+      text-align: center;
+    }
+    .modal, .modal-content, .modal-title, .wallet-section, .wallet-chain-title, .wallet-btn-row, .wallet-btn, #walletModalClose,
+    .burn-container, .burn-title, .burn-warning, .burn-form, .burn-form input, .burn-btn, .burn-success, .burn-balance {
+      text-align: center !important;
+    }
+    form, .burn-form, .burn-form input, .burn-btn, .burn-success, .burn-balance {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .burn-title {
+      font-size: 2.3em;
+      color: #fffbe7;
+      text-shadow: 0 0 48px #ff1a1a, 0 0 24px #ffae00, 0 0 4px #000;
+      font-family: 'Nosifer', 'Orbitron', Arial, sans-serif;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      background: rgba(30,0,0,0.92);
+      padding: 10px 18px;
+      border-radius: 14px;
+      box-shadow: 0 0 24px #ffae00, 0 0 12px #ff1a1a;
+      animation: flicker 2.2s infinite alternate;
+    }
+    .burn-warning {
+      color: #fffbe7;
+      font-weight: bold;
+      text-shadow: 0 0 24px #ffae00, 0 0 16px #ff1a1a, 0 0 4px #000;
+      margin-bottom: 0;
+      text-align: center;
+      animation: flicker 1.7s infinite alternate;
+      font-size: 1.15em;
+      border: 2.5px solid #ff1a1a;
+      border-radius: 12px;
+      background: rgba(30,0,0,0.92);
+      padding: 12px 10px;
+      box-shadow: 0 0 16px #ff1a1a, 0 0 8px #ffae00;
+    }
+    .burn-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      margin-top: 10px;
+      z-index: 2;
+    }
+    .burn-form input {
+      width: 100%;
+      padding: 18px;
+      border-radius: 12px;
+      border: 2.5px solid #ffae00;
+      background: #1a0909ee;
+      color: #fffbe7;
+      box-shadow: 0 0 24px #ff4500cc, 0 0 12px #ffae00;
+      font-size: 1.15em;
+      font-weight: 700;
+      text-shadow: 0 0 6px #ffae00, 0 0 2px #000;
+      transition: box-shadow 0.2s, background 0.2s;
+    }
+    .burn-form input:focus {
+      outline: none;
+      background: #2d0000ee;
+      color: #fffbe7;
+      border-color: #fffbe7;
+      box-shadow: 0 0 32px #ffae00, 0 0 16px #ff1a1a;
+    }
+    .burn-form input::placeholder {
+      color: #ffae00;
+      opacity: 1;
+      text-shadow: 0 0 2px #000, 0 0 2px #ffae00;
+    }
+    .burn-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #ff1a1a 60%, #ffae00 100%);
+      box-shadow: 0 0 96px #ff1a1a, 0 0 48px #ffae00, 0 0 16px #fffbe7;
+      font-size: 1.5em;
+      border: 3px solid #ffae00;
+      border-radius: 16px;
+      text-transform: uppercase;
+      font-family: 'Bangers', 'Ewert', 'Orbitron', cursive, sans-serif;
+      letter-spacing: 2.5px;
+      filter: brightness(1.1) saturate(1.2);
+      padding: 22px 0;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+      color: #fffbe7;
+      font-weight: 900;
+      text-shadow: 0 0 12px #ffae00, 0 0 4px #000;
+      animation: burnBtnFlicker 2.2s infinite alternate, pulseBtn 2.2s infinite alternate;
+      position: relative;
+      z-index: 2;
+      overflow: visible;
+    }
+    .burn-btn:active {
+      background: linear-gradient(90deg, #ffae00 60%, #ff1a1a 100%);
+      filter: brightness(1.3) saturate(1.3);
+      color: #fffbe7;
+      border: 3px solid #fffbe7;
+      transform: scale(0.97);
+    }
+    .burn-btn::before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 32px;
+      background: url('https://svgshare.com/i/14kA.svg') repeat-x bottom/120px 32px;
+      opacity: 0.7;
+      pointer-events: none;
+      animation: fireBanner 2.5s linear infinite;
+      z-index: 2;
+    }
+    @keyframes burnBtnFlicker {
+      0% { filter: brightness(1.1) saturate(1.2); }
+      100% { filter: brightness(1.3) saturate(1.5); }
+    }
+    .burn-success {
+      color: #fffbe7;
+      font-size: 1.15em;
+      margin-top: 18px;
+      text-shadow: 0 0 16px #ffae00, 0 0 8px #ff1a1a, 0 0 2px #000;
+      background: rgba(30,0,0,0.96);
+      border-radius: 12px;
+      padding: 16px 12px;
+      box-shadow: 0 0 24px #ffae00, 0 0 12px #ff1a1a;
+      text-align: center;
+      animation: flicker 2.2s infinite alternate;
+      border: 2.5px solid #ffae00;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 90%;
+    }
+    .burn-balance {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #fffbe7;
+      font-size: 1.08em;
+      background: linear-gradient(90deg, #ffae00 0%, #ff1a1a 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+      border: 2px solid #ffae00;
+      box-shadow: 0 0 8px #ffae00, 0 0 4px #ff1a1a;
+      position: relative;
+      z-index: 2;
+      font-weight: 900;
+      text-shadow: 0 0 8px #ffae00, 0 0 2px #000;
+    }
+    .fire-emoji {
+      font-size: 1.2em;
+      animation: fireEmojiFlicker 1.2s infinite alternate;
+      filter: drop-shadow(0 0 6px #ffae00) drop-shadow(0 0 2px #ff1a1a);
+    }
+    @keyframes fireEmojiFlicker {
+      0% { filter: drop-shadow(0 0 6px #ffae00) drop-shadow(0 0 2px #ff1a1a); }
+      100% { filter: drop-shadow(0 0 12px #ffae00) drop-shadow(0 0 6px #ff1a1a); }
+    }
+    /* --- ENHANCED EMBERS --- */
+    .ember {
+      opacity: 0.8;
+      animation: emberFloat 4s linear infinite, emberDrift 8s ease-in-out infinite alternate;
+    }
+    @keyframes emberDrift {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(40vw); }
+    }
+    /* --- GLASSY OVERLAY --- */
+    .burn-container, .modal-content {
+      background: linear-gradient(120deg, #1a0909ee 80%, #2d0000ee 100%), rgba(255,255,255,0.04);
+      backdrop-filter: blur(2.5px) brightness(1.1);
+      border-radius: 32px;
+    }
+    /* --- FIRE BORDER --- */
+    .fire-border {
+      position: relative;
+      box-shadow: 0 0 64px 16px #ff1a1a99, 0 0 32px #ffae00cc, 0 0 0 8px #ffae0033;
+      border: 4px solid transparent;
+      background-clip: padding-box;
+      overflow: visible;
+    }
+    .fire-border::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 36px;
+      z-index: 0;
+      pointer-events: none;
+      background: conic-gradient(from 0deg, #ffae00 0%, #ff1a1a 30%, #ffae00 60%, #ff1a1a 100%);
+      filter: blur(8px) brightness(1.3) saturate(1.5);
+      opacity: 0.7;
+      animation: fireGlow 2.5s linear infinite;
+    }
+    @keyframes fireGlow {
+      0% { filter: blur(8px) brightness(1.2) saturate(1.2); opacity: 0.7; }
+      50% { filter: blur(16px) brightness(1.5) saturate(2); opacity: 1; }
+      100% { filter: blur(8px) brightness(1.2) saturate(1.2); opacity: 0.7; }
+    }
+    /* --- FIRE REFLECTION UNDER TITLE --- */
+    .fire-reflection {
+      position: relative;
+    }
+    .fire-reflection::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      transform: translateX(-50%) scaleY(-1);
+      width: 80%;
+      height: 18px;
+      background: linear-gradient(180deg, #ffae00cc 0%, transparent 100%);
+      opacity: 0.25;
+      filter: blur(2.5px) brightness(1.2);
+      pointer-events: none;
+      z-index: 1;
+      animation: fireBanner 2.5s linear infinite;
+    }
+    /* --- INPUT ICONS --- */
+    .input-icon-group {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 4px #ffae00);
+    }
+    .input-icon + input {
+      padding-left: 44px !important;
+    }
+    /* --- FIRE BUTTON --- */
+    .fire-btn {
+      position: relative;
+      overflow: visible;
+    }
+    .fire-btn::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(1.1);
+      width: 120%;
+      height: 120%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffae00 0%, #ff1a1a 60%, transparent 100%);
+      opacity: 0.18;
+      filter: blur(8px) brightness(1.5);
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, filter 0.2s;
+      animation: fireBtnPulse 2.2s infinite alternate;
+    }
+    .fire-btn:hover::after, .fire-btn:focus::after {
+      opacity: 0.32;
+      filter: blur(16px) brightness(2.2);
+    }
+    @keyframes fireBtnPulse {
+      0% { opacity: 0.18; filter: blur(8px) brightness(1.5); }
+      100% { opacity: 0.32; filter: blur(16px) brightness(2.2); }
+    }
+    
+    /* Mode Toggle Styles */
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      background: rgba(26, 9, 9, 0.8);
+      border-radius: 12px;
+      padding: 4px;
+      border: 2px solid #ffae00;
+      box-shadow: 0 0 16px #ffae0066;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      color: #ffae00;
+      font-family: 'Orbitron', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 0.9em;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .mode-btn.active {
+      background: linear-gradient(90deg, #ffae00 0%, #ff1a1a 100%);
+      color: #fffbe7;
+      box-shadow: 0 0 12px #ffae00, 0 0 6px #ff1a1a;
+      text-shadow: 0 0 4px #000;
+    }
+    .mode-btn:hover:not(.active) {
+      background: rgba(255, 174, 0, 0.1);
+      color: #fff;
+    }
+    
+    /* NFT Mode Styles */
+    .nft-interface {
+      display: none;
+    }
+    .nft-interface.active {
+      display: block;
+    }
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 8px;
+      background: rgba(26, 9, 9, 0.6);
+      border-radius: 8px;
+      border: 1px solid #ffae0066;
+    }
+    .nft-item {
+      aspect-ratio: 1;
+      background: rgba(45, 0, 0, 0.8);
+      border: 2px solid #ffae0066;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .nft-item:hover {
+      border-color: #ffae00;
+      box-shadow: 0 0 8px #ffae0066;
+      transform: scale(1.02);
+    }
+    .nft-item.selected {
+      border-color: #ff1a1a;
+      box-shadow: 0 0 16px #ff1a1a66;
+      background: rgba(255, 26, 26, 0.2);
+    }
+    .nft-image {
+      width: 100%;
+      height: 70%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .nft-id {
+      font-size: 0.7em;
+      color: #ffae00;
+      margin-top: 4px;
+      text-align: center;
+      word-break: break-all;
+    }
+    .nft-loading {
+      color: #ffae00;
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+    }
+    
+    /* Modal styles - more 3D, infernal */
+    .modal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      backdrop-filter: blur(2.5px) brightness(0.9);
+      box-sizing: border-box;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: linear-gradient(120deg, #1a0909 80%, #2d0000 100%);
+      border-radius: 18px;
+      padding: 32px 24px 24px 24px;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      box-shadow: 0 0 64px #ff1a1a, 0 0 32px #ffae00, 0 0 8px #fffbe7;
+      border: 3px solid #ffae00;
+      position: relative;
+      z-index: 2;
+      animation: modalFlicker 2.2s infinite alternate;
+      box-sizing: border-box;
+    }
+    @keyframes modalFlicker {
+      0% { box-shadow: 0 0 32px #ff1a1a, 0 0 16px #ffae00; }
+      100% { box-shadow: 0 0 64px #ffae00, 0 0 32px #ff1a1a; }
+    }
+    .modal-title {
+      font-family: 'Nosifer', 'Orbitron', Arial, sans-serif;
+      font-size: 1.7em;
+      color: #ffae00;
+      text-shadow: 0 0 16px #ff1a1a, 0 0 12px #ffae00;
+      margin-bottom: 22px;
+      text-align: center;
+      letter-spacing: 0.06em;
+      animation: flicker 2.2s infinite alternate;
+    }
+    .wallet-section {
+      margin-bottom: 22px;
+      width: 100%;
+      text-align: center;
+    }
+    .wallet-chain-title {
+      font-family: 'Orbitron', Arial, sans-serif;
+      color: #fffbe7;
+      font-size: 1.15em;
+      margin-bottom: 10px;
+      text-align: center;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 10px #ffae00, 0 0 2px #000;
+      border: none;
+    }
+    .wallet-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .wallet-btn {
+      font-family: 'Orbitron', Arial, sans-serif;
+      font-size: 1.05em;
+      font-weight: 700;
+      padding: 12px 26px;
+      border-radius: 10px;
+      border: 2.5px solid #ffae00;
+      background: #1a0909;
+      color: #ffae00;
+      box-shadow: 0 0 12px #ff4500cc, 0 0 6px #ffae00;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      margin: 0 4px 4px 0;
+      text-shadow: 0 0 6px #ffae00, 0 0 2px #000;
+      animation: burnBtnFlicker 2.2s infinite alternate;
+      text-align: center;
+      text-transform: uppercase;
+      font-family: 'Bangers', 'Ewert', 'Orbitron', cursive, sans-serif;
+      letter-spacing: 2.5px;
+    }
+    .wallet-btn:hover, .wallet-btn:focus {
+      background: linear-gradient(90deg, #ff1a1a 60%, #ffae00 100%);
+      color: #fffbe7;
+      box-shadow: 0 0 24px #ff1a1a, 0 0 12px #ffae00;
+      outline: none;
+      border: 2.5px solid #fffbe7;
+    }
+    #walletModalClose {
+      margin-top: 14px;
+      width: 100%;
+      background: #1a0909;
+      color: #ffae00;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05em;
+      font-weight: 700;
+      padding: 12px 0;
+      cursor: pointer;
+      box-shadow: 0 0 12px #ff4500cc, 0 0 6px #ffae00;
+      text-shadow: 0 0 6px #ffae00, 0 0 2px #000;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      animation: burnBtnFlicker 2.2s infinite alternate;
+      text-align: center;
+      text-transform: uppercase;
+      font-family: 'Bangers', 'Ewert', 'Orbitron', cursive, sans-serif;
+      letter-spacing: 2.5px;
+    }
+    #walletModalClose:hover {
+      background: linear-gradient(90deg, #ff1a1a 60%, #ffae00 100%);
+      color: #fffbe7;
+      box-shadow: 0 0 24px #ff1a1a, 0 0 12px #ffae00;
+      border: none;
+    }
+    .top-right-link {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      z-index: 100;
+      background: linear-gradient(90deg, #ffae00 60%, #ff1a1a 100%);
+      color: #fffbe7;
+      font-family: 'Orbitron', 'Arial', sans-serif;
+      font-size: 1.1em;
+      font-weight: 900;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      box-shadow: 0 0 16px #ffae00, 0 0 8px #ff1a1a;
+      text-shadow: 0 0 8px #ffae00, 0 0 2px #000;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      display: inline-block;
+      text-align: center;
+      text-transform: uppercase;
+      font-family: 'Bangers', 'Ewert', 'Orbitron', cursive, sans-serif;
+    }
+    .top-right-link:hover {
+      background: linear-gradient(90deg, #ff1a1a 60%, #ffae00 100%);
+      color: #fffbe7;
+      box-shadow: 0 0 32px #ff1a1a, 0 0 16px #ffae00;
+    }
+    .wildwest-title {
+      font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive;
+      font-size: 6.2em;
+      color: #ffae00;
+      text-shadow: 0 0 32px #ffae00, 0 0 16px #ff1a1a, 0 0 4px #000;
+      letter-spacing: 0.14em;
+      margin-bottom: 0.1em;
+      margin-top: 0.1em;
+      text-align: center;
+      display: block;
+      filter: drop-shadow(0 0 16px #ffae00);
+      animation: flicker 2.2s infinite alternate;
+    }
+    @media (max-width: 800px) {
+      .wildwest-title {
+        font-size: 4.2em;
+        margin-top: 2.8em;
+        margin-bottom: 0.2em;
+      }
+      .top-right-link {
+        top: 0.7em;
+        right: 2vw;
+        font-size: 0.7em;
+        padding: 2px 6px;
+        border-radius: 4px;
+        z-index: 200;
+        min-width: 0;
+        min-height: 0;
+      }
+    }
+    @media (max-width: 420px) {
+      .wildwest-title {
+        font-size: 3.2em;
+        margin-top: 2.8em;
+        margin-bottom: 0.25em;
+      }
+      .top-right-link {
+        top: 0.5em;
+        right: 2vw;
+        font-size: 0.6em;
+        padding: 1.5px 4px;
+        border-radius: 3px;
+      }
+      .modal {
+        padding: 8px;
+      }
+      .modal-content {
+        padding: 12px 8px;
+        width: 85vw;
+        max-width: 85vw;
+        max-height: 75vh;
+      }
+    }
+    /* Ember particles - more dramatic */
+    .ember {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 50%;
+      opacity: 0.7;
+      background: radial-gradient(circle, #ffae00 0%, #ff1a1a 60%, transparent 100%);
+      animation: emberFloat 4s linear infinite;
+      box-shadow: 0 0 24px #ffae00, 0 0 12px #ff1a1a;
+      filter: blur(0.5px) brightness(1.2);
+    }
+    @keyframes emberFloat {
+      0% { transform: translateY(0) scale(1); opacity: 0.7; }
+      80% { opacity: 1; }
+      100% { transform: translateY(-120vh) scale(0.7); opacity: 0; }
+    }
+    /* Responsive tweaks */
+    @media (max-width: 800px) {
+      html, body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+      }
+      .header {
+        padding: 12px 0 0 0;
+        margin-bottom: 0;
+        min-width: 0;
+      }
+      .logo {
+        font-size: 1.3em;
+        padding: 0 4px;
+        margin-bottom: 0.2em;
+      }
+      .wildwest-title {
+        font-size: 2.2em;
+        margin-bottom: 0.1em;
+        margin-top: 0.1em;
+      }
+      .connect-btn {
+        margin: 10px auto 0 auto;
+        font-size: 0.95em;
+        padding: 8px 8px;
+        min-width: 0;
+        border-radius: 8px;
+      }
+      .top-right-link {
+        top: 0.7em;
+        right: 2vw;
+        font-size: 0.7em;
+        padding: 2px 6px;
+        border-radius: 4px;
+        z-index: 200;
+        min-width: 0;
+        min-height: 0;
+      }
+      .fire-animation {
+        width: 60px;
+        height: 24px;
+        margin-bottom: 8px;
+      }
+      .burn-container {
+        padding: 10px 2vw 10px 2vw;
+        max-width: 99vw;
+        min-width: 0;
+        border-radius: 18px;
+        box-shadow: 0 0 32px 8px #ff1a1a99, 0 0 16px #ffae00cc;
+        margin: 0 auto 24px auto;
+        gap: 14px;
+      }
+      .modal-content {
+        padding: 16px 12px;
+        max-width: 90vw;
+        margin: 0 auto;
+        border-radius: 14px;
+        box-sizing: border-box;
+        width: 90vw;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+      }
+      .modal {
+        padding: 16px;
+        box-sizing: border-box;
+        align-items: center;
+        justify-content: center;
+      }
+      }
+      .burn-title {
+        font-size: 1.2em;
+        padding: 6px 4px;
+        border-radius: 8px;
+      }
+      .burn-warning {
+        font-size: 0.95em;
+        padding: 7px 4px;
+        border-radius: 8px;
+      }
+      .burn-form {
+        gap: 10px;
+      }
+      .burn-form input {
+        padding: 10px;
+        font-size: 0.95em;
+        border-radius: 8px;
+      }
+      .burn-btn {
+        font-size: 1em;
+        padding: 12px 0;
+        border-radius: 10px;
+        margin-top: 6px;
+      }
+      .burn-success {
+        font-size: 0.95em;
+        padding: 8px 4px;
+        border-radius: 8px;
+      }
+      .burn-balance {
+        font-size: 0.95em;
+        border-radius: 8px;
+        padding: 4px 2px;
+      }
+      .wallet-chain-btn {
+        font-size: 1em !important;
+        padding: 10px 0 !important;
+        border-radius: 8px !important;
+      }
+      #walletModalClose {
+        font-size: 1em;
+        padding: 10px 0;
+        border-radius: 8px;
+      }
+    }
+    .burn-balance, .wallet-btn[data-mint], .base-token-list-item, #tokenAddress {
+      word-break: break-all;
+      overflow-wrap: anywhere;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+      cursor: pointer;
+    }
+    .burn-balance:hover, .wallet-btn[data-mint]:hover, .base-token-list-item:hover, #tokenAddress:hover {
+      white-space: normal;
+      background: #1a0909ee;
+      z-index: 10;
+      box-shadow: 0 0 16px #ffae00, 0 0 8px #ff1a1a;
+    }
+    .base-token-list-item {
+      margin: 6px 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 2px solid #ffae00;
+      background: #1a0909ee;
+      color: #fffbe7;
+      font-size: 1em;
+      box-shadow: 0 0 8px #ffae00, 0 0 4px #ff1a1a;
+      transition: background 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .base-token-list-item .base-token-address {
+      font-size: 0.95em;
+      color: #ffae00;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .base-token-list-item .base-token-address:hover {
+      white-space: normal;
+      background: #1a0909ee;
+      z-index: 10;
+      box-shadow: 0 0 16px #ffae00, 0 0 8px #ff1a1a;
+    }
+  </style>
+</head>
+<body>
+    <a href="../index.html" class="top-right-link" style="text-transform:uppercase;font-family:'Bangers','Ewert','Orbitron',cursive,sans-serif;letter-spacing:2.5px;">BACK TO MAIN</a>
+    <div class="header">
+      <span class="wildwest-title">WILDWEST</span>
+      <span class="logo">TOKEN FURNACE</span>
+      <button class="connect-btn" id="connectWalletBtn" style="text-transform:uppercase;font-family:'Bangers','Ewert','Orbitron',cursive,sans-serif;letter-spacing:2.5px;">
+        <span class="chain-indicator" id="chainIndicator"></span>
+        <span id="walletBtnText">CONNECT WALLET</span>
+      </button>
+    </div>
+  <div class="burn-container fire-border">
+      <div class="burn-title fire-reflection">Burn Any Token</div>
+      <div class="burn-warning">This will send your tokens to a dead wallet. <b>IRREVERSIBLE!</b></div>
+      <form class="burn-form" id="burnForm" autocomplete="off">
+        <div class="input-icon-group">
+          <input type="text" id="tokenAddress" placeholder="Token Address (BASE or SOLANA)" required spellcheck="false" autocapitalize="off" autocomplete="off">
+        </div>
+        <div class="input-icon-group" style="position:relative;display:flex;align-items:center;gap:8px;">
+          <input type="number" id="tokenAmount" placeholder="Amount to Burn" min="0" step="any" required spellcheck="false" autocapitalize="off" autocomplete="off" style="flex:1;">
+          <button type="button" id="burnAllBtn" title="Burn All" style="background:linear-gradient(90deg,#ffae00 0%,#ff1a1a 100%);color:#fffbe7;border:2px solid #ffae00;border-radius:8px;padding:8px 14px;font-size:1em;font-weight:900;box-shadow:0 0 8px #ffae00,0 0 4px #ff1a1a;cursor:pointer;text-transform:uppercase;font-family:'Bangers','Ewert','Orbitron',cursive,sans-serif;letter-spacing:2.5px;transition:background 0.2s,box-shadow 0.2s;">Burn All</button>
+        </div>
+        <div class="burn-balance" title="Your token balance">
+          <span id="tokenBalance"></span>
+        </div>
+        <button type="submit" class="burn-btn fire-btn" id="burnBtn">
+          Burn Token
+        </button>
+        <div class="burn-success" id="burnSuccess" style="display:none;"></div>
+      </form>
+    </div>
+    <!-- Dramatic ember particles -->
+    <!-- Load Ethers.js for Web3 functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Load Solana Web3.js for Solana functionality -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <!-- Load BN.js for large number handling -->
+    <script src="https://cdn.jsdelivr.net/npm/bn.js@5.2.1/lib/bn.min.js"></script>
+    
+    <!-- Mark that we're handling the wallet button ourselves -->
+    <script>
+      window.TOKEN_FURNACE_HANDLES_WALLET_BUTTON = true;
+    </script>
+    
+    <!-- Load wallet functionality -->
+    <script src="../js/wallet.js"></script>
+    <script>
+      // Enhanced ember particle animation for realism
+      function randomColor() {
+        // Warm palette: yellow, orange, red
+        const colors = [
+          'rgba(255, 174, 0, 0.85)', // yellow
+          'rgba(255, 69, 0, 0.85)',  // orange-red
+          'rgba(255, 26, 26, 0.85)', // red
+          'rgba(255, 140, 0, 0.85)', // orange
+          'rgba(255, 215, 0, 0.85)'  // gold
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+      }
+      function createEmber() {
+        const ember = document.createElement('div');
+        ember.className = 'ember';
+        const size = Math.random() * 18 + 8;
+        const blur = Math.random() * 4 + 1;
+        const left = Math.random() * 100;
+        const duration = Math.random() * 2.5 + 3.5; // 3.5s to 6s
+        const sway = Math.random() * 40 + 10; // max horizontal sway px
+        const color = randomColor();
+        const opacity = Math.random() * 0.4 + 0.4;
+        ember.style.width = `${size}px`;
+        ember.style.height = `${size}px`;
+        ember.style.left = `${left}vw`;
+        ember.style.bottom = '-40px';
+        ember.style.opacity = 0;
+        ember.style.position = 'fixed';
+        ember.style.pointerEvents = 'none';
+        ember.style.zIndex = 9999;
+        ember.style.borderRadius = '50%';
+        ember.style.background = `radial-gradient(circle, ${color} 0%, #ff1a1a 60%, transparent 100%)`;
+        ember.style.filter = `blur(${blur}px) brightness(1.2)`;
+        // Animate
+        const start = Date.now();
+        const maxY = window.innerHeight + 80;
+        const swayFreq = Math.random() * 0.002 + 0.0015; // radians/ms
+        function animate() {
+          const now = Date.now();
+          const t = (now - start) / 1000;
+          const progress = t / duration;
+          if (progress > 1) {
+            ember.remove();
+            return;
+          }
+          // Fade in/out
+          if (progress < 0.15) {
+            ember.style.opacity = (progress / 0.15) * opacity;
+          } else if (progress > 0.85) {
+            ember.style.opacity = ((1 - progress) / 0.15) * opacity;
+          } else {
+            ember.style.opacity = opacity;
+          }
+          // Vertical position
+          const y = progress * maxY;
+          // Sway left/right
+          const x = left + Math.sin(t * 2 * Math.PI * swayFreq * 1000 + left) * sway;
+          ember.style.transform = `translate(${x - left}vw, -${y}px)`;
+          requestAnimationFrame(animate);
+        }
+        document.body.appendChild(ember);
+        requestAnimationFrame(animate);
+      }
+      setInterval(createEmber, 250); // More embers for density
+    </script>
+    <!-- --- Wallet Connect Logic --- -->
+    <script>
+// --- CONFIG: QuickNode Endpoints ---
+const SOLANA_RPC = 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ef60836be4b1b1fea3b948cf28c518322a18147';
+// Get RPC endpoint from centralized config
+const BASE_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getBaseEndpoint() : 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/aa86b92100862c55985ff1d322a9ff07d9ab236f';
+
+// --- GLOBAL STATE ---
+let currentChain = null; // 'base' or 'solana'
+let currentAddress = null;
+let currentProvider = null;
+let currentEvmProvider = null;
+let currentSolanaProvider = null;
+let currentTokenDecimals = 18; // default for EVM
+let currentTokenSymbol = '';
+let ethersLoaded = false;
+let solanaLoaded = false;
+let bnLoaded = false;
+let splTokenLoaded = false;
+
+// --- DYNAMIC LIBRARY LOADERS ---
+async function loadEthers() {
+  if (ethersLoaded) return;
+  if (!window.ethers) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js';
+      s.onload = resolve;
+      s.onerror = (e) => {
+        showBurnSuccess('Failed to load ethers.js library. Check your internet connection or try again later.', true);
+        reject(e);
+      };
+      document.head.appendChild(s);
+    });
+  }
+  ethersLoaded = true;
+}
+async function loadSolanaWeb3() {
+  if (solanaLoaded) return;
+  if (!window.solanaWeb3) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.2/lib/index.iife.min.js';
+      s.onload = resolve;
+      s.onerror = (e) => {
+        showBurnSuccess('Failed to load Solana web3.js library. Check your internet connection or try again later.', true);
+        reject(e);
+      };
+      document.head.appendChild(s);
+    });
+  }
+  solanaLoaded = true;
+}
+async function loadBN() {
+  if (bnLoaded) return;
+  if (!window.BN) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/bn.js@5.2.1/lib/bn.js';
+      s.onload = resolve;
+      s.onerror = (e) => {
+        showBurnSuccess('Failed to load bn.js library. Check your internet connection or try again later.', true);
+        reject(e);
+      };
+      document.head.appendChild(s);
+    });
+  }
+  bnLoaded = true;
+}
+// --- WRAPPER: Safe dynamic loader usage ---
+async function safeLoad(fn) {
+  try {
+    await fn();
+    return true;
+  } catch (e) {
+    console.error('Library load error:', e);
+    return false;
+  }
+}
+
+// --- WALLET INTEGRATION WITH BOTH BASE AND SOLANA ---
+// Use existing global variables, no need to redeclare
+
+// Wait for wallet.js to initialize
+document.addEventListener('DOMContentLoaded', function() {
+  // IMMEDIATELY setup our chain selection before wallet.js can interfere
+  setupChainSelectionButton();
+  
+  // DON'T wait for wallet system - set up our own button handling first
+  function setupChainSelectionButton() {
+    const connectBtn = document.getElementById('connectWalletBtn');
+    if (connectBtn) {
+      // Completely replace the button to remove any existing listeners
+      const newButton = connectBtn.cloneNode(true);
+      connectBtn.parentNode.replaceChild(newButton, connectBtn);
+      
+      // Add our event listener with immediate effect
+      newButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Chain selection button clicked'); // Debug
+        
+        if (currentAddress && currentChain) {
+          console.log('Already connected, showing wallet details'); // Debug
+          // If already connected, show wallet details
+          showWalletDetails();
+        } else {
+          console.log('Not connected, showing chain selection modal'); // Debug
+          // Show chain selection modal FIRST
+          try {
+            showChainSelectionModal();
+            console.log('Chain selection modal called successfully'); // Debug
+          } catch (error) {
+            console.error('Error showing chain selection modal:', error); // Debug
+          }
+        }
+      });
+      
+      console.log('Chain selection button setup complete'); // Debug
+    }
+  }
+  
+  // Wait for wildWestWallet to be available for UI updates only
+  function waitForWalletSystem() {
+    if (window.wildWestWallet) {
+      console.log('wildWestWallet found and available!'); // Debug
+      
+      // Hook into wallet UI updates but DON'T touch the button
+      const originalUpdateWalletUI = window.wildWestWallet.updateWalletUI;
+      if (originalUpdateWalletUI) {
+        window.wildWestWallet.updateWalletUI = function() {
+          console.log('wildWestWallet.updateWalletUI called, wallet state:', {
+            isConnected: this.isConnected,
+            account: this.account,
+            currentChain: this.currentChain
+          }); // Debug
+          
+          // Call the original to update wallet button text
+          originalUpdateWalletUI.call(this);
+          
+          // Update our local state when EVM wallet changes
+          if (this.isConnected && this.account) {
+            console.log('Updating token furnace for Base connection'); // Debug
+            currentAddress = this.account;
+            currentProvider = this.provider;
+            currentEvmProvider = this.provider;
+            currentChain = 'base';
+            updateTokenFurnaceUI();
+            updateBalance();
+          } else if (currentChain === 'base') {
+            console.log('Clearing Base connection from token furnace'); // Debug
+            // Only clear if we were using Base
+            currentAddress = null;
+            currentProvider = null;
+            currentEvmProvider = null;
+            currentChain = null;
+            updateTokenFurnaceUI();
+          }
+        };
+      }
+    } else {
+      // Retry after a short delay if wallet system isn't ready yet
+      console.log('wildWestWallet not available yet, retrying...'); // Debug
+      setTimeout(waitForWalletSystem, 100);
+    }
+  }
+  
+  // Start checking for wallet system
+  waitForWalletSystem();
+});
+
+function showChainSelectionModal() {
+  console.log('showChainSelectionModal() called'); // Debug
+  
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  modal.innerHTML = `
+    <div class="chain-selection-modal" style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #00eaff;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+      max-width: 400px;
+      width: 90vw;
+      max-height: 80vh;
+      overflow: hidden;
+      animation: slideUp 0.3s ease-out;
+    ">
+      <div class="modal-header" style="
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 234, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Select Chain</h3>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #00eaff;
+          font-size: 1.5rem;
+          cursor: pointer;
+          padding: 0;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: background-color 0.2s;
+        ">×</button>
+      </div>
+      <div class="chain-options" style="padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <button class="chain-option" data-chain="base" style="
+          display: flex;
+          align-items: center;
+          padding: 1rem;
+          background: rgba(0, 234, 255, 0.05);
+          border: 1px solid rgba(0, 234, 255, 0.2);
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+          color: white;
+          text-decoration: none;
+        ">
+          <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🔵</div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
+            <span style="font-weight: 600; margin-bottom: 0.25rem;">Base Network</span>
+            <span style="font-size: 0.875rem; color: #aaa;">EVM Compatible • ETH Gas</span>
+          </div>
+          <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
+        </button>
+        <button class="chain-option" data-chain="solana" style="
+          display: flex;
+          align-items: center;
+          padding: 1rem;
+          background: rgba(0, 234, 255, 0.05);
+          border: 1px solid rgba(0, 234, 255, 0.2);
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+          color: white;
+          text-decoration: none;
+        ">
+          <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🟣</div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
+            <span style="font-weight: 600; margin-bottom: 0.25rem;">Solana Network</span>
+            <span style="font-size: 0.875rem; color: #aaa;">Fast & Low Fees • SOL Gas</span>
+          </div>
+          <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle chain selection
+  modal.querySelectorAll('.chain-option').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const chain = btn.dataset.chain;
+      document.body.removeChild(modal);
+      
+      if (chain === 'base') {
+        console.log('Base chain selected'); // Debug
+        // Use wallet.js for Base connection
+        if (window.wildWestWallet) {
+          console.log('wildWestWallet found, attempting connection'); // Debug
+          try {
+            const connected = await window.wildWestWallet.connectWallet();
+            console.log('Base wallet connection result:', connected); // Debug
+            if (connected) {
+              console.log('Base wallet connected successfully'); // Debug
+            } else {
+              console.log('Base wallet connection failed'); // Debug
+            }
+          } catch (error) {
+            console.error('Error connecting Base wallet:', error); // Debug
+          }
+        } else {
+          console.log('wildWestWallet not found'); // Debug
+          alert('Wallet system not loaded. Please refresh the page.');
+        }
+      } else if (chain === 'solana') {
+        await connectSolanaWallet();
+      }
+    });
+    
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = 'rgba(0, 234, 255, 0.1)';
+      btn.style.borderColor = '#00eaff';
+      btn.style.transform = 'translateY(-1px)';
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = 'rgba(0, 234, 255, 0.05)';
+      btn.style.borderColor = 'rgba(0, 234, 255, 0.2)';
+      btn.style.transform = 'translateY(0)';
+    });
+  });
+  
+  // Handle close
+  modal.querySelector('.close-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+  
+  console.log('Chain selection modal created and added to page'); // Debug
+}
+
+async function connectSolanaWallet() {
+  if (!await safeLoad(loadSolanaWeb3)) return;
+  if (!await safeLoad(loadBN)) return;
+  
+  let provider = null;
+  // Try Phantom first
+  if (window.solana && window.solana.isPhantom) {
+    provider = window.solana;
+  } else if (window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) {
+    provider = window.phantom.solana;
+  } else if (window.solflare && window.solflare.isSolflare) {
+    provider = window.solflare;
+  }
+  
+  if (provider) {
+    try {
+      const resp = await provider.connect();
+      let pubkey = resp && resp.publicKey ? resp.publicKey : (provider.publicKey ? provider.publicKey : null);
+      if (pubkey && pubkey.toString) pubkey = pubkey.toString();
+      
+      if (pubkey) {
+        currentChain = 'solana';
+        currentAddress = pubkey;
+        currentProvider = provider;
+        currentSolanaProvider = provider;
+        currentEvmProvider = null;
+        
+        updateTokenFurnaceUI();
+        updateBalance();
+        showBurnSuccess('Solana wallet connected successfully!', false);
+      } else {
+        alert('Solana wallet connected, but no public key found.');
+      }
+    } catch (e) {
+      alert('Solana wallet connection failed or cancelled. ' + (e && e.message ? e.message : e));
+    }
+  } else {
+    alert('No Solana wallet (Phantom, Solflare, etc.) detected.\\nInstall Phantom: https://phantom.app/download');
+  }
+}
+
+function updateTokenFurnaceUI() {
+  const walletBtnText = document.getElementById('walletBtnText');
+  const connectBtn = document.getElementById('connectWalletBtn');
+  const chainIndicator = document.getElementById('chainIndicator');
+  
+  if (currentAddress && currentChain) {
+    const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
+    
+    // Just show the address, let wallet.js handle the chain indicator
+    walletBtnText.textContent = shortAddress;
+    
+    // Remove all state classes first
+    connectBtn.classList.remove('disconnected', 'evm', 'solana');
+    connectBtn.classList.add('connected');
+    
+    // Add appropriate chain class for the indicator color
+    if (currentChain === 'solana') {
+      connectBtn.classList.add('solana');
+      if (chainIndicator) {
+        chainIndicator.style.display = 'inline-block';
+      }
+    } else {
+      connectBtn.classList.add('evm');
+      if (chainIndicator) {
+        chainIndicator.style.display = 'inline-block';
+      }
+    }
+  } else {
+    walletBtnText.textContent = 'CONNECT WALLET';
+    
+    // Remove all state classes and add disconnected
+    connectBtn.classList.remove('connected', 'evm', 'solana');
+    connectBtn.classList.add('disconnected');
+    
+    if (chainIndicator) {
+      chainIndicator.style.display = 'none';
+    }
+  }
+}
+
+function showWalletDetails() {
+  if (!currentAddress || !currentChain) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  const chainEmoji = currentChain === 'base' ? '🔵' : '🟣';
+  const chainName = currentChain === 'base' ? 'Base Network' : 'Solana Network';
+  
+  modal.innerHTML = `
+    <div class="wallet-details-modal" style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #00eaff;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+      max-width: 400px;
+      width: 90vw;
+      overflow: hidden;
+    ">
+      <div class="modal-header" style="
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 234, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Wallet Connected</h3>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #00eaff;
+          font-size: 1.5rem;
+          cursor: pointer;
+        ">×</button>
+      </div>
+      <div class="wallet-details" style="padding: 1.5rem;">
+        <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+          <div style="
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00eaff, #0077ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+          ">${chainEmoji}</div>
+          <div style="flex: 1;">
+            <div style="color: white; font-family: monospace; margin-bottom: 0.25rem;">
+              ${currentAddress.slice(0, 8)}...${currentAddress.slice(-8)}
+            </div>
+            <div style="color: #00eaff; font-size: 0.9rem;">${chainName}</div>
+          </div>
+          <button onclick="navigator.clipboard.writeText('${currentAddress}')" style="
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            font-size: 1.2rem;
+          ">📋</button>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="switch-chain-btn" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #00eaff;
+            border-radius: 8px;
+            background: transparent;
+            color: #00eaff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+          ">Switch Chain</button>
+          <button class="disconnect-btn" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            background: transparent;
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+          ">Disconnect</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle actions
+  modal.querySelector('.switch-chain-btn').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    showChainSelectionModal();
+  });
+  
+  modal.querySelector('.disconnect-btn').addEventListener('click', () => {
+    disconnectWallet();
+    document.body.removeChild(modal);
+  });
+  
+  modal.querySelector('.close-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+}
+
+function disconnectWallet() {
+  if (currentChain === 'base' && window.wildWestWallet) {
+    window.wildWestWallet.disconnectWallet();
+  }
+  
+  // Clear all wallet state
+  currentChain = null;
+  currentAddress = null;
+  currentProvider = null;
+  currentEvmProvider = null;
+  currentSolanaProvider = null;
+  
+  updateTokenFurnaceUI();
+  showBurnSuccess('Wallet disconnected', false);
+}
+
+// --- BURN FORM LOGIC ---
+document.getElementById('burnForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const tokenAddress = document.getElementById('tokenAddress').value.trim();
+  const amount = document.getElementById('tokenAmount').value.trim();
+  if (!currentChain || !currentAddress) {
+    showBurnSuccess('Please connect your wallet first.', true);
+    return;
+  }
+  if (!tokenAddress || !amount || isNaN(amount) || Number(amount) <= 0) {
+    showBurnSuccess('Enter a valid token address and amount.', true);
+    return;
+  }
+  if (currentChain === 'base') {
+    await burnEvmToken(tokenAddress, amount);
+  } else if (currentChain === 'solana') {
+    await burnSolanaToken(tokenAddress, amount);
+  } else {
+    showBurnSuccess('Unknown chain selected.', true);
+  }
+});
+
+// --- BALANCE DISPLAY ---
+document.getElementById('tokenAddress').addEventListener('input', updateBalance);
+document.getElementById('tokenAddress').addEventListener('change', updateBalance);
+
+async function updateBalance() {
+  const tokenAddress = document.getElementById('tokenAddress').value.trim();
+  if (!currentChain || !currentAddress || !tokenAddress) {
+    document.getElementById('tokenBalance').textContent = '';
+    return;
+  }
+  if (currentChain === 'base') {
+    if (!await safeLoad(loadEthers)) return;
+    try {
+      let provider;
+      if (window.ethereum) {
+        provider = new window.ethers.providers.Web3Provider(window.ethereum);
+      } else {
+        provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      }
+      const erc20 = new window.ethers.Contract(tokenAddress, [
+        'function balanceOf(address) view returns (uint256)',
+        'function decimals() view returns (uint8)',
+        'function symbol() view returns (string)'
+      ], provider);
+      const [bal, dec, sym] = await Promise.all([
+        erc20.balanceOf(currentAddress),
+        erc20.decimals(),
+        erc20.symbol().catch(() => '')
+      ]);
+      currentTokenDecimals = dec;
+      currentTokenSymbol = sym || '';
+      const display = window.ethers.utils.formatUnits(bal, dec) + (sym ? ' ' + sym : '');
+      document.getElementById('tokenBalance').textContent = display;
+    } catch (e) {
+      document.getElementById('tokenBalance').textContent = 'Unable to fetch balance.';
+    }
+  } else if (currentChain === 'solana') {
+    if (!await safeLoad(loadSolanaWeb3)) return;
+    if (!await safeLoad(loadBN)) return;
+    try {
+      const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
+      const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
+      const ownerPubkey = new window.solanaWeb3.PublicKey(currentAddress);
+      const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
+      if (tokenAccounts.value.length === 0) {
+        document.getElementById('tokenBalance').textContent = '0';
+        return;
+      }
+      const accountInfo = await connection.getParsedAccountInfo(tokenAccounts.value[0].pubkey);
+      const bal = accountInfo.value.data.parsed.info.tokenAmount.uiAmountString;
+      const dec = accountInfo.value.data.parsed.info.tokenAmount.decimals;
+      currentTokenDecimals = dec;
+      document.getElementById('tokenBalance').textContent = bal;
+    } catch (e) {
+      document.getElementById('tokenBalance').textContent = 'Unable to fetch balance.';
+    }
+  } else {
+    document.getElementById('tokenBalance').textContent = '';
+  }
+}
+
+// --- BURN LOGIC ---
+async function burnEvmToken(tokenAddress, amount) {
+  if (!await safeLoad(loadEthers)) return;
+  try {
+    let provider, signer;
+    if (window.ethereum) {
+      provider = new window.ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+    } else {
+      provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      // No signer, can't send txs
+      showBurnSuccess('No wallet connected. Cannot burn tokens in read-only mode.', true);
+      return;
+    }
+    const erc20 = new window.ethers.Contract(tokenAddress, [
+      'function transfer(address to, uint256 amount) returns (bool)',
+      'function decimals() view returns (uint8)'
+    ], signer);
+    let decimals = currentTokenDecimals;
+    if (!decimals) {
+      decimals = await erc20.decimals();
+    }
+    const value = window.ethers.utils.parseUnits(amount, decimals);
+    const dead = '0x000000000000000000000000000000000000dEaD';
+    const tx = await erc20.transfer(dead, value);
+    showBurnSuccess('Burned! TX: <a href="https://basescan.org/tx/' + tx.hash + '" target="_blank" style="color:#ffae00;">' + tx.hash.slice(0, 8) + '...</a>');
+    await tx.wait();
+    updateBalance();
+  } catch (e) {
+    showBurnSuccess('Burn failed: ' + (e && e.message ? e.message : e), true);
+  }
+}
+async function burnSolanaToken(tokenAddress, amount) {
+  if (!await safeLoad(loadSolanaWeb3)) return;
+  if (!await safeLoad(loadBN)) return;
+  try {
+    const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
+    const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
+    const ownerPubkey = new window.solanaWeb3.PublicKey(currentAddress);
+    const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
+    if (tokenAccounts.value.length === 0) {
+      showBurnSuccess('No token account found for this mint.', true);
+      return;
+    }
+    const tokenAccountPubkey = tokenAccounts.value[0].pubkey;
+    // Get decimals
+    let decimals = currentTokenDecimals;
+    if (!decimals) {
+      const mintInfo = await connection.getParsedAccountInfo(mintPubkey);
+      decimals = mintInfo.value.data.parsed.info.decimals;
+    }
+    // Calculate amount in base units
+    const bnAmount = new window.BN(amount).mul(new window.BN(10).pow(new window.BN(decimals)));
+    // Hand-craft SPL Token burn instruction (instruction 8)
+    // Layout: [8, ...amount(8 bytes LE)]
+    const data = new Uint8Array(9);
+    data[0] = 8; // Burn instruction
+    const amountLE = bnAmount.toArray('le', 8);
+    for (let i = 0; i < 8; ++i) data[i + 1] = amountLE[i];
+    const splTokenProgramId = new window.solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    const keys = [
+      { pubkey: tokenAccountPubkey, isSigner: false, isWritable: true },
+      { pubkey: mintPubkey, isSigner: false, isWritable: true },
+      { pubkey: ownerPubkey, isSigner: true, isWritable: false },
+    ];
+    const burnIx = new window.solanaWeb3.TransactionInstruction({
+      keys,
+      programId: splTokenProgramId,
+      data,
+    });
+    const transaction = new window.solanaWeb3.Transaction().add(burnIx);
+    transaction.feePayer = ownerPubkey;
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    const signed = await currentSolanaProvider.signTransaction(transaction);
+    const txid = await connection.sendRawTransaction(signed.serialize());
+    showBurnSuccess('Burned! TX: <a href="https://solscan.io/tx/' + txid + '" target="_blank" style="color:#ffae00;">' + txid.slice(0, 8) + '...</a>');
+    updateBalance();
+  } catch (e) {
+    showBurnSuccess('Burn failed: ' + (e && e.message ? e.message : e), true);
+  }
+}
+
+// --- BURN SUCCESS/ERROR UI ---
+function showBurnSuccess(msg, isError) {
+  const el = document.getElementById('burnSuccess');
+  el.innerHTML = msg;
+  el.style.display = 'block';
+  el.style.color = isError ? '#ff1a1a' : '#fffbe7';
+  el.style.borderColor = isError ? '#ff1a1a' : '#ffae00';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+// --- INIT: clear state on load ---
+window.addEventListener('DOMContentLoaded', function() {
+  currentChain = null;
+  currentAddress = null;
+  currentProvider = null;
+  document.getElementById('walletBtnText').textContent = 'Connect Wallet';
+  document.getElementById('connectWalletBtn').classList.remove('connected');
+  document.getElementById('tokenBalance').textContent = '';
+});
+    </script>
+    <!-- --- BURN ALL BUTTON LOGIC --- -->
+    <script>
+document.getElementById('burnAllBtn').addEventListener('click', async function() {
+  const tokenAddress = document.getElementById('tokenAddress').value.trim();
+  if (!currentChain || !currentAddress || !tokenAddress) {
+    showBurnSuccess('Connect wallet and enter a token address first.', true);
+    return;
+  }
+  // Fetch balance using same logic as updateBalance
+  if (currentChain === 'base') {
+    if (!await safeLoad(loadEthers)) return;
+    try {
+      let provider;
+      if (window.ethereum) {
+        provider = new window.ethers.providers.Web3Provider(window.ethereum);
+      } else {
+        provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      }
+      const erc20 = new window.ethers.Contract(tokenAddress, [
+        'function balanceOf(address) view returns (uint256)',
+        'function decimals() view returns (uint8)'
+      ], provider);
+      const [bal, dec] = await Promise.all([
+        erc20.balanceOf(currentAddress),
+        erc20.decimals()
+      ]);
+      const display = window.ethers.utils.formatUnits(bal, dec);
+      document.getElementById('tokenAmount').value = display;
+    } catch (e) {
+      showBurnSuccess('Unable to fetch balance for Burn All.', true);
+    }
+  } else if (currentChain === 'solana') {
+    if (!await safeLoad(loadSolanaWeb3)) return;
+    if (!await safeLoad(loadBN)) return;
+    try {
+      const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
+      const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
+      const ownerPubkey = new window.solanaWeb3.PublicKey(currentAddress);
+      const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
+      if (tokenAccounts.value.length === 0) {
+        document.getElementById('tokenAmount').value = '0';
+        return;
+      }
+      const accountInfo = await connection.getParsedAccountInfo(tokenAccounts.value[0].pubkey);
+      const bal = accountInfo.value.data.parsed.info.tokenAmount.uiAmountString;
+      document.getElementById('tokenAmount').value = bal;
+    } catch (e) {
+      showBurnSuccess('Unable to fetch balance for Burn All.', true);
+    }
+  }
+});
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wild West Launchpad</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- RPC Configuration -->
+  <script src="js/rpc-config.js"></script>
+  <!-- Environment Configuration (must load before secure-config) -->
+  <script src="js/env-config.js"></script>
+  <!-- Secure Configuration API -->
+  <script src="js/secure-config-loader.js"></script>
+  <script src="js/secure-integration.js"></script>
+  <!-- Secure Configuration -->
+  <script src="js/secure-config.js"></script>
+  <!-- Development Environment Injection -->
+  <script src="js/dev-env-inject.js"></script>
+  <!-- Development Token Injection (localhost only) -->
+  <script>
+    // Only load development token injection on localhost
+    if (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')) {
+      document.write('<script src="js/dev-token-inject.js"><\/script>');
+    }
+  </script>
+  <!-- Payment Configuration -->
+  <script src="js/payment-config.js"></script>
+  <!-- Banner Configuration and Rotation -->
+  <script src="js/banner-config.js"></script>
+  <script src="js/banner-rotation.js"></script>
+  <!-- Ethers.js for Web3 functionality -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Solana Web3.js for Solana support -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  <!-- Shared wallet logic -->
+  <script src="js/wallet.js"></script>
+  <!-- Add Google Fonts for Ewert, UnifrakturMaguntia, Creepster -->
+  <link href="https://fonts.googleapis.com/css2?family=Ewert&family=UnifrakturMaguntia&family=Creepster&display=swap" rel="stylesheet">
+  <style>
+    .wildwest-title {
+      font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive;
+      font-size: 5.2em;
+      letter-spacing: 0.14em;
+      margin-bottom: 0.1em;
+      margin-top: 0.1em;
+      text-align: center;
+      display: block;
+      background: linear-gradient(90deg, #00eaff, #00fff7, #fff, #00eaff 100%);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 24px #00eaff);
+      animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate;
+      text-shadow:
+        0 0 32px #00eaff,
+        0 0 16px #00fff7,
+        0 0 8px #fff,
+        0 0 2px #00eaff;
+    }
+    .wildwest-subtitle {
+      display: block;
+      text-align: center;
+      font-family: 'Orbitron', 'Ewert', 'UnifrakturMaguntia', 'Creepster', Arial, sans-serif;
+      font-size: 1.25em;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      color: #ffffff;
+      margin-top: -0.3em;
+      margin-bottom: 0.5em;
+      text-shadow: 0 0 20px #00eaff, 0 0 10px #00fff7, 0 0 5px #fff, 0 0 2px #000;
+      filter: drop-shadow(0 0 12px #00eaff);
+      background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    @keyframes wildwestBlueGlow {
+      0% { background-position: 0% 50%; filter: drop-shadow(0 0 32px #00eaff) drop-shadow(0 0 8px #00fff7); }
+      50% { background-position: 100% 50%; filter: drop-shadow(0 0 48px #00fff7) drop-shadow(0 0 16px #00eaff); }
+      100% { background-position: 0% 50%; filter: drop-shadow(0 0 32px #00eaff) drop-shadow(0 0 8px #00fff7); }
+    }
+    @keyframes flickerBlue {
+      0% { text-shadow: 0 0 32px #00eaff, 0 0 16px #00fff7, 0 0 2px #000; filter: brightness(1.1); }
+      50% { text-shadow: 0 0 48px #00fff7, 0 0 32px #00eaff, 0 0 8px #fff; filter: brightness(1.3); }
+      100% { text-shadow: 0 0 32px #00eaff, 0 0 16px #00fff7, 0 0 2px #000; filter: brightness(1.1); }
+    }
+    .arcade-emoji-link {
+      position: absolute;
+      top: 1.1em;
+      right: 2em;
+      z-index: 10;
+      text-decoration: none;
+      transition: filter 0.2s;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+    .arcade-emoji {
+      font-size: 2.1em;
+      filter: drop-shadow(0 0 8px #00fff7) drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 2px #fff);
+      text-shadow: 0 0 12px #00fff7, 0 0 6px #00eaff, 0 0 1px #fff;
+      animation: neonShine 2.5s infinite alternate, neonPulse 1.7s infinite alternate;
+      user-select: none;
+      vertical-align: middle;
+      transition: filter 0.2s;
+    }
+    .arcade-label {
+      display: block;
+      font-family: 'Orbitron', 'Ewert', Arial, sans-serif;
+      font-size: 0.75em;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      color: #00eaff;
+      margin-top: -0.2em;
+      text-align: center;
+      text-shadow: 0 0 8px #00fff7, 0 0 2px #00eaff, 0 0 1px #fff;
+      filter: drop-shadow(0 0 4px #00eaff);
+      background: linear-gradient(90deg, #00eaff 0%, #00fff7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      pointer-events: none;
+      user-select: none;
+    }
+    @keyframes neonShine {
+      0% { filter: drop-shadow(0 0 8px #00fff7) drop-shadow(0 0 16px #00eaff); }
+      100% { filter: drop-shadow(0 0 32px #00fff7) drop-shadow(0 0 48px #00eaff); }
+    }
+    @keyframes neonPulse {
+      0% { opacity: 0.85; }
+      100% { opacity: 1; }
+    }
+    @media (max-width: 600px) {
+      .wildwest-title {
+        font-size: 3.2em;
+        margin-top: 0.6em;
+        margin-bottom: 0.25em;
+        letter-spacing: 0.11em;
+        word-break: break-word;
+        max-width: 98vw;
+        line-height: 1.08;
+      }
+      .wildwest-subtitle {
+        font-size: 1em;
+        margin-bottom: 0.3em;
+      }
+      .arcade-emoji { font-size: 1.5em; }
+      .arcade-emoji-link { top: 0.7em; right: 1em; }
+      .arcade-label { font-size: 0.65em; }
+      .connect-btn.switch-btn {
+        width: 88vw;
+        max-width: 340px;
+        margin: 1.1em auto 0.7em auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.98em;
+        padding: 0.6em 0.2em 0.5em 0.2em;
+        border-radius: 10px;
+        box-sizing: border-box;
+        text-align: center;
+        line-height: 1.1;
+        gap: 0.5em;
+      }
+      #walletBtnText {
+        position: relative;
+        top: -1px;
+      }
+      .wallet-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2em;
+      }
+      .chain-name {
+        font-size: 0.75em;
+        font-weight: 600;
+        opacity: 0.8;
+        letter-spacing: 0.5px;
+      }
+      .wallet-dropdown {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    @media (max-width: 400px) {
+      .wildwest-title {
+        font-size: 2.2em;
+        margin-top: 0.5em;
+        margin-bottom: 0.18em;
+        letter-spacing: 0.08em;
+      }
+      .wildwest-subtitle {
+        font-size: 0.85em;
+        margin-bottom: 0.2em;
+      }
+      .arcade-emoji { font-size: 1.1em; }
+      .arcade-emoji-link { top: 0.5em; right: 0.5em; }
+      .arcade-label { font-size: 0.55em; }
+      .connect-btn.switch-btn {
+        width: 94vw;
+        max-width: 98vw;
+        font-size: 0.92em;
+        padding: 0.4em 0.1em 0.4em 0.1em;
+        margin: 0.8em auto 0.4em auto;
+        border-radius: 8px;
+        text-align: center;
+        line-height: 1.1;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5em;
+      }
+      #walletBtnText {
+        position: relative;
+        top: -1px;
+      }
+      .wallet-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2em;
+      }
+      .chain-name {
+        font-size: 0.65em;
+        font-weight: 600;
+        opacity: 0.8;
+        letter-spacing: 0.5px;
+      }
+    }
+    /* New styles for staking dropdown */
+    .staking-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .staking-menu {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background: rgba(30, 34, 44, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px #0008;
+      padding: 0.5em 0.7em;
+      z-index: 100;
+      min-width: 180px;
+    }
+    .staking-menu a {
+      display: block;
+      padding: 0.4em 0.6em;
+      color: #00eaff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .staking-menu a:hover {
+      background: rgba(0, 234, 255, 0.1);
+    }
+    /* New styles for token locking dropdown */
+    .token-locking-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .token-locking-menu {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background: rgba(30, 34, 44, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px #0008;
+      padding: 0.5em 0.7em;
+      z-index: 100;
+      min-width: 180px;
+    }
+    .token-locking-menu a {
+      display: block;
+      padding: 0.4em 0.6em;
+      color: #00eaff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .token-locking-menu a:hover {
+      background: rgba(0, 234, 255, 0.1);
+    }
+    /* New styles for launch token dropdown */
+    .launch-token-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .launch-token-menu {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background: rgba(30, 34, 44, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px #0008;
+      padding: 0.5em 0.7em;
+      z-index: 100;
+      min-width: 180px;
+    }
+    .launch-token-menu a {
+      display: block;
+      padding: 0.4em 0.6em;
+      color: #00eaff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .launch-token-menu a:hover {
+      background: rgba(0, 234, 255, 0.1);
+    }
+    /* Desktop navigation optimization */
+    @media (min-width: 701px) {
+      .main-nav {
+        width: 100%;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      .main-nav ul {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0 2rem;
+        box-sizing: border-box;
+        list-style: none;
+      }
+      .main-nav li {
+        flex: 1;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+      }
+      .main-nav a {
+        padding: 0.5em 0.2em;
+        font-size: 0.9em;
+        white-space: nowrap;
+        display: block;
+        text-align: center;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      /* Ensure dropdowns don't break layout */
+      .staking-dropdown,
+      .token-locking-dropdown,
+      .launch-token-dropdown {
+        position: relative;
+        display: block;
+        width: 100%;
+      }
+    }
+    /* Compact navigation for smaller desktop screens */
+    @media (min-width: 701px) and (max-width: 1200px) {
+      .main-nav ul {
+        padding: 0 1rem;
+      }
+      .main-nav a {
+        padding: 0.4em 0.1em;
+        font-size: 0.85em;
+      }
+    }
+    /* Extra compact for very wide screens */
+    @media (min-width: 1201px) {
+      .main-nav ul {
+        padding: 0 3rem;
+      }
+      .main-nav a {
+        padding: 0.6em 0.3em;
+        font-size: 1em;
+      }
+    }
+    /* Mobile-specific improvements for symmetry */
+    @media (max-width: 768px) {
+      .main-nav {
+        padding: 0;
+      }
+      
+      .main-nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+        width: 100%;
+      }
+      
+      .main-nav li {
+        width: 100%;
+        text-align: center;
+      }
+      
+      .main-nav a {
+        display: block;
+        padding: 0.8rem 1rem;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        background: rgba(30, 34, 44, 0.8);
+        border: 1px solid rgba(0, 234, 255, 0.3);
+        border-radius: 10px;
+        margin: 0.25rem 0;
+      }
+      
+      .main-nav a:hover {
+        background: rgba(0, 234, 255, 0.1);
+        border-color: rgba(0, 234, 255, 0.6);
+      }
+      
+      /* Dropdown menus on mobile */
+      .launch-token-menu,
+      .staking-menu,
+      .token-locking-menu {
+        position: static;
+        display: none;
+        background: rgba(20, 24, 34, 0.95);
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .launch-token-menu a,
+      .staking-menu a,
+      .token-locking-menu a {
+        margin: 0.25rem 0;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .main-nav ul {
+        padding: 0.5rem;
+      }
+      
+      .main-nav a {
+        padding: 0.7rem 0.8rem;
+        font-size: 0.9rem;
+      }
+      
+      .project-grid {
+        padding: 0;
+        align-items: center;
+      }
+      
+      .project-slot {
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+      
+      .all-projects-grid .project-slot {
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+      
+      .search-container {
+        max-width: 280px;
+      }
+      
+      .load-more-btn {
+        width: 280px;
+        max-width: 280px;
+      }
+    }
+    
+    /* Trending Projects Section */
+    .trending-section {
+      padding: 2rem 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid rgba(0, 234, 255, 0.2);
+    }
+    
+    .trending-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .trending-category {
+      margin-bottom: 3rem;
+    }
+    
+    .trending-title {
+      font-family: 'Orbitron', Arial, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 10px #00eaff, 0 0 5px #00fff7;
+      filter: drop-shadow(0 0 8px #00eaff);
+      background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .project-grid {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    
+    .project-slot {
+      background: rgba(30, 34, 44, 0.8);
+      border: 1px solid rgba(0, 234, 255, 0.3);
+      border-radius: 15px;
+      padding: 1.5rem;
+      width: 300px;
+      min-width: 300px;
+      max-width: 300px;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 234, 255, 0.1);
+    }
+    
+    .project-slot:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 234, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(0, 234, 255, 0.2);
+    }
+    
+    .project-rank {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #00eaff;
+      margin-bottom: 0.5rem;
+    }
+    
+    .project-name {
+      font-size: 1.1rem;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    
+    .project-mcap,
+    .project-volume,
+    .project-status {
+      font-size: 0.9rem;
+      color: #00fff7;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+      .project-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        width: 100%;
+        padding: 0;
+        margin: 0 auto;
+      }
+      
+      .project-slot {
+        width: 300px;
+        min-width: 300px;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      
+      .trending-title {
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+      }
+      
+      .trending-category {
+        margin-bottom: 3rem;
+      }
+      
+      .trending-section {
+        padding: 2rem 1rem;
+      }
+      
+      .trending-container {
+        width: 100%;
+        max-width: none;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    
+    /* Explore More Projects Section */
+    .explore-section {
+      padding: 3rem 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(0, 234, 255, 0.1);
+    }
+    
+    .explore-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .search-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 3rem;
+      position: relative;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .search-bar {
+      width: 100%;
+      padding: 15px 60px 15px 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: rgba(30, 34, 44, 0.9);
+      border: 1px solid rgba(0, 234, 255, 0.4);
+      border-radius: 15px;
+      outline: none;
+      transition: all 0.3s ease;
+      text-align: center;
+      letter-spacing: 1px;
+      box-sizing: border-box;
+    }
+    
+    .search-bar::placeholder {
+      color: rgba(0, 234, 255, 0.7);
+      font-weight: 600;
+    }
+    
+    .search-bar:focus {
+      border-color: rgba(0, 234, 255, 0.8);
+      box-shadow: 0 0 20px rgba(0, 234, 255, 0.2);
+      background: rgba(30, 34, 44, 1);
+    }
+    
+    .search-btn {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 10px 15px;
+      font-size: 1.2rem;
+      background: rgba(0, 234, 255, 0.1);
+      border: 1px solid rgba(0, 234, 255, 0.4);
+      border-radius: 10px;
+      color: #00eaff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      height: calc(100% - 10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .search-btn:hover {
+      border-color: rgba(0, 234, 255, 0.6);
+      background: rgba(0, 234, 255, 0.2);
+    }
+    
+    .all-projects-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .all-projects-grid .project-slot {
+      background: rgba(30, 34, 44, 0.8);
+      border: 1px solid rgba(0, 234, 255, 0.3);
+      border-radius: 15px;
+      padding: 1.5rem;
+      width: 300px;
+      min-width: 300px;
+      max-width: 300px;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 234, 255, 0.1);
+    }
+    
+    .all-projects-grid .project-slot:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 234, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(0, 234, 255, 0.2);
+    }
+    
+    .pagination-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .load-more-btn {
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #00eaff;
+      background: rgba(30, 34, 44, 0.9);
+      border: 1px solid rgba(0, 234, 255, 0.4);
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(0, 234, 255, 0.1);
+    }
+    
+    .load-more-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 234, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(0, 234, 255, 0.2);
+      background: rgba(0, 234, 255, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+      .search-container {
+        max-width: 300px;
+        margin: 0 auto 3rem auto;
+      }
+      
+      .search-bar {
+        font-size: 1rem;
+        padding: 15px 60px 15px 15px;
+      }
+      
+      .search-btn {
+        padding: 8px 12px;
+        font-size: 1rem;
+      }
+      
+      .all-projects-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        width: 100%;
+        margin: 0 auto 3rem auto;
+      }
+      
+      .all-projects-grid .project-slot {
+        width: 300px;
+        min-width: 300px;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      
+      .load-more-btn {
+        width: 300px;
+        max-width: 300px;
+        padding: 15px 20px;
+        font-size: 1rem;
+        margin: 0 auto;
+      }
+      
+      .explore-section {
+        padding: 3rem 1rem;
+      }
+      
+      .explore-container {
+        width: 100%;
+        max-width: none;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .pagination-container {
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    
+    /* Ad Banner Styles */
+    .ad-banner {
+      padding: 2rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Force advertise buttons to be visible */
+    .advertise-btn {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      z-index: 1000 !important;
+      margin: 1rem auto !important;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #000 100%);
+      color: #00eaff;
+      border: 2px solid #00eaff;
+      padding: 15px 30px;
+      border-radius: 0;
+      font-weight: 900;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 
+        0 0 20px rgba(0, 234, 255, 0.3),
+        inset 0 0 20px rgba(0, 234, 255, 0.1);
+      font-family: 'Orbitron', Arial, sans-serif;
+    }
+    
+    .advertise-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 234, 255, 0.4), transparent);
+      transition: left 0.5s;
+    }
+    
+    .advertise-btn:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #2d2d2d 100%);
+      color: #fff;
+      border-color: #fff;
+      box-shadow: 
+        0 0 30px rgba(0, 234, 255, 0.6),
+        inset 0 0 30px rgba(0, 234, 255, 0.2),
+        0 5px 15px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 0 10px #00eaff;
+    }
+    
+    .advertise-btn:hover::before {
+      left: 100%;
+    }
+    
+    .advertise-btn:active {
+      transform: scale(0.98);
+    }
+    
+    /* Top Ad Banner - Silver */
+    .top-ad {
+      background: linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(169, 169, 169, 0.2) 100%);
+      border-top: 1px solid rgba(192, 192, 192, 0.4);
+      border-bottom: 1px solid rgba(192, 192, 192, 0.4);
+    }
+    
+    .top-ad::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(192, 192, 192, 0.15), transparent);
+      animation: shimmer 3s infinite;
+    }
+    
+    /* Bottom Ad Banner - Silver */
+    .bottom-ad {
+      background: linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(169, 169, 169, 0.2) 100%);
+      border-top: 1px solid rgba(192, 192, 192, 0.4);
+      border-bottom: 1px solid rgba(192, 192, 192, 0.4);
+      margin-top: 2rem;
+    }
+    
+    .bottom-ad::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(192, 192, 192, 0.15), transparent);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    
+    .ad-container {
+      max-width: 1500px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .ad-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 1500px;
+      height: 500px;
+      padding: 2rem;
+      background: rgba(30, 34, 44, 0.9);
+      border-radius: 15px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Custom banner styling */
+    .ad-content .custom-banner {
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+    
+    .ad-content:hover .custom-banner {
+      transform: scale(1.02);
+      filter: brightness(1.1);
+    }
+    
+    /* Silver styling for both ads (default advertising) */
+    .top-ad .ad-content,
+    .bottom-ad .ad-content {
+      border: 2px solid rgba(192, 192, 192, 0.5);
+    }
+    
+    .top-ad .ad-content:hover,
+    .bottom-ad .ad-content:hover {
+      transform: translateY(-3px);
+      border-color: rgba(192, 192, 192, 0.8);
+      box-shadow: 0 10px 30px rgba(192, 192, 192, 0.3);
+      background: rgba(192, 192, 192, 0.08);
+    }
+    
+    /* Override hover for custom banners */
+    .ad-content:has(.custom-banner):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(0, 234, 255, 0.2);
+      border-color: rgba(0, 234, 255, 0.4);
+    }
+    
+    .top-ad .ad-text,
+    .bottom-ad .ad-text {
+      font-family: 'Orbitron', Arial, sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #c0c0c0;
+      text-shadow: 0 0 15px rgba(192, 192, 192, 0.6);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    
+    @media (max-width: 768px) {
+      .ad-banner {
+        padding: 1.5rem 1rem;
+      }
+      
+      .ad-content {
+        height: 300px;
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+      }
+      
+      .top-ad .ad-text,
+      .bottom-ad .ad-text {
+        font-size: 1.4rem;
+        letter-spacing: 1px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .ad-banner {
+        padding: 1rem 0.5rem;
+      }
+      
+      .ad-content {
+        height: 250px;
+        padding: 1rem;
+        max-width: 300px;
+      }
+      
+      .top-ad .ad-text,
+      .bottom-ad .ad-text {
+        font-size: 1.2rem;
+        letter-spacing: 0.5px;
+      }
+    }
+    
+  </style>
+</head>
+<body>
+  <header class="header" style="display:flex;flex-direction:column;align-items:center;position:relative;">
+    <a href="pages/wildwest-arcade.html" class="arcade-emoji-link" title="WildWest Arcade">
+      <span class="arcade-emoji">🕹️</span>
+      <span class="arcade-label">ARCADE</span>
+    </a>
+    <span class="wildwest-title">WILDWEST</span>
+    <span class="wildwest-subtitle">LAUNCHPAD &amp; UTILITY HUB</span>
+    <div class="wallet-dropdown">
+      <div class="wallet-hint">CONNECT YOUR BASE OR SOLANA WALLET</div>
+      <button class="connect-btn switch-btn" id="connectWalletBtn">
+        <span class="chain-indicator" id="chainIndicator"></span>
+        <div class="wallet-info">
+          <span class="chain-name" id="chainName" style="display:none;"></span>
+          <span id="walletBtnText">Connect Wallet</span>
+        </div>
+      </button>
+      <div class="wallet-disclaimer">CONNECT YOUR BASE OR SOLANA WALLET</div>
+      <div class="wallet-dropdown-menu" id="walletDropdownMenu" style="display:none;">
+        <button id="disconnectBtn">Disconnect</button>
+      </div>
+    </div>
+  </header>
+  <nav class="main-nav">
+    <ul>
+      <li class="launch-token-dropdown">
+        <a href="#" id="launchTokenDropdownBtn">Launch Token ▼</a>
+        <ul class="launch-token-menu" id="launchTokenMenu">
+          <li><a href="#" class="launch-token-link disabled" onclick="alert('Base token creation coming soon!'); return false;" style="color: #888; cursor: not-allowed;">Base (Coming Soon)</a></li>
+          <li><a href="pages/solana-launch.html" class="launch-token-link">Solana</a></li>
+        </ul>
+      </li>
+      <li><a href="pages/nft-marketplace.html">NFT Marketplace</a></li>
+      <li class="staking-dropdown">
+        <a href="#" id="stakingDropdownBtn">Staking ▼</a>
+        <ul class="staking-menu" id="stakingMenu">
+          <li><a href="pages/base-staking.html" class="staking-link">Base</a></li>
+          <li><a href="pages/solana-staking.html" class="staking-link">Solana</a></li>
+        </ul>
+      </li>
+      <li class="token-locking-dropdown">
+        <a href="#" id="tokenLockingDropdownBtn">Token Locking ▼</a>
+        <ul class="token-locking-menu" id="tokenLockingMenu">
+          <li><a href="pages/base-locking.html" class="token-lock-link">Base</a></li>
+          <li><a href="pages/solana-locking.html" class="token-lock-link">Solana</a></li>
+        </ul>
+      </li>
+      <li><a href="pages/token-furnace.html">Token Furnace</a></li>
+      <li><a href="pages/the-team.html">The Team</a></li>
+    </ul>
+  </nav>
+  
+  <!-- Top Ad Banner -->
+  <section class="ad-banner top-ad">
+    <div class="ad-container">
+      <div class="ad-content">
+        <span class="ad-text">ADVERTISE HERE</span>
+      </div>
+      <button class="advertise-btn" onclick="window.open('admin/banner-admin.html', '_blank')">
+        ADVERTISE HERE
+      </button>
+    </div>
+  </section>
+  
+  <!-- Trending Projects Section -->
+  <section class="trending-section">
+    <div class="trending-container">
+      <!-- Trending by Market Cap -->
+      <div class="trending-category">
+        <h2 class="trending-title">TRENDING BY MARKET CAP</h2>
+        <div class="project-grid">
+          <div class="project-slot">
+            <div class="project-rank">#1</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-mcap">$1.2M</div>
+          </div>
+          <div class="project-slot">
+            <div class="project-rank">#2</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-mcap">$850K</div>
+          </div>
+          <div class="project-slot">
+            <div class="project-rank">#3</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-mcap">$650K</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Trending by 24h Volume -->
+      <div class="trending-category">
+        <h2 class="trending-title">TRENDING BY 24H VOLUME</h2>
+        <div class="project-grid">
+          <div class="project-slot">
+            <div class="project-rank">#1</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-volume">$125K</div>
+          </div>
+          <div class="project-slot">
+            <div class="project-rank">#2</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-volume">$98K</div>
+          </div>
+          <div class="project-slot">
+            <div class="project-rank">#3</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-volume">$75K</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Recently Graduated -->
+      <div class="trending-category">
+        <h2 class="trending-title">RECENTLY GRADUATED</h2>
+        <div class="project-grid">
+          <div class="project-slot">
+            <div class="project-rank">#1</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-status">Graduated</div>
+          </div>
+          <div class="project-slot">
+            <div class="project-rank">#2</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-status">Graduated</div>
+          </div>
+          <div class="project-slot">
+            <div class="project-rank">#3</div>
+            <div class="project-name">Project Name</div>
+            <div class="project-status">Graduated</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Explore More Projects Section -->
+  <section class="explore-section">
+    <div class="explore-container">
+      <div class="search-container">
+        <input type="text" class="search-bar" placeholder="EXPLORE MORE PROJECTS" />
+        <button class="search-btn">🔍</button>
+      </div>
+      
+      <!-- All Projects Grid -->
+      <div class="all-projects-grid">
+        <!-- Row 1 -->
+        <div class="project-slot">
+          <div class="project-rank">#4</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$450K</div>
+        </div>
+        <div class="project-slot">
+          <div class="project-rank">#5</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$380K</div>
+        </div>
+        <div class="project-slot">
+          <div class="project-rank">#6</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$320K</div>
+        </div>
+        
+        <!-- Row 2 -->
+        <div class="project-slot">
+          <div class="project-rank">#7</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$280K</div>
+        </div>
+        <div class="project-slot">
+          <div class="project-rank">#8</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$220K</div>
+        </div>
+        <div class="project-slot">
+          <div class="project-rank">#9</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$195K</div>
+        </div>
+        
+        <!-- Row 3 -->
+        <div class="project-slot">
+          <div class="project-rank">#10</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$175K</div>
+        </div>
+        <div class="project-slot">
+          <div class="project-rank">#11</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$150K</div>
+        </div>
+        <div class="project-slot">
+          <div class="project-rank">#12</div>
+          <div class="project-name">Project Name</div>
+          <div class="project-mcap">$125K</div>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-container">
+        <button class="load-more-btn" id="loadMoreBtn">LOAD MORE</button>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Bottom Ad Banner -->
+  <section class="ad-banner bottom-ad">
+    <div class="ad-container">
+      <div class="ad-content">
+        <span class="ad-text">ADVERTISE HERE</span>
+      </div>
+      <button class="advertise-btn" onclick="window.open('admin/banner-admin.html', '_blank')">
+        ADVERTISE HERE
+      </button>
+    </div>
+  </section>
+  
+  <script src="js/script.js"></script>
+  
+  <script>
+// Ensure dropdown menus are hidden on page load - IMMEDIATE FIX
+document.addEventListener('DOMContentLoaded', function() {
+  // Force hide all dropdown menus
+  const menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
+  menus.forEach(menuId => {
+    const menu = document.getElementById(menuId);
+    if (menu) {
+      menu.style.display = 'none';
+    }
+  });
+});
+
+// Launch token dropdown functionality
+const launchTokenBtn = document.getElementById('launchTokenDropdownBtn');
+const launchTokenMenu = document.getElementById('launchTokenMenu');
+let launchTokenMenuTimeout = null;
+if (launchTokenBtn && launchTokenMenu) {
+  // Ensure dropdown is hidden on page load
+  launchTokenMenu.style.display = 'none';
+  // Desktop: hover, Mobile: click
+  function showLaunchTokenMenu() {
+    clearTimeout(launchTokenMenuTimeout);
+    launchTokenMenu.style.display = 'block';
+  }
+  function hideLaunchTokenMenu() {
+    launchTokenMenuTimeout = setTimeout(() => {
+      launchTokenMenu.style.display = 'none';
+    }, 180);
+  }
+  // Desktop hover
+  if (window.innerWidth > 700) {
+    launchTokenBtn.addEventListener('mouseenter', showLaunchTokenMenu);
+    launchTokenBtn.addEventListener('mouseleave', hideLaunchTokenMenu);
+    launchTokenMenu.addEventListener('mouseenter', showLaunchTokenMenu);
+    launchTokenMenu.addEventListener('mouseleave', hideLaunchTokenMenu);
+  }
+  // Mobile click
+  launchTokenBtn.addEventListener('click', function(e) {
+    if (window.innerWidth <= 700) {
+      e.preventDefault();
+      if (launchTokenMenu.style.display === 'block') {
+        launchTokenMenu.style.display = 'none';
+      } else {
+        launchTokenMenu.style.display = 'block';
+      }
+    }
+  });
+  // Hide dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!launchTokenBtn.contains(e.target) && !launchTokenMenu.contains(e.target)) {
+      launchTokenMenu.style.display = 'none';
+    }
+  });
+  // Close dropdown on link click (mobile)
+  document.querySelectorAll('.launch-token-link').forEach(link => {
+    link.addEventListener('click', function() {
+      launchTokenMenu.style.display = 'none';
+    });
+  });
+}
+
+// Staking dropdown functionality
+const stakingBtn = document.getElementById('stakingDropdownBtn');
+const stakingMenu = document.getElementById('stakingMenu');
+let stakingMenuTimeout = null;
+if (stakingBtn && stakingMenu) {
+  // Ensure dropdown is hidden on page load
+  stakingMenu.style.display = 'none';
+  // Desktop: hover, Mobile: click
+  function showStakingMenu() {
+    clearTimeout(stakingMenuTimeout);
+    stakingMenu.style.display = 'block';
+  }
+  function hideStakingMenu() {
+    stakingMenuTimeout = setTimeout(() => {
+      stakingMenu.style.display = 'none';
+    }, 180);
+  }
+  // Desktop hover
+  if (window.innerWidth > 700) {
+    stakingBtn.addEventListener('mouseenter', showStakingMenu);
+    stakingBtn.addEventListener('mouseleave', hideStakingMenu);
+    stakingMenu.addEventListener('mouseenter', showStakingMenu);
+    stakingMenu.addEventListener('mouseleave', hideStakingMenu);
+  }
+  // Mobile click
+  stakingBtn.addEventListener('click', function(e) {
+    if (window.innerWidth <= 700) {
+      e.preventDefault();
+      if (stakingMenu.style.display === 'block') {
+        stakingMenu.style.display = 'none';
+      } else {
+        stakingMenu.style.display = 'block';
+      }
+    }
+  });
+  // Hide dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!stakingBtn.contains(e.target) && !stakingMenu.contains(e.target)) {
+      stakingMenu.style.display = 'none';
+    }
+  });
+  // Close dropdown on link click (mobile)
+  document.querySelectorAll('.staking-link').forEach(link => {
+    link.addEventListener('click', function() {
+      stakingMenu.style.display = 'none';
+    });
+  });
+}
+
+// Token locking dropdown functionality
+const tokenLockingBtn = document.getElementById('tokenLockingDropdownBtn');
+const tokenLockingMenu = document.getElementById('tokenLockingMenu');
+let tokenLockingMenuTimeout = null;
+if (tokenLockingBtn && tokenLockingMenu) {
+  // Ensure dropdown is hidden on page load
+  tokenLockingMenu.style.display = 'none';
+  // Desktop: hover, Mobile: click
+  function showMenu() {
+    clearTimeout(tokenLockingMenuTimeout);
+    tokenLockingMenu.style.display = 'block';
+  }
+  function hideMenu() {
+    tokenLockingMenuTimeout = setTimeout(() => {
+      tokenLockingMenu.style.display = 'none';
+    }, 180);
+  }
+  // Desktop hover
+  if (window.innerWidth > 700) {
+    tokenLockingBtn.addEventListener('mouseenter', showMenu);
+    tokenLockingBtn.addEventListener('mouseleave', hideMenu);
+    tokenLockingMenu.addEventListener('mouseenter', showMenu);
+    tokenLockingMenu.addEventListener('mouseleave', hideMenu);
+  }
+  // Mobile click
+  tokenLockingBtn.addEventListener('click', function(e) {
+    if (window.innerWidth <= 700) {
+      e.preventDefault();
+      if (tokenLockingMenu.style.display === 'block') {
+        tokenLockingMenu.style.display = 'none';
+      } else {
+        tokenLockingMenu.style.display = 'block';
+      }
+    }
+  });
+  // Hide dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!tokenLockingBtn.contains(e.target) && !tokenLockingMenu.contains(e.target)) {
+      tokenLockingMenu.style.display = 'none';
+    }
+  });
+  // Close dropdown on link click (mobile)
+  document.querySelectorAll('.token-lock-link').forEach(link => {
+    link.addEventListener('click', function() {
+      tokenLockingMenu.style.display = 'none';
+    });
+  });
+}
+
+// Load more projects functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  let currentPage = 1;
+  const projectsPerPage = 9;
+  
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', function() {
+      // Add loading state
+      this.textContent = 'LOADING...';
+      this.disabled = true;
+      
+      // Simulate loading delay
+      setTimeout(() => {
+        currentPage++;
+        
+        // Reset button
+        this.textContent = 'LOAD MORE';
+        this.disabled = false;
+        
+        // You can add actual project loading logic here
+        console.log(`Loading page ${currentPage}`);
+      }, 1000);
+    });
+  }
+  
+  // Search functionality
+  const searchBar = document.querySelector('.search-bar');
+  const searchBtn = document.querySelector('.search-btn');
+  
+  function performSearch() {
+    const searchTerm = searchBar.value.trim();
+    if (searchTerm) {
+      console.log('Searching for:', searchTerm);
+      // Add actual search logic here
+    }
+  }
+  
+  if (searchBtn) {
+    searchBtn.addEventListener('click', performSearch);
+  }
+  
+  if (searchBar) {
+    searchBar.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+  }
+  
+  // Note: Ad banner click functionality is now handled by banner-rotation.js
+  
+  // Initialize Banner Rotation System
+  console.log('🎯 Starting banner rotation system...');
+  
+  if (window.bannerRotationManager) {
+    window.bannerRotationManager.init().then(() => {
+      console.log('✅ Banner rotation system initialized');
+    }).catch(error => {
+      console.error('❌ Banner rotation system initialization failed:', error);
+    });
+  } else {
+    console.error('❌ Banner rotation manager not found');
+  }
+});
+  </script>
+
+  <!-- Banner System Debugging Functions -->
+  <script>
+  // Simple banner debugging functions
+  window.checkBannerStorage = function() {
+    console.log('📦 Checking banner storage...');
+    try {
+      const topBanners = localStorage.getItem('wildwest_top_banners');
+      const bottomBanners = localStorage.getItem('wildwest_bottom_banners');
+      
+      console.log('📊 Banner System Stats:', {
+        topBanners: topBanners ? JSON.parse(topBanners).length : 0,
+        bottomBanners: bottomBanners ? JSON.parse(bottomBanners).length : 0
+      });
+      
+      if (topBanners) {
+        const parsed = JSON.parse(topBanners);
+        console.log('🔝 Top Banners:');
+        parsed.forEach((banner, index) => {
+          console.log(`  ${index + 1}. ${banner.projectName} (${banner.id})`);
+          console.log(`     Image: ${banner.imageUrl}`);
+          if (!banner.imageUrl || banner.imageUrl === 'undefined') {
+            console.warn(`     ⚠️ This banner has undefined imageUrl!`);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+    }
+  };
+  
+  window.cleanBannerStorage = function() {
+    console.log('🧹 Cleaning banner storage...');
+    try {
+      const topBanners = localStorage.getItem('wildwest_top_banners');
+      if (topBanners) {
+        const parsed = JSON.parse(topBanners);
+        const cleaned = parsed.filter(banner => banner.imageUrl && banner.imageUrl !== 'undefined');
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem('wildwest_top_banners', JSON.stringify(cleaned));
+          console.log(`✅ Removed ${parsed.length - cleaned.length} banners with undefined URLs`);
+          if (window.bannerRotationManager) {
+            window.bannerRotationManager.updateBanners();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+    }
+  };
+  
+  window.fixBannerUrl = function(bannerId, newImageUrl) {
+    console.log('🔧 Fixing banner URL...');
+    if (!bannerId || !newImageUrl) {
+      console.error('Usage: fixBannerUrl("banner_1752406742544", "https://github.com/...");');
+      return;
+    }
+    
+    try {
+      const topBanners = localStorage.getItem('wildwest_top_banners');
+      if (topBanners) {
+        const banners = JSON.parse(topBanners);
+        const bannerIndex = banners.findIndex(banner => banner.id === bannerId);
+        if (bannerIndex !== -1) {
+          banners[bannerIndex].imageUrl = newImageUrl;
+          localStorage.setItem('wildwest_top_banners', JSON.stringify(banners));
+          console.log('✅ Banner URL updated');
+          if (window.bannerRotationManager) {
+            window.bannerRotationManager.updateBanners();
+          }
+        } else {
+          console.error('❌ Banner not found');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+    }
+  };
+  
+  window.refreshBanners = function() {
+    console.log('🔄 Refreshing banners...');
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.updateBanners();
+      console.log('✅ Done');
+    } else {
+      console.error('❌ Banner manager not found');
+    }
+  };
+  
+  window.debugBannerClicks = function() {
+    console.log('🔍 Debugging banner click functionality...');
+    
+    // Check if banner rotation manager exists
+    if (!window.bannerRotationManager) {
+      console.error('❌ Banner rotation manager not found');
+      return;
+    }
+    
+    // Check current banners
+    const topBanner = window.BANNER_CONFIG.getCurrentBanner('top');
+    const bottomBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+    
+    console.log('📊 Current Banner State:');
+    console.log('🔝 Top Banner:', {
+      projectName: topBanner?.projectName,
+      linkUrl: topBanner?.linkUrl,
+      isDefault: topBanner?.isDefault,
+      imageUrl: topBanner?.imageUrl
+    });
+    console.log('⬇️ Bottom Banner:', {
+      projectName: bottomBanner?.projectName,
+      linkUrl: bottomBanner?.linkUrl,
+      isDefault: bottomBanner?.isDefault,
+      imageUrl: bottomBanner?.imageUrl
+    });
+    
+    // Check if click handlers are properly attached
+    const topAdContent = document.querySelector('.top-ad .ad-content');
+    const bottomAdContent = document.querySelector('.bottom-ad .ad-content');
+    
+    console.log('🖱️ Click Handler Status:');
+    console.log('� Top banner click handler:', topAdContent?.onclick ? 'Attached' : 'Missing');
+    console.log('⬇️ Bottom banner click handler:', bottomAdContent?.onclick ? 'Attached' : 'Missing');
+    
+    // Test click functionality
+    console.log('🧪 To test banner clicks:');
+    console.log('1. Click on a banner and watch this console');
+    console.log('2. You should see "📊 Banner Click Tracked" messages');
+    console.log('3. If banner has linkUrl, a new tab should open');
+    
+    return {
+      topBanner: topBanner,
+      bottomBanner: bottomBanner,
+      topClickHandler: !!topAdContent?.onclick,
+      bottomClickHandler: !!bottomAdContent?.onclick
+    };
+  };
+  
+  console.log('�💡 Banner functions: checkBannerStorage(), cleanBannerStorage(), fixBannerUrl(), refreshBanners(), debugBannerClicks()');
+  </script>
+  
+  <script>
+  // Additional banner management functions
+  window.clearAllBanners = function() {
+    console.log('🧹 Clearing all banners...');
+    
+    try {
+      // Clear local storage
+      localStorage.removeItem('wildwest_top_banners');
+      localStorage.removeItem('wildwest_bottom_banners');
+      console.log('✅ Cleared local storage banners');
+      
+      // Clear banner cache in BANNER_CONFIG
+      if (window.BANNER_CONFIG) {
+        window.BANNER_CONFIG._bannerCache = {
+          top: [],
+          bottom: [],
+          lastFetch: 0
+        };
+        console.log('✅ Cleared banner cache');
+      }
+      
+      // Refresh banners to show default state
+      if (window.bannerRotationManager) {
+        window.bannerRotationManager.updateBanners();
+        console.log('✅ Refreshed banner display');
+      }
+      
+      console.log('🎯 All banners cleared! You can now create new banners.');
+      console.log('⚠️ Note: To permanently remove banners, you need to delete them from GitHub repository');
+      console.log('📍 Repository: https://github.com/cowboytbc/wildwest-banners-pfps');
+      
+    } catch (error) {
+      console.error('❌ Error clearing banners:', error);
+    }
+  };
+  
+  console.log('💡 Updated functions: clearAllBanners() - Clear all banners and cache');
+  
+  // Test banner click functionality
+  window.testBannerClick = function() {
+    console.log('🧪 Testing banner click functionality...');
+    
+    // Check if banner system is loaded
+    if (!window.BANNER_CONFIG) {
+      console.error('❌ BANNER_CONFIG not loaded');
+      return;
+    }
+    
+    if (!window.bannerRotationManager) {
+      console.error('❌ bannerRotationManager not loaded');
+      return;
+    }
+    
+    // Get current banners
+    const topBanner = window.BANNER_CONFIG.getCurrentBanner('top');
+    const bottomBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+    
+    console.log('📊 Current Banner State:');
+    console.log('🔝 Top Banner:', topBanner);
+    console.log('⬇️ Bottom Banner:', bottomBanner);
+    
+    // Check click handlers
+    const topAdContent = document.querySelector('.top-ad .ad-content');
+    const bottomAdContent = document.querySelector('.bottom-ad .ad-content');
+    
+    console.log('🖱️ Click Handlers:');
+    console.log('🔝 Top onclick:', topAdContent?.onclick);
+    console.log('⬇️ Bottom onclick:', bottomAdContent?.onclick);
+    
+    // Simulate clicks if banners exist
+    if (topBanner && !topBanner.isDefault) {
+      console.log('🧪 Simulating top banner click...');
+      console.log('🔗 Should open:', topBanner.linkUrl);
+      console.log('🖱️ Click handler function:', topAdContent.onclick);
+      
+      // Try different ways to trigger the click
+      console.log('📋 Testing click methods:');
+      
+      // Method 1: Direct onclick call
+      if (topAdContent.onclick) {
+        console.log('  1️⃣ Calling onclick directly...');
+        try {
+          topAdContent.onclick();
+        } catch (error) {
+          console.error('  ❌ Direct onclick failed:', error);
+        }
+      }
+      
+      // Method 2: Manual click event
+      console.log('  2️⃣ Creating manual click event...');
+      try {
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true
+        });
+        topAdContent.dispatchEvent(clickEvent);
+      } catch (error) {
+        console.error('  ❌ Manual click event failed:', error);
+      }
+      
+      // Method 3: Direct window.open test
+      console.log('  3️⃣ Testing direct window.open...');
+      try {
+        const testWindow = window.open(topBanner.linkUrl, '_blank');
+        if (testWindow) {
+          console.log('  ✅ Direct window.open succeeded');
+          setTimeout(() => testWindow.close(), 1000); // Close after 1 second
+        } else {
+          console.log('  ⚠️ Direct window.open was blocked');
+        }
+      } catch (error) {
+        console.error('  ❌ Direct window.open failed:', error);
+      }
+    }
+    
+    if (bottomBanner && !bottomBanner.isDefault) {
+      console.log('🧪 Simulating bottom banner click...');
+      console.log('🔗 Should open:', bottomBanner.linkUrl);
+      if (bottomAdContent?.onclick) {
+        bottomAdContent.onclick();
+      } else {
+        console.error('❌ Bottom banner click handler not found');
+      }
+    }
+    
+    return {
+      topBanner,
+      bottomBanner,
+      topClickHandler: !!topAdContent?.onclick,
+      bottomClickHandler: !!bottomAdContent?.onclick
+    };
+  };
+  
+  // Test URL parsing from banner filenames
+  window.testUrlParsing = function() {
+    console.log('🧪 Testing URL parsing from banner filenames...');
+    
+    // Test cases for URL encoding/decoding
+    const testCases = [
+      'github-com',
+      'example-com',
+      'my-site-net',
+      'google-com-search',
+      'github-com-user-repo',
+      'app-example-io-dashboard',
+      'subdomain-domain-com-path-to-page'
+    ];
+    
+    console.log('� Testing URL reconstruction:');
+    
+    testCases.forEach(testUrl => {
+      // Simulate the URL reconstruction logic from banner-config.js
+      let linkUrl = testUrl;
+      
+      if (testUrl.includes('-')) {
+        const urlSegments = testUrl.split('-');
+        
+        if (urlSegments.length >= 2) {
+          const lastSegment = urlSegments[urlSegments.length - 1];
+          const commonTlds = ['com', 'org', 'net', 'io', 'co', 'ai', 'xyz', 'app', 'dev', 'tech', 'me', 'ly', 'tv', 'gg'];
+          
+          if (commonTlds.includes(lastSegment)) {
+            const domainParts = urlSegments.slice(0, -1);
+            if (domainParts.length === 1) {
+              linkUrl = domainParts[0] + '.' + lastSegment;
+            } else {
+              linkUrl = domainParts.join('.') + '.' + lastSegment;
+            }
+          } else {
+            let domainEndIndex = -1;
+            for (let i = 0; i < urlSegments.length; i++) {
+              if (commonTlds.includes(urlSegments[i])) {
+                domainEndIndex = i;
+                break;
+              }
+            }
+            
+            if (domainEndIndex > 0) {
+              const domainParts = urlSegments.slice(0, domainEndIndex);
+              const tld = urlSegments[domainEndIndex];
+              const pathParts = urlSegments.slice(domainEndIndex + 1);
+              
+              linkUrl = domainParts.join('.') + '.' + tld;
+              if (pathParts.length > 0) {
+                linkUrl += '/' + pathParts.join('/');
+              }
+            } else {
+              linkUrl = urlSegments[0] + '.' + urlSegments.slice(1).join('/');
+            }
+          }
+        }
+      }
+      
+      if (!linkUrl.startsWith('http')) {
+        linkUrl = `https://${linkUrl}`;
+      }
+      
+      console.log(`${testUrl} → ${linkUrl}`);
+    });
+  };
+  
+  // Force refresh banner system with click handlers
+  window.refreshBannerSystem = function() {
+    console.log('� Force refreshing banner system...');
+    
+    if (!window.BANNER_CONFIG) {
+      console.error('❌ BANNER_CONFIG not loaded');
+      return;
+    }
+    
+    if (!window.bannerRotationManager) {
+      console.error('❌ bannerRotationManager not loaded');
+      return;
+    }
+    
+    // Clear cache first
+    window.BANNER_CONFIG._bannerCache = {
+      top: [],
+      bottom: [],
+      lastFetch: 0
+    };
+    
+    // Fetch fresh data from GitHub
+    return window.BANNER_CONFIG.fetchBanners()
+      .then(() => {
+        console.log('✅ Fresh banner data fetched');
+        
+        // Update banners with new data
+        window.bannerRotationManager.updateBanners();
+        
+        // Wait a moment for DOM updates, then verify click handlers
+        setTimeout(() => {
+          const topBanner = window.BANNER_CONFIG.getCurrentBanner('top');
+          const bottomBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+          
+          console.log('🔝 Top banner after refresh:', topBanner);
+          console.log('⬇️ Bottom banner after refresh:', bottomBanner);
+          
+          // Check click handlers
+          const topAdContent = document.querySelector('.top-ad .ad-content');
+          const bottomAdContent = document.querySelector('.bottom-ad .ad-content');
+          
+          console.log('🖱️ Click handlers after refresh:');
+          console.log('🔝 Top:', topAdContent?.onclick ? 'Attached' : 'Missing');
+          console.log('⬇️ Bottom:', bottomAdContent?.onclick ? 'Attached' : 'Missing');
+          
+        }, 500);
+        
+        return true;
+      })
+      .catch(error => {
+        console.error('❌ Error refreshing banner system:', error);
+        return false;
+      });
+  };
+  
+  console.log('💡 Refresh function: refreshBannerSystem() - Force refresh with click handlers');
+  
+  // Force fetch banners from GitHub for testing
+  window.fetchGitHubBanners = async function() {
+    console.log('🔄 Fetching banners from GitHub...');
+    
+    if (!window.BANNER_CONFIG) {
+      console.error('❌ BANNER_CONFIG not loaded');
+      return;
+    }
+    
+    try {
+      const success = await window.BANNER_CONFIG.fetchBanners();
+      console.log('📡 GitHub fetch result:', success);
+      
+      // Check what banners we got
+      const topBanners = window.BANNER_CONFIG._bannerCache.top;
+      const bottomBanners = window.BANNER_CONFIG._bannerCache.bottom;
+      
+      console.log('📊 Fetched Banners:');
+      console.log('🔝 Top banners:', topBanners.length, topBanners);
+      console.log('⬇️ Bottom banners:', bottomBanners.length, bottomBanners);
+      
+      // Update the display
+      if (window.bannerRotationManager) {
+        window.bannerRotationManager.updateBanners();
+        console.log('✅ Updated banner display');
+      }
+      
+      return { topBanners, bottomBanners };
+    } catch (error) {
+      console.error('❌ Error fetching banners:', error);
+      return null;
+    }
+  };
+  
+  console.log('💡 Additional functions: fetchGitHubBanners() - Force fetch banners from GitHub');
+  
+  // Test URL encoding/decoding for banners
+  window.testUrlEncoding = function() {
+    console.log('🧪 Testing URL encoding/decoding for banner filenames...');
+    
+    const testUrls = [
+      'https://example.com',
+      'https://app.example.com',
+      'https://example.com/page',
+      'https://subdomain.example.io',
+      'https://wildwestlaunchpad.com',
+      'https://docs.example.com/api/v1'
+    ];
+    
+    testUrls.forEach(originalUrl => {
+      // Simulate the encoding process from banner-admin.html
+      let sanitizedUrl = originalUrl
+        .replace(/^https?:\/\//, '') // Remove protocol
+        .replace(/\//g, '-') // Replace slashes with hyphens
+        .replace(/[^a-z0-9.-]/gi, '-') // Replace other special chars with hyphens
+        .replace(/-+/g, '-') // Remove multiple consecutive hyphens
+        .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+      
+      // Simulate the decoding process from banner-config.js
+      let reconstructedUrl = sanitizedUrl;
+      
+      if (sanitizedUrl.includes('-')) {
+        const urlSegments = sanitizedUrl.split('-');
+        
+        if (urlSegments.length >= 2) {
+          const lastSegment = urlSegments[urlSegments.length - 1];
+          
+          // If last segment looks like a TLD
+          if (['com', 'org', 'net', 'io', 'co', 'ai', 'xyz', 'app', 'dev'].includes(lastSegment)) {
+            const domain = urlSegments.slice(0, -1).join('.') + '.' + lastSegment;
+            reconstructedUrl = domain;
+          } else {
+            reconstructedUrl = urlSegments[0] + '.' + urlSegments.slice(1).join('/');
+          }
+        }
+      }
+      
+      if (!reconstructedUrl.startsWith('http')) {
+        reconstructedUrl = `https://${reconstructedUrl}`;
+      }
+      
+      console.log(`🔗 ${originalUrl}`);
+      console.log(`   📝 Encoded: ${sanitizedUrl}`);
+      console.log(`   🔄 Decoded: ${reconstructedUrl}`);
+      console.log(`   ✅ Match: ${originalUrl === reconstructedUrl ? 'YES' : 'NO'}`);
+      console.log('');
+    });
+  };
+  
+  console.log('💡 URL testing: testUrlEncoding() - Test URL encoding/decoding for banners');
+  
+  // Add a test function to create sample banners for demonstration
+  window.createTestBanners = function() {
+    console.log('🧪 Creating test banners...');
+    
+    const testTopBanner = {
+      id: 'test-top-1',
+      projectName: 'CryptoCoin Demo',
+      imageUrl: 'https://via.placeholder.com/1500x200/ff6b6b/ffffff?text=CRYPTOCOIN+DEMO+-+TEST+BANNER',
+      linkUrl: 'https://example-crypto.com',
+      position: 'top',
+      duration: 7,
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      isDefault: false
+    };
+    
+    const testBottomBanner = {
+      id: 'test-bottom-1', 
+      projectName: 'NFT Project Demo',
+      imageUrl: 'https://via.placeholder.com/1500x200/4ecdc4/ffffff?text=NFT+PROJECT+DEMO+-+TEST+BANNER',
+      linkUrl: 'https://example-nft.com',
+      position: 'bottom',
+      duration: 3,
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      isDefault: false
+    };
+    
+    // Store in localStorage
+    localStorage.setItem('wildwest_top_banners', JSON.stringify([testTopBanner]));
+    localStorage.setItem('wildwest_bottom_banners', JSON.stringify([testBottomBanner]));
+    
+    console.log('✅ Test banners created and stored');
+    
+    // Update banner display
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.updateBanners();
+      console.log('🔄 Banner display updated');
+    }
+    
+    alert('🎉 Test banners created! You should see them displayed now.');
+  };
+  
+  window.clearTestBanners = function() {
+    localStorage.removeItem('wildwest_top_banners');
+    localStorage.removeItem('wildwest_bottom_banners');
+    
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.updateBanners();
+    }
+    
+    console.log('🧹 Test banners cleared');
+    alert('🧹 Test banners cleared! Back to default "Advertise Here" banners.');
+  };
+  
+  // GitHub Token Helper for Development
+  window.setGitHubToken = function(token) {
+    window.DEV_GITHUB_TOKEN = token;
+    console.log('✅ GitHub token set for development');
+    console.log('🔄 Refreshing banner system...');
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.init();
+    }
+  };
+
+  // Debug GitHub API
+  window.debugGitHubAPI = async function() {
+    console.log('🔍 Debugging GitHub API connection...');
+    
+    const config = window.SECURE_CONFIG.getGitHubConfig();
+    console.log('📊 GitHub Config:', {
+      owner: config.owner,
+      repo: config.repo,
+      folder: config.folder,
+      hasToken: !!config.token,
+      tokenLength: config.token ? config.token.length : 0
+    });
+    
+    if (!config.token) {
+      console.error('❌ No GitHub token found');
+      return;
+    }
+    
+    try {
+      const apiUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.folder}`;
+      console.log('🌐 Testing API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `token ${config.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      
+      console.log('📡 API Response Status:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ API Success! Found files:', data.length);
+        data.forEach(file => {
+          console.log(`  📄 ${file.name} (${file.type})`);
+        });
+      } else {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ API Request Failed:', error);
+    }
+  };
+  
+  console.log('🧪 Test functions available:');
+  console.log('  createTestBanners() - Add sample banners');
+  console.log('  clearTestBanners() - Remove test banners');
+  console.log('  setGitHubToken("token") - Set GitHub token for real banners');
+  console.log('  debugGitHubAPI() - Debug GitHub API connection');
+  </script>
+</body>
+</html>

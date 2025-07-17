@@ -1,0 +1,198 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Inject GitHub token at build time
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+        BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+      run: |
+        # Create a secure config file with tokens injected at build time
+        cat > js/secure-config-production.js << EOF
+        // Production secure config - tokens injected at build time via GitHub Secrets
+        class SecureConfig {
+          constructor() {
+            this.isProduction = true;
+            this.config = this.loadConfig();
+          }
+          
+          loadConfig() {
+            return {
+              github: {
+                owner: '${{ github.repository_owner }}',
+                repo: 'wildwest-banner-storage',
+                token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}',
+                branch: 'main',
+                folder: 'banners'
+              },
+              rpc: {
+                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
+                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
+              }
+            };
+          }
+          
+          getGitHubConfig() {
+            return this.config.github;
+          }
+          
+          getGitHubToken() {
+            return this.config.github.token;
+          }
+          
+          getRPCConfig() {
+            return this.config.rpc;
+          }
+          
+          // File validation for uploads
+          validateUploadFile(file) {
+            const errors = [];
+            
+            if (!file) {
+              errors.push('No file selected');
+              return { isValid: false, errors };
+            }
+            
+            // File size validation (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+              errors.push('File too large (max 5MB)');
+            }
+            
+            // File type validation
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+              errors.push('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed');
+            }
+            
+            return { isValid: errors.length === 0, errors };
+          }
+          
+          // Upload banner to GitHub (same method as development)
+          async uploadBannerToGitHub(file, position, projectName, linkUrl, endDate) {
+            // Implementation matches the one in secure-config.js
+            const fileValidation = this.validateUploadFile(file);
+            if (!fileValidation.isValid) {
+              throw new Error('File validation failed: ' + fileValidation.errors.join(', '));
+            }
+            
+            try {
+              const base64Content = await this.fileToBase64(file);
+              const timestamp = Date.now();
+              const endDateStr = endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const encodedUrl = btoa(linkUrl).replace(/[+/=]/g, (m) => ({'+': '-', '/': '_', '=': ''}[m]));
+              const fileExtension = file.name.split('.').pop().toLowerCase();
+              const fileName = projectName + '_' + endDateStr + '_' + timestamp + '_' + encodedUrl + '.' + fileExtension;
+              
+              let folderPath = '';
+              switch (position) {
+                case 'top': folderPath = 'banners/top'; break;
+                case 'bottom': folderPath = 'banners/bottom'; break;
+                case 'project-banner': folderPath = 'project-banners'; break;
+                case 'project-logo': folderPath = 'project-logos'; break;
+                case 'trader-pfp': folderPath = 'trader-pfps'; break;
+                default: folderPath = 'banners';
+              }
+              
+              const filePath = folderPath + '/' + fileName;
+              const apiUrl = 'https://api.github.com/repos/' + this.config.github.owner + '/' + this.config.github.repo + '/contents/' + filePath;
+              
+              const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': 'Bearer ' + this.config.github.token,
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'WildWest-Launchpad'
+                },
+                body: JSON.stringify({
+                  message: 'Upload ' + position + ' banner: ' + projectName,
+                  content: base64Content,
+                  branch: 'main'
+                })
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                throw new Error('GitHub upload failed: ' + (errorData.message || response.statusText));
+              }
+
+              const result = await response.json();
+              return {
+                success: true,
+                url: result.download_url,
+                fileName: fileName,
+                message: 'Banner uploaded successfully to GitHub!'
+              };
+            } catch (error) {
+              throw new Error('Upload failed: ' + error.message);
+            }
+          }
+          
+          // File to base64 conversion
+          async fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          }
+        }
+        
+        window.SECURE_CONFIG = new SecureConfig();
+        console.log('🔒 Production secure configuration loaded from GitHub Secrets');
+        EOF
+        
+        # Replace the dev config with production config
+        mv js/secure-config-production.js js/secure-config.js
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

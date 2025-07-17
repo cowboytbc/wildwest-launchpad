@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base ERC20 Token Lock</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" type="image/png" href="../images/locked.png">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="../js/rpc-config.js"></script>
+  <script src="../js/lock-fee-config.js"></script>
+  <script src="../js/fee-calculator.js"></script>
+  
+  <!-- Mark that we're handling the wallet button ourselves -->
+  <script>
+    window.BASE_LOCKING_HANDLES_WALLET_BUTTON = true;
+  </script>
+  
+  <script src="../js/wallet.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #181c22 0%, #23272f 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #e6eaf3;
+      margin: 0;
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      margin: 0 auto;
+      margin-top: 64px;
+      max-width: 480px;
+      background: rgba(30,34,44,0.92);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px #0008, 0 1.5px 8px #23272f88;
+      padding: 36px 32px 28px 32px;
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(4px) saturate(1.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      font-size: 2.1em;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin-top: 0;
+      margin-bottom: 18px;
+      text-align: center;
+      color: #e6eaf3;
+      text-shadow: 0 1px 0 #23272f88, 0 2px 8px #0004;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 1em;
+      margin-bottom: 0.2em;
+      display: block;
+      color: #b8c0d0;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #353a45;
+      border-radius: 8px;
+      font-size: 1em;
+      background: #23272f;
+      color: #e6eaf3;
+      margin-bottom: 0.5em;
+      transition: border 0.2s, background 0.2s;
+      box-sizing: border-box;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      border: 1.5px solid #6c8cff;
+      outline: none;
+      background: #232b3a;
+    }
+    button {
+      background: linear-gradient(90deg, #6c8cff 0%, #4e6edb 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 1em;
+      font-weight: 600;
+      box-shadow: 0 2px 8px #6c8cff22;
+      cursor: pointer;
+      margin-top: 1em;
+      transition: background 0.18s, box-shadow 0.18s;
+    }
+    button:hover, button:focus {
+      background: linear-gradient(90deg, #4e6edb 0%, #6c8cff 100%);
+      box-shadow: 0 4px 16px #6c8cff33;
+    }
+    #backToMainBtn {
+      font-size: 1em;
+      background: #23272f;
+      color: #e6eaf3;
+      border: 1.5px solid #353a45;
+      box-shadow: 0 1px 4px #0004;
+      transition: background 0.18s, color 0.18s;
+      left: auto !important;
+      right: 24px !important;
+      top: 18px !important;
+    }
+    #backToMainBtn:hover {
+      background: #353a45;
+      color: #6c8cff;
+    }
+    img[alt="Locked Vault"] {
+      position: absolute;
+      top: 18px;
+      left: 24px;
+      right: auto;
+      width: 32px;
+      height: 32px;
+      max-width: 32px;
+      max-height: 32px;
+      aspect-ratio: 1/1;
+      filter: drop-shadow(0 2px 8px #0004);
+      object-fit: cover;
+      z-index: 11;
+      background: transparent;
+      border-radius: 8px;
+      border: none;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #walletAddress {
+      font-size: 1.08em;
+      color: #6c8cff;
+      background: #232b3a;
+      border-radius: 6px;
+      padding: 6px 12px;
+      margin-bottom: 1em;
+      word-break: break-all;
+      box-shadow: 0 1px 4px #0002;
+    }
+    #status {
+      font-size: 1.08em;
+      color: #ff6c6c;
+      background: #2a2323;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 1em;
+      min-height: 24px;
+      box-shadow: 0 1px 4px #0002;
+    }
+    #userLocks {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .wildwest-lock-card {
+      background: linear-gradient(135deg, rgba(30,34,44,0.96) 60%, rgba(76,108,255,0.10) 100%);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px #000a, 0 1.5px 8px #23272f88;
+      padding: 38px 18px 18px 18px; /* Increased bottom padding for button fit */
+      margin-bottom: 18px;
+      border: 2px solid #4e6edb55;
+      position: relative;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+      animation: widgetFadeIn 0.7s cubic-bezier(.4,2,.6,1) 1;
+      min-height: 320px; /* Use min-height instead of fixed height */
+      width: 420px;
+      max-width: 420px;
+      min-width: 420px;
+      box-sizing: border-box;
+    }
+    @keyframes widgetFadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .wildwest-label {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, #6c8cff 0%, #4e6edb 100%);
+      color: #fff;
+      font-size: 0.98em;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      border-radius: 7px;
+      padding: 4px 16px 3px 16px;
+      box-shadow: 0 2px 8px #6c8cff33;
+      z-index: 3;
+      text-align: center;
+      text-shadow: 0 2px 8px #0004, 0 1px 0 #23272f88;
+      border: 1.5px solid #232b3a;
+      user-select: text;
+    }
+    .lock-img {
+      position: relative;
+      display: block;
+      margin: 0 auto 0 auto; /* Remove top margin, center image */
+      width: 56px;
+      height: 56px;
+      aspect-ratio: 1/1;
+      border-radius: 14px;
+      object-fit: contain;
+      background: linear-gradient(135deg, #232b3a 60%, #6c8cff22 100%);
+      border: 3px solid #6c8cff;
+      box-shadow: 0 4px 24px #6c8cff66, 0 1px 8px #0006;
+      z-index: 2;
+      transition: border 0.2s;
+      top: 0;
+      left: 0;
+      transform: none;
+    }
+    .lock-title {
+      font-size: 1.08em;
+      font-weight: 800;
+      margin-top: 18px;
+      margin-bottom: 4px;
+      text-align: center;
+      color: #e6eaf3;
+      letter-spacing: 0.04em;
+      text-shadow: 0 2px 8px #0004, 0 1px 0 #23272f88;
+      word-break: break-word;
+    }
+    .lock-info {
+      font-size: 1em;
+      margin-bottom: 2px;
+      color: #b8c0d0;
+      text-align: center;
+      font-weight: 600;
+    }
+    .lock-status {
+      font-size: 1em;
+      margin-top: 8px;
+      font-weight: 700;
+      text-align: center;
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 7px;
+      background: linear-gradient(90deg, #232b3a 60%, #4e6edb22 100%);
+      box-shadow: 0 2px 8px #6c8cff22;
+      letter-spacing: 0.08em;
+      border: 1.5px solid #353a45;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      margin-bottom: 2px;
+    }
+    .lock-status.locked {
+      color: #6c8cff;
+      border-color: #6c8cff55;
+      background: linear-gradient(90deg, #232b3a 60%, #4e6edb22 100%);
+    }
+    .lock-status.claimable {
+      color: #00e676;
+      border-color: #00e67699;
+      background: linear-gradient(90deg, #232b3a 60%, #00e67622 100%);
+      box-shadow: 0 0 16px #00e67655, 0 2px 8px #6c8cff22;
+      animation: claimGlow 1.2s infinite alternate;
+    }
+    @keyframes claimGlow {
+      from { box-shadow: 0 0 16px #00e67655, 0 2px 8px #6c8cff22; }
+      to { box-shadow: 0 0 32px #00e676cc, 0 2px 8px #6c8cff22; }
+    }
+    .lock-status.claimed {
+      color: #b8c0d0;
+      border-color: #6c6c6c55;
+      background: linear-gradient(90deg, #232b3a 60%, #6c6c6c22 100%);
+      text-decoration: line-through;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+        justify-content: flex-start;
+        min-height: auto;
+      }
+      .container {
+        margin: 10px auto;
+        margin-top: 60px;
+        padding: 24px 16px;
+        max-width: calc(100vw - 20px);
+        width: 100%;
+        box-sizing: border-box;
+      }
+      h2 {
+        font-size: 1.6em;
+        margin-bottom: 16px;
+      }
+      label {
+        font-size: 1em;
+        margin-top: 0.8em;
+        margin-bottom: 0.4em;
+      }
+      input[type="text"], input[type="number"] {
+        padding: 12px 14px;
+        font-size: 1.1em;
+        border-radius: 10px;
+        margin-bottom: 0.8em;
+      }
+      button {
+        font-size: 1.1em;
+        padding: 12px 16px;
+        border-radius: 10px;
+        width: 100%;
+        margin-top: 0.8em;
+      }
+      #setSelfBeneficiary {
+        width: auto;
+        min-width: 60px;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        margin-top: 0;
+      }
+      #backToMainBtn {
+        right: 10px !important;
+        top: 10px !important;
+        padding: 8px 12px;
+        font-size: 0.9em;
+      }
+      img[alt="Locked Vault"] {
+        left: 10px !important;
+        top: 10px !important;
+        width: 28px;
+        height: 28px;
+        max-width: 28px;
+        max-height: 28px;
+      }
+      #walletAddress, #status {
+        font-size: 1em;
+        padding: 10px 14px;
+        margin: 0.8em 0;
+        border-radius: 8px;
+        word-break: break-all;
+      }
+      .wildwest-lock-card {
+        min-width: auto;
+        max-width: calc(100vw - 20px);
+        width: 100%;
+        height: auto;
+        padding: 24px 16px 12px 16px;
+        margin: 0 auto 14px auto;
+        border-radius: 14px;
+        box-sizing: border-box;
+      }
+      .wildwest-label {
+        font-size: 0.8em;
+        padding: 3px 10px;
+        top: 6px;
+      }
+      .lock-img-card {
+        top: 6px !important;
+        left: 6px !important;
+        width: 28px;
+        height: 28px;
+        max-width: 28px;
+        max-height: 28px;
+      }
+      .embed-icon {
+        top: 6px !important;
+        right: 6px !important;
+        width: 26px !important;
+        height: 26px !important;
+        background: rgba(76, 108, 255, 0.15) !important;
+        border: 1px solid rgba(76, 108, 255, 0.3) !important;
+      }
+      .embed-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+      .lock-title {
+        font-size: 1.05em;
+        margin-top: 12px;
+        margin-bottom: 6px;
+        line-height: 1.3;
+      }
+      .lock-info {
+        font-size: 0.9em;
+        margin-bottom: 3px;
+        line-height: 1.3;
+        word-break: break-word;
+      }
+      .lock-status {
+        font-size: 0.85em;
+        padding: 5px 10px;
+        margin-top: 8px;
+        margin-bottom: 6px;
+      }
+      .lock-actions {
+        flex-direction: column !important;
+        gap: 6px !important;
+        margin-top: 8px !important;
+      }
+      .lock-actions button {
+        width: 100% !important;
+        margin-top: 0 !important;
+        font-size: 0.9em;
+        padding: 8px 12px;
+      }
+      /* Time input flexbox for mobile */
+      div[style*="display:flex"][style*="gap:8px"] {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+      }
+      div[style*="display:flex"][style*="gap:8px"] input[type="number"] {
+        flex: 1;
+        min-width: 60px;
+      }
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800&display=swap');
+    
+    /* Widget Configuration Modal Styles */
+    .widget-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      animation: modalFadeIn 0.3s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .widget-modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #232b3a 0%, #2a3340 100%);
+      border-radius: 20px;
+      padding: 2em;
+      min-width: 500px;
+      max-width: 600px;
+      max-height: 90vh;
+      border: 2px solid #6c8cff55;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: modalSlideIn 0.4s cubic-bezier(0.4, 2, 0.6, 1);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    @keyframes modalSlideIn {
+      from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .widget-modal h2 {
+      color: #6c8cff;
+      text-align: center;
+      margin-bottom: 1em;
+      font-size: 1.5em;
+    }
+    .widget-option {
+      background: rgba(108, 140, 255, 0.1);
+      border: 2px solid #6c8cff33;
+      border-radius: 12px;
+      padding: 1.5em;
+      margin: 1em 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .widget-option:hover {
+      border-color: #6c8cff;
+      background: rgba(108, 140, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    .widget-option h3 {
+      color: #e6eaf3;
+      margin: 0 0 0.5em 0;
+      font-size: 1.2em;
+    }
+    .widget-option p {
+      color: #b8c0d0;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .widget-option .preview-size {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      background: #6c8cff;
+      color: #fff;
+      padding: 0.3em 0.8em;
+      border-radius: 5px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 1em;
+      justify-content: center;
+      margin-top: 2em;
+    }
+    .modal-btn {
+      background: #6c8cff;
+      color: #fff;
+      border: none;
+      padding: 0.8em 2em;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .modal-btn:hover {
+      background: #5577ee;
+    }
+    .modal-btn.secondary {
+      background: #6c6c6c;
+    }
+    .modal-btn.secondary:hover {
+      background: #555;
+    }
+    .code-display {
+      background: #181c22;
+      border: 1px solid #6c8cff;
+      border-radius: 8px;
+      padding: 1em;
+      margin: 1em 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    @media (max-width: 768px) {
+      .widget-modal-content {
+        min-width: 300px;
+        max-width: calc(100vw - 30px);
+        padding: 1.5em;
+        margin: 0;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        position: fixed;
+        max-height: calc(100vh - 60px);
+      }
+      .widget-option {
+        padding: 1.2em;
+        margin: 0.8em 0;
+      }
+      .widget-option h3 {
+        font-size: 1.1em;
+      }
+      .widget-option p {
+        font-size: 0.95em;
+        line-height: 1.5;
+      }
+      .widget-option .preview-size {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 0.5em;
+        display: inline-block;
+        font-size: 0.8em;
+      }
+      .modal-buttons {
+        flex-direction: column;
+        gap: 0.8em;
+      }
+      .modal-btn {
+        width: 100%;
+        padding: 1em;
+        font-size: 1em;
+      }
+      .code-display {
+        font-size: 0.8em;
+        max-height: 150px;
+        padding: 0.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="../index.html" id="backToMainBtn" style="position:absolute;top:18px;right:24px;padding:8px 16px;background:#f0f0f0;border-radius:6px;text-decoration:none;color:#222;font-weight:600;box-shadow:0 1px 4px #0001;z-index:10;">Back to Main</a>
+  <img src="../images/locked.png" alt="Locked Vault" style="position:absolute;top:18px;left:24px;width:32px;height:auto;max-height:56px;filter:drop-shadow(0 2px 8px #0002);object-fit:contain;z-index:11;"/>
+  <div class="container">
+    <h2>Base ERC20 Token Lock</h2>
+    <button id="connectWalletBtn">CONNECT WALLET</button>
+    <div id="walletAddress" style="margin: 1em 0;"></div>
+    <form id="lockForm">
+      <label>ERC20 Token Address</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="tokenAddress" required placeholder="0x..." style="flex:1;" />
+      </div>
+      <div id="tokenInfo" style="font-size:0.95em;color:#008080;margin-bottom:0.5em;"></div>
+      <label>Beneficiary Address</label>
+      <div style="display:flex;gap:8px;align-items:flex-start;justify-content:center;min-height:48px;">
+        <input type="text" id="beneficiary" required placeholder="0x..." style="flex:1;margin-top:2px;" />
+        <button type="button" id="setSelfBeneficiary" style="padding:4px 12px;min-width:56px;align-self:flex-start;margin-top:12px;">ME</button>
+      </div>
+      <label>Amount</label>
+      <input type="number" id="amount" required min="0" step="any" placeholder="Amount" />
+      <label>Lock Name</label>
+      <input type="text" id="lockName" required maxlength="64" placeholder="Lock Name" />
+      <label>Unlock After</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="unlockDays" min="0" value="0" style="width:80px;" placeholder="Days" /> days
+        <input type="number" id="unlockHours" min="0" value="0" style="width:80px;" placeholder="Hours" /> hours
+        <input type="number" id="unlockMinutes" min="0" value="0" style="width:80px;" placeholder="Minutes" /> minutes
+      </div>
+      
+      <!-- Lock Creation Fee Display -->
+      <div id="feeDisplay" style="background:rgba(255,140,0,0.1);border:1px solid #ff8c00;border-radius:8px;padding:12px;margin:16px 0;text-align:center;">
+        <div style="color:#ff8c00;font-weight:600;margin-bottom:4px;">LOCK CREATION FEE</div>
+        <div id="feeAmount" style="font-size:1.1em;color:#e6eaf3;">Loading...</div>
+      </div>
+      
+      <button type="submit" style="display:block;margin:18px auto 0 auto;">LOCK TOKENS</button>
+    </form>
+    <div id="status" style="margin-top:1em;"></div>
+    <button id="refreshLocksBtn" style="margin-bottom:12px;width:100%;font-size:1.08em;letter-spacing:0.08em;">REFRESH LOCKS</button>
+    <h3>Your Locks</h3>
+    <ul id="userLocks"></ul>
+  </div>
+  <script>
+    const CONTRACT_ADDRESS = "0x58f7D324A96Eb2932a66d99dd06459aCdc30c29D";
+    const FACTORY_ADDRESS = "0xaaDf8d2919C824BD5573e19F43D7a6aFe4867b56";
+    const FACTORY_ABI = [
+      {"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"beneficiary","type":"address"},{"internalType":"uint256","name":"days_","type":"uint256"},{"internalType":"uint256","name":"hours_","type":"uint256"},{"internalType":"uint256","name":"minutes_","type":"uint256"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"lockName","type":"string"}],"name":"createLock","outputs":[],"stateMutability":"nonpayable","type":"function"},
+      {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserLocks","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"getAllLocks","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},
+      {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"lock","type":"address"},{"indexed":true,"internalType":"address","name":"creator","type":"address"},{"indexed":true,"internalType":"address","name":"beneficiary","type":"address"},{"indexed":false,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"releaseTime","type":"uint256"},{"indexed":false,"internalType":"string","name":"lockName","type":"string"}],"name":"LockCreated","type":"event"}
+    ];
+    const LOCK_ABI = [
+      {"inputs":[{"internalType":"address","name":"token_","type":"address"},{"internalType":"address","name":"beneficiary_","type":"address"},{"internalType":"uint256","name":"releaseTime_","type":"uint256"},{"internalType":"uint256","name":"amount_","type":"uint256"},{"internalType":"string","name":"lockName_","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},
+      {"inputs":[],"name":"amount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"beneficiary","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"lockName","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"release","outputs":[],"stateMutability":"nonpayable","type":"function"},
+      {"inputs":[],"name":"releaseTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"released","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"token","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+    ];
+
+    // Fee collector address from config
+    const FEE_COLLECTOR_ADDRESS = window.LOCK_FEE_CONFIG?.BASE_FEE_COLLECTOR || "0x1234567890123456789012345678901234567890";
+
+    let provider, signer, userAddress;
+
+    async function connectWallet() {
+      // Use centralized wallet.js with 'base' parameter
+      const connected = await window.wildWestWallet.connectWallet('base');
+      if (connected) {
+        provider = window.wildWestWallet.provider;
+        signer = window.wildWestWallet.signer;
+        userAddress = window.wildWestWallet.account;
+        document.getElementById('walletAddress').textContent = 'Connected: ' + userAddress;
+        loadUserLocks();
+        // Reload fee display to check for exemptions
+        loadLockCreationFee();
+      }
+    }
+
+    // Wait for wallet.js to be available
+    function waitForWalletSystem() {
+      if (window.wildWestWallet) {
+        document.getElementById('connectWalletBtn').onclick = connectWallet;
+        document.getElementById('connectWalletBtn').textContent = 'CONNECT WALLET';
+      } else {
+        setTimeout(waitForWalletSystem, 100);
+      }
+    }
+    
+    waitForWalletSystem();
+
+    // Load and display the lock creation fee
+    async function loadLockCreationFee() {
+      try {
+        // Check if current user is exempt
+        if (userAddress && lockingFeeCalculator.isExemptFromFees(userAddress, 'base')) {
+          document.getElementById('feeAmount').textContent = 'FREE (Exempt Address)';
+          document.getElementById('feeDisplay').style.background = 'rgba(0,255,0,0.1)';
+          document.getElementById('feeDisplay').style.borderColor = '#00ff00';
+        } else {
+          const feeAmount = await lockingFeeCalculator.getFormattedETHFee();
+          document.getElementById('feeAmount').textContent = feeAmount;
+        }
+      } catch (error) {
+        console.error('Failed to load fee:', error);
+        document.getElementById('feeAmount').textContent = '~0.0033 ETH (~$10)';
+      }
+    }
+
+    // Load fee when page loads
+    loadLockCreationFee();
+
+    document.getElementById('lockForm').onsubmit = async function(e) {
+      e.preventDefault();
+      if (!signer) {
+        alert('Connect wallet first!');
+        return;
+      }
+      const tokenAddress = document.getElementById('tokenAddress').value.trim();
+      const beneficiary = document.getElementById('beneficiary').value.trim();
+      const lockName = document.getElementById('lockName').value.trim();
+      const unlockDays = parseInt(document.getElementById('unlockDays').value, 10) || 0;
+      const unlockHours = parseInt(document.getElementById('unlockHours').value, 10) || 0;
+      const unlockMinutes = parseInt(document.getElementById('unlockMinutes').value, 10) || 0;
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = '';
+      if (!tokenAddress || !beneficiary || !lockName) {
+        statusDiv.textContent = 'Fill all fields.';
+        return;
+      }
+      try {
+        // Get token decimals
+        const erc20 = new ethers.Contract(tokenAddress, [
+          {"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"}
+        ], signer);
+        const decimals = await erc20.decimals();
+        // Convert amount to correct decimals
+        const amountRaw = document.getElementById('amount').value.trim();
+        const amount = ethers.utils.parseUnits(amountRaw, decimals);
+        const now = Math.floor(Date.now() / 1000);
+        const releaseTime = now + (unlockDays * 86400) + (unlockHours * 3600) + (unlockMinutes * 60);
+        // Approve tokens
+        statusDiv.textContent = 'Approving tokens...';
+        const approveTx = await erc20.approve(FACTORY_ADDRESS, amount);
+        await approveTx.wait();
+        
+        // Check if user is exempt from fees
+        const isExempt = lockingFeeCalculator.isExemptFromFees(userAddress, 'base');
+        
+        if (!isExempt) {
+          // Send the lock creation fee first
+          statusDiv.textContent = 'Sending lock creation fee...';
+          const lockCreationFee = await lockingFeeCalculator.getETHFeeAmount();
+          const feeTx = await signer.sendTransaction({
+            to: FEE_COLLECTOR_ADDRESS,
+            value: lockCreationFee
+          });
+          await feeTx.wait();
+        } else {
+          statusDiv.textContent = 'Fee waived for exempt address...';
+        }
+        
+        // Call the factory to create a new lock
+        statusDiv.textContent = 'Creating lock...';
+        const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, signer);
+        const tx = await factory.createLock(
+          tokenAddress,
+          beneficiary,
+          unlockDays,
+          unlockHours,
+          unlockMinutes,
+          amount,
+          lockName
+        );
+        await tx.wait();
+        statusDiv.textContent = 'Lock created!';
+        loadUserLocks();
+      } catch (err) {
+        statusDiv.textContent = 'Error: ' + (err.message || err);
+      }
+    };
+
+    // Display user's locks (requires factory with event logs or lock registry)
+    async function loadUserLocks() {
+      const userLocksList = document.getElementById('userLocks');
+      userLocksList.innerHTML = '';
+      if (!provider || !userAddress) return;
+      try {
+        const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
+        const lockAddresses = await factory.getUserLocks(userAddress);
+        if (lockAddresses.length === 0) {
+          const li = document.createElement('li');
+          li.textContent = 'No locks found.';
+          userLocksList.appendChild(li);
+          return;
+        }
+        for (const lockAddr of lockAddresses) {
+          const lock = new ethers.Contract(lockAddr, LOCK_ABI, signer);
+          const [name, amount, releaseTime, released, beneficiary] = await Promise.all([
+            lock.lockName(),
+            lock.amount(),
+            lock.releaseTime(),
+            lock.released(),
+            lock.beneficiary()
+          ]);
+          if (released) continue; // Skip claimed locks
+          const now = Math.floor(Date.now() / 1000);
+          
+          // Determine user's relationship to this lock
+          // getUserLocks returns locks where user is creator, but let's verify
+          const isCreator = true; // Always true since getUserLocks returns user's created locks
+          const isBeneficiary = beneficiary.toLowerCase() === userAddress.toLowerCase();
+          
+          let userRole;
+          if (isCreator && isBeneficiary) {
+            userRole = 'Creator & Beneficiary';
+          } else if (isCreator) {
+            userRole = 'Creator';
+          } else if (isBeneficiary) {
+            userRole = 'Beneficiary';
+          } else {
+            userRole = 'Viewer';
+          }
+          
+          // Format amount for display
+          let formattedAmount = amount;
+          let symbol = '';
+          try {
+            const token = new ethers.Contract(await lock.token(), [
+              {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
+              {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"}
+            ], provider);
+            const [decimals, sym] = await Promise.all([
+              token.decimals(),
+              token.symbol()
+            ]);
+            formattedAmount = ethers.utils.formatUnits(amount, decimals);
+            symbol = sym;
+          } catch {}
+
+          // Card container
+          const li = document.createElement('li');
+          li.className = 'wildwest-lock-card';
+          li.style.maxWidth = '420px';
+          li.style.minWidth = '420px';
+          li.style.width = '420px';
+          li.style.minHeight = '320px'; // Changed from height to minHeight
+          li.style.marginBottom = '18px';
+          li.style.borderRadius = '20px';
+          li.style.padding = '38px 18px 18px 18px'; // Increased bottom padding
+          li.style.boxSizing = 'border-box';
+          li.style.position = 'relative';
+          // Get token address for display/copy
+          const tokenAddr = await lock.token();
+          li.innerHTML = `
+            <img src="../images/locked.png" class="lock-img-card" alt="Lock" />
+            <div class="wildwest-label">WILDWEST LOCK</div>
+            <div class="lock-title">${name}</div>
+            <div class="lock-info" style="color:#dc267f;font-weight:600;">YOUR ROLE: ${userRole}</div>
+            <div class="lock-info">AMOUNT: <span title="${amount.toString()}" style="font-family:monospace;">${formattedAmount}${symbol ? ' ' + symbol : ''}</span></div>
+            <div class="lock-info">BENEFICIARY: <span style="font-family:monospace;">${beneficiary}</span></div>
+            <div class="lock-info">TOKEN: <span title="${tokenAddr}" class="copy-token" style="cursor:pointer;color:#6c8cff;">${tokenAddr.slice(0, 6)}...${tokenAddr.slice(-4)}</span></div>
+            <div class="lock-info">UNLOCKS: ${new Date(releaseTime * 1000).toLocaleString()}</div>
+            <div class="lock-status ${(released ? 'claimed' : (now >= releaseTime ? 'claimable' : 'locked'))}">
+              ${(released ? 'CLAIMED' : (now >= releaseTime ? 'CLAIMABLE' : 'LOCKED'))}
+            </div>
+          `;
+
+          // Fix lock image size to match Solana card
+          if (!document.getElementById('lock-img-card-style')) {
+            const style = document.createElement('style');
+            style.id = 'lock-img-card-style';
+            style.textContent = `
+              .lock-img-card {
+                position: absolute;
+                top: 18px;
+                left: 14px;
+                width: 44px;
+                height: 44px;
+                max-width: 44px;
+                max-height: 44px;
+                aspect-ratio: 1/1;
+                object-fit: contain;
+                z-index: 12;
+                background: transparent;
+                border-radius: 10px;
+                border: none;
+                padding: 2px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px #0004;
+              }
+            `;
+            document.head.appendChild(style);
+          }
+
+          // Copy token address to clipboard
+          li.querySelector('.copy-token').onclick = function() {
+            navigator.clipboard.writeText(tokenAddr);
+            this.textContent = 'COPIED!';
+            setTimeout(() => { this.textContent = tokenAddr.slice(0, 6) + '...' + tokenAddr.slice(-4); }, 1200);
+          };
+
+          // --- EMBED ICON AT TOP RIGHT ---
+          const embedIcon = document.createElement('span');
+          embedIcon.className = 'embed-icon';
+          embedIcon.title = 'Copy embed widget code';
+          embedIcon.style.position = 'absolute';
+          embedIcon.style.top = '18px';
+          embedIcon.style.right = '18px';
+          embedIcon.style.cursor = 'pointer';
+          embedIcon.style.zIndex = '20';
+          embedIcon.style.display = 'flex';
+          embedIcon.style.alignItems = 'center';
+          embedIcon.style.justifyContent = 'center';
+          embedIcon.style.width = '28px';
+          embedIcon.style.height = '28px';
+          embedIcon.style.background = 'rgba(76,108,255,0.10)';
+          embedIcon.style.borderRadius = '7px';
+          embedIcon.style.transition = 'background 0.18s';
+          embedIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="14" height="10" rx="2" stroke="#6c8cff" stroke-width="2" fill="none"/><path d="M7 9L5 10L7 11" stroke="#6c8cff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 9L15 10L13 11" stroke="#6c8cff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+          let embedIconTimeout = null;
+          embedIcon.onclick = () => {
+            showWidgetModal(lockAddr);
+          };
+          li.appendChild(embedIcon);
+
+          // --- ACTION BUTTONS FLEX CONTAINER ---
+          const actionsDiv = document.createElement('div');
+          actionsDiv.className = 'lock-actions';
+          actionsDiv.style.display = 'flex';
+          actionsDiv.style.flexWrap = 'wrap';
+          actionsDiv.style.gap = '8px';
+          actionsDiv.style.justifyContent = 'center';
+          actionsDiv.style.marginTop = '8px'; // reduce gap above buttons
+          actionsDiv.style.marginBottom = '0'; // ensure no extra margin at bottom
+
+          // Basescan link button
+          const shareBtn = document.createElement('button');
+          shareBtn.textContent = 'COPY BASESCAN LINK';
+          shareBtn.title = 'Copy the Basescan contract link for this lock to your clipboard';
+          shareBtn.onclick = () => {
+            const url = `https://basescan.org/address/${lockAddr}`;
+            navigator.clipboard.writeText(url);
+            shareBtn.textContent = 'COPIED!';
+            setTimeout(() => shareBtn.textContent = 'COPY BASESCAN LINK', 1200);
+          };
+          actionsDiv.appendChild(shareBtn);
+
+          // Claim button if claimable and not claimed
+          if (!released && now >= releaseTime && beneficiary.toLowerCase() === userAddress.toLowerCase()) {
+            const claimBtn = document.createElement('button');
+            claimBtn.textContent = 'CLAIM';
+            claimBtn.onclick = async () => {
+              try {
+                const tx = await lock.release();
+                await tx.wait();
+                alert('Tokens claimed!');
+                loadUserLocks();
+              } catch (err) {
+                alert('Claim failed: ' + (err.message || err));
+              }
+            };
+            actionsDiv.appendChild(claimBtn);
+          }
+
+          li.appendChild(actionsDiv);
+          userLocksList.appendChild(li);
+        }
+      } catch (err) {
+        const li = document.createElement('li');
+        li.textContent = 'Error loading locks: ' + (err.message || err);
+        userLocksList.appendChild(li);
+      }
+    }
+
+    document.getElementById('setSelfBeneficiary').onclick = function() {
+      if (userAddress) {
+        document.getElementById('beneficiary').value = userAddress;
+      } else {
+        alert('Connect wallet first!');
+      }
+    };
+
+    async function fetchTokenInfo() {
+      const tokenAddress = document.getElementById('tokenAddress').value.trim();
+      const tokenInfoDiv = document.getElementById('tokenInfo');
+      tokenInfoDiv.textContent = '';
+      if (!tokenAddress || !ethers.utils.isAddress(tokenAddress) || !provider) return;
+      try {
+        const erc20 = new ethers.Contract(tokenAddress, [
+          {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
+          {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}
+        ], provider);
+        const [name, symbol, decimals, balance] = await Promise.all([
+          erc20.name(),
+          erc20.symbol(),
+          erc20.decimals(),
+          erc20.balanceOf(userAddress)
+        ]);
+        let usdValue = '';
+        // Optionally fetch USD value from a public API (e.g. Coingecko, or your QuickNode endpoint if it supports price feeds)
+        // Example with Coingecko (if symbol is known):
+        try {
+          const resp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${symbol.toLowerCase()}&vs_currencies=usd`);
+          const data = await resp.json();
+          if (data && data[symbol.toLowerCase()] && data[symbol.toLowerCase()].usd) {
+            const bal = parseFloat(ethers.utils.formatUnits(balance, decimals));
+            usdValue = ` ($${(bal * data[symbol.toLowerCase()].usd).toFixed(2)} USD)`;
+          }
+        } catch {}
+        tokenInfoDiv.textContent = `Name: ${name} | Symbol: ${symbol} | Balance: ${ethers.utils.formatUnits(balance, decimals)}${symbol}${usdValue}`;
+      } catch (err) {
+        tokenInfoDiv.textContent = 'Could not fetch token info.';
+      }
+    }
+    document.getElementById('tokenAddress').addEventListener('input', function() {
+      // Debounce to avoid too many requests
+      clearTimeout(window._tokenInfoTimeout);
+      window._tokenInfoTimeout = setTimeout(fetchTokenInfo, 400);
+    });
+
+    document.getElementById('refreshLocksBtn').onclick = function() {
+      loadUserLocks();
+      document.getElementById('status').textContent = 'Lock list refreshed.';
+      setTimeout(()=>{document.getElementById('status').textContent='';}, 1200);
+    };
+    
+    // Widget Modal Functions
+    let currentLockAddress = null;
+    
+    function showWidgetModal(lockAddress) {
+      currentLockAddress = lockAddress;
+      document.getElementById('widgetModal').style.display = 'block';
+      document.getElementById('codeSection').style.display = 'none';
+      document.getElementById('copyCodeBtn').style.display = 'none';
+    }
+    
+    function closeWidgetModal() {
+      document.getElementById('widgetModal').style.display = 'none';
+      currentLockAddress = null;
+    }
+    
+    function selectWidgetType(type) {
+      if (!currentLockAddress) return;
+      
+      const baseUrl = window.location.origin;
+      let widgetUrl, dimensions;
+      
+      if (type === 'readonly') {
+        widgetUrl = `${baseUrl}/embed-base-lock.html?lock=${currentLockAddress}`;
+        dimensions = 'width="400" height="320"';
+      } else {
+        widgetUrl = `${baseUrl}/embed-base-lock-interactive.html?lock=${currentLockAddress}`;
+        dimensions = 'width="400" height="380"';
+      }
+      
+      const iframeCode = `<iframe 
+  src="${widgetUrl}" 
+  ${dimensions} 
+  style="border:none;border-radius:20px;box-shadow:0 2px 12px #0003;">
+</iframe>`;
+      
+      document.getElementById('widgetCode').textContent = iframeCode;
+      document.getElementById('codeSection').style.display = 'block';
+      document.getElementById('copyCodeBtn').style.display = 'inline-block';
+    }
+    
+    function copyWidgetCode() {
+      const codeText = document.getElementById('widgetCode').textContent;
+      navigator.clipboard.writeText(codeText).then(() => {
+        const btn = document.getElementById('copyCodeBtn');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = '#00e676';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#6c8cff';
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy code:', err);
+        alert('Failed to copy code. Please select and copy manually.');
+      });
+    }
+    
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+      const modal = document.getElementById('widgetModal');
+      if (e.target === modal) {
+        closeWidgetModal();
+      }
+    });
+  </script>
+
+  <!-- Widget Configuration Modal -->
+  <div id="widgetModal" class="widget-modal">
+    <div class="widget-modal-content">
+      <h2>🔗 Create Your Widget</h2>
+      <p style="text-align: center; color: #b8c0d0; margin-bottom: 2em;">
+        Choose the type of widget you'd like to embed on your website:
+      </p>
+      
+      <div class="widget-option" onclick="selectWidgetType('readonly')">
+        <div class="preview-size">400×320</div>
+        <h3>📖 Read-Only Widget</h3>
+        <p>Perfect for displaying lock information without wallet interaction. Shows lock details, token amounts, unlock dates, and links to Base Explorer. Ideal for portfolios, documentation, or informational pages.</p>
+      </div>
+      
+      <div class="widget-option" onclick="selectWidgetType('interactive')">
+        <div class="preview-size">400×380</div>
+        <h3>⚡ Interactive Widget</h3>
+        <p>Full-featured widget with wallet connect and claim functionality. Users can connect their MetaMask wallet and claim unlocked tokens directly from your website. Perfect for dApps and user dashboards.</p>
+      </div>
+      
+      <div id="codeSection" style="display: none;">
+        <h3 style="color: #6c8cff; margin-top: 2em;">Your Widget Code:</h3>
+        <div id="widgetCode" class="code-display"></div>
+        <p style="color: #b8c0d0; font-size: 0.9em; text-align: center;">
+          Copy this code and paste it anywhere on your website!
+        </p>
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="modal-btn" id="copyCodeBtn" onclick="copyWidgetCode()" style="display: none;">📋 Copy Code</button>
+        <button class="modal-btn secondary" onclick="closeWidgetModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

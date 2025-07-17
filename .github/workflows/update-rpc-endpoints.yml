@@ -1,0 +1,43 @@
+name: Update RPC Endpoints
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  update-endpoints:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Update RPC configuration file
+        run: |
+          # Create secure RPC configuration file with QuickNode endpoints
+          cat << 'EOF' > js/secure-rpc-endpoints.js
+          // Secure RPC endpoints - Updated by GitHub Actions with QuickNode
+          window.SECURE_RPC_ENDPOINTS = {
+            solana: {
+              primary: "${{ secrets.SOLANA_RPC_ENDPOINT }}",
+              timestamp: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            },
+            base: {
+              primary: "${{ secrets.BASE_RPC_ENDPOINT }}",
+              timestamp: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            },
+            updated: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          };
+          
+          console.log('🌐 Secure RPC endpoints loaded from GitHub Secrets');
+          console.log('⚡ QuickNode Base endpoint configured');
+          console.log('🟣 QuickNode Solana endpoint configured');
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add js/secure-rpc-endpoints.js
+          git commit -m "Update secure RPC endpoints [automated]" || exit 0
+          git push

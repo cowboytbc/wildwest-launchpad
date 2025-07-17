@@ -1,0 +1,407 @@
+// Banner rental configuration and management system - PRODUCTION READY
+// Pricing: Top Banner $200/day, Bottom Banner $100/day
+// Maximum 20 projects per banner slot
+// 5-minute rotation intervals
+
+const BANNER_CONFIG = {
+  // Pricing configuration
+  PRICING: {
+    TOP_BANNER: 200, // $200 per day
+    BOTTOM_BANNER: 100, // $100 per day
+    MAX_PROJECTS_PER_SLOT: 20,
+    ROTATION_INTERVAL: 5 * 60 * 1000 // 5 minutes in milliseconds
+  },
+
+  // GitHub API configuration for fetching banners
+  API_CONFIG: {
+    baseUrl: 'https://api.github.com/repos',
+    endpoints: {
+      contents: '/contents/banners',
+      raw: 'https://raw.githubusercontent.com'
+    }
+  },
+
+  // Cache for banner data
+  _bannerCache: {
+    top: [],
+    bottom: [],
+    lastFetch: null,
+    cacheExpiry: 5 * 60 * 1000 // 5 minutes cache
+  },
+
+  // Top banner slots (fetched from GitHub)
+  get TOP_BANNERS() {
+    return this._bannerCache.top;
+  },
+
+  // Bottom banner slots (fetched from GitHub)  
+  get BOTTOM_BANNERS() {
+    return this._bannerCache.bottom;
+  },
+
+  // Fetch banners from GitHub repository - PRODUCTION READY
+  async fetchBannersFromGitHub() {
+    try {
+      const now = Date.now();
+      
+      // Check if cache is still valid
+      if (this._bannerCache.lastFetch && 
+          (now - this._bannerCache.lastFetch) < this._bannerCache.cacheExpiry) {
+        console.log('📦 Using cached banner data');
+        return true;
+      }
+
+      console.log('🔄 Fetching banners from GitHub...');
+      
+      // Use serverless proxy for production, direct API for development
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+      
+      // Use direct GitHub API for production
+      if (isLocalhost) {
+        return await this.fetchBannersLocal();
+      } else {
+        return await this.fetchBannersGitHub();
+      }
+
+    } catch (error) {
+      console.error('❌ Error fetching banners from GitHub:', error);
+      console.log('🔧 Banner system disabled - check configuration');
+      return false;
+    }
+  },
+
+  // Alias for fetchBannersFromGitHub for compatibility
+  async fetchBanners() {
+    return await this.fetchBannersFromGitHub();
+  },
+
+  // Local development banner fetching - uses same GitHub API
+  async fetchBannersLocal() {
+    console.log('🔧 Local development - using GitHub API...');
+    return await this.fetchBannersGitHub();
+  },
+
+  // Setup default banners when repository doesn't exist
+  setupDefaultBanners() {
+    console.log('🎯 Setting up default banners - repository will be created on first upload');
+    
+    this._bannerCache.top = [];
+    this._bannerCache.bottom = [];
+    this._bannerCache.lastFetch = Date.now();
+    
+    console.log('✅ Default banner configuration ready');
+  },
+
+  // Force refresh banner cache
+  clearCache() {
+    this._bannerCache.top = [];
+    this._bannerCache.bottom = [];
+    this._bannerCache.lastFetch = null;
+    console.log('🗑️ Banner cache cleared - will fetch fresh data');
+  },
+
+  // Production banner fetching via GitHub API
+  async fetchBannersGitHub() {
+    console.log('🌐 Using direct GitHub API for production...');
+    
+    try {
+      // Get GitHub configuration
+      const githubConfig = window.SECURE_CONFIG ? window.SECURE_CONFIG.getGitHubConfig() : null;
+      if (!githubConfig) {
+        console.log('📦 No GitHub config available, setting up defaults');
+        this.setupDefaultBanners();
+        return true;
+      }
+      
+      // Fetch banners from GitHub repository
+      const topBannersUrl = `${this.API_CONFIG.baseUrl}/${githubConfig.owner}/${githubConfig.repo}/contents/banners/top`;
+      const bottomBannersUrl = `${this.API_CONFIG.baseUrl}/${githubConfig.owner}/${githubConfig.repo}/contents/banners/bottom`;
+      
+      console.log('🔄 Fetching banners from GitHub API...');
+      
+      const [topResponse, bottomResponse] = await Promise.all([
+        fetch(topBannersUrl).catch(() => ({ ok: false })),
+        fetch(bottomBannersUrl).catch(() => ({ ok: false }))
+      ]);
+      
+      const topBanners = [];
+      const bottomBanners = [];
+      
+      if (topResponse.ok) {
+        const topFiles = await topResponse.json();
+        if (Array.isArray(topFiles)) {
+          for (const file of topFiles) {
+            if (file.type === 'file' && this.isImageFile(file.name)) {
+              topBanners.push(this.createBannerFromFile(file, 'top', githubConfig));
+            }
+          }
+        }
+      }
+      
+      if (bottomResponse.ok) {
+        const bottomFiles = await bottomResponse.json();
+        if (Array.isArray(bottomFiles)) {
+          for (const file of bottomFiles) {
+            if (file.type === 'file' && this.isImageFile(file.name)) {
+              bottomBanners.push(this.createBannerFromFile(file, 'bottom', githubConfig));
+            }
+          }
+        }
+      }
+      
+      this._bannerCache.top = topBanners;
+      this._bannerCache.bottom = bottomBanners;
+      this._bannerCache.lastFetch = Date.now();
+
+      console.log(`✅ Processed ${topBanners.length} top banners and ${bottomBanners.length} bottom banners from GitHub`);
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Error fetching banners from GitHub API:', error);
+      this.setupDefaultBanners();
+      return false;
+    }
+  },
+  
+  // Helper function to check if file is an image
+  isImageFile(filename) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+  },
+  
+  // Create banner object from GitHub file
+  createBannerFromFile(file, position, githubConfig) {
+    return {
+      imageUrl: `${this.API_CONFIG.endpoints.raw}/${githubConfig.owner}/${githubConfig.repo}/main/${file.path}`,
+      link: 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry',
+      linkUrl: 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry',
+      position: position,
+      isDefault: false,
+      filename: file.name,
+      projectName: this.extractProjectNameFromFilename(file.name),
+      id: `github_${file.sha}`,
+      active: true
+    };
+  },
+  
+  // Extract project name from filename
+  extractProjectNameFromFilename(filename) {
+    // Extract project name from filename format: ProjectName_YYYY-MM-DD_timestamp_encodedUrl.ext
+    const parts = filename.split('_');
+    return parts[0] || 'Advertiser';
+  },
+
+  // Process banner data from serverless API
+  processBannerData(banners) {
+    // Cache the banners
+    this._bannerCache.top = banners.top || [];
+    this._bannerCache.bottom = banners.bottom || [];
+    this._bannerCache.lastFetch = Date.now();
+    
+    console.log(`✅ Processed ${this._bannerCache.top.length} top banners and ${this._bannerCache.bottom.length} bottom banners`);
+    return true;
+  },
+
+  // Process banner files from direct GitHub API
+  async processBannerFiles(files) {
+    const topBanners = [];
+    const bottomBanners = [];
+    
+    for (const file of files) {
+      if (file.type === 'file' && (file.name.endsWith('.jpg') || file.name.endsWith('.png') || file.name.endsWith('.gif'))) {
+        const bannerData = await this.parseBannerFromFile(file);
+        if (bannerData) {
+          if (bannerData.position === 'top') {
+            topBanners.push(bannerData);
+          } else if (bannerData.position === 'bottom') {
+            bottomBanners.push(bannerData);
+          }
+        }
+      }
+    }
+
+    this._bannerCache.top = topBanners;
+    this._bannerCache.bottom = bottomBanners;
+    this._bannerCache.lastFetch = Date.now();
+
+    console.log(`✅ Fetched ${topBanners.length} top banners and ${bottomBanners.length} bottom banners from GitHub`);
+    return true;
+  },
+
+  // Process banner data from serverless proxy
+  async processBannerData(banners) {
+    const topBanners = [];
+    const bottomBanners = [];
+    
+    for (const banner of banners) {
+      const bannerData = {
+        imageUrl: banner.url,
+        link: 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry',
+        position: banner.name.toLowerCase().includes('top') ? 'top' : 'bottom',
+        isDefault: false
+      };
+      
+      if (bannerData.position === 'top') {
+        topBanners.push(bannerData);
+      } else {
+        bottomBanners.push(bannerData);
+      }
+    }
+
+    this._bannerCache.top = topBanners;
+    this._bannerCache.bottom = bottomBanners;
+    this._bannerCache.lastFetch = Date.now();
+
+    console.log(`✅ Fetched ${topBanners.length} top banners and ${bottomBanners.length} bottom banners via proxy`);
+    return true;
+  },
+
+  // Parse banner information from GitHub file
+  async parseBannerFromFile(file) {
+    try {
+      const imageUrl = file.download_url;
+      const fileName = file.name.toLowerCase();
+      
+      // Determine position from filename
+      let position = 'bottom'; // default
+      if (fileName.includes('top')) {
+        position = 'top';
+      }
+      
+      return {
+        imageUrl: imageUrl,
+        link: 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry',
+        position: position,
+        isDefault: false,
+        filename: file.name,
+        size: file.size
+      };
+    } catch (error) {
+      console.error('Error parsing banner file:', error);
+      return null;
+    }
+  },
+
+  // Rest of the configuration methods...
+  getActiveBanners: function(position) {
+    const banners = position === 'top' ? this.TOP_BANNERS : this.BOTTOM_BANNERS;
+    const now = Date.now();
+    
+    return banners.filter(banner => {
+      // Default banners are always active
+      if (banner.isDefault) return true;
+      
+      // Check if banner has expired based on endDate
+      if (banner.endDate && now > banner.endDate.getTime()) {
+        console.log(`⏰ Filtering out expired banner: ${banner.projectName} (expired ${banner.endDate.toDateString()})`);
+        return false;
+      }
+      
+      // GitHub banners without timing info are always active (old format)
+      if (!banner.startTime && !banner.duration && !banner.endDate) return true;
+      
+      // New format banners are active if not expired
+      if (banner.endDate && !banner.isExpired) return true;
+      
+      // Legacy paid banners with startTime/duration timing
+      if (banner.startTime && banner.duration) {
+        return now >= banner.startTime && now <= (banner.startTime + banner.duration);
+      }
+      
+      // Default to inactive if no valid timing found
+      return false;
+    });
+  },
+
+  getCurrentBanner: function(position) {
+    const activeBanners = this.getActiveBanners(position);
+    if (activeBanners.length === 0) {
+      return this.getDefaultBanner(position);
+    }
+    
+    const rotationIndex = Math.floor(Date.now() / this.PRICING.ROTATION_INTERVAL) % activeBanners.length;
+    return activeBanners[rotationIndex];
+  },
+
+  // Check for expired banners and clean up cache
+  checkExpiredBanners: function() {
+    const now = Date.now();
+    let expiredCount = 0;
+    
+    // Check top banners
+    this._bannerCache.top = this._bannerCache.top.filter(banner => {
+      if (banner.endDate && now > banner.endDate.getTime()) {
+        console.log(`🗑️ Removing expired top banner: ${banner.projectName}`);
+        expiredCount++;
+        return false;
+      }
+      return true;
+    });
+    
+    // Check bottom banners
+    this._bannerCache.bottom = this._bannerCache.bottom.filter(banner => {
+      if (banner.endDate && now > banner.endDate.getTime()) {
+        console.log(`🗑️ Removing expired bottom banner: ${banner.projectName}`);
+        expiredCount++;
+        return false;
+      }
+      return true;
+    });
+    
+    if (expiredCount > 0) {
+      console.log(`⏰ Cleaned up ${expiredCount} expired banners`);
+      // Trigger banner rotation update if banners expired
+      if (window.bannerRotationManager) {
+        window.bannerRotationManager.updateBanners();
+      }
+    }
+    
+    return expiredCount;
+  },
+
+  getDefaultBanner: function(position) {
+    return {
+      imageUrl: `https://via.placeholder.com/728x90/FF6B35/FFFFFF?text=Advertise+Here+-+${position === 'top' ? '$200' : '$100'}/day`,
+      link: 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry&body=Hi, I\'d like to inquire about banner advertising on your platform.',
+      isDefault: true
+    };
+  }
+};
+
+// Export for use
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = BANNER_CONFIG;
+}
+
+// Make globally available
+window.BANNER_CONFIG = BANNER_CONFIG;
+
+// Add test functions for development
+window.refreshBannerCache = function() {
+  BANNER_CONFIG.clearCache();
+  return BANNER_CONFIG.fetchBannersFromGitHub();
+};
+
+window.testBannerRepository = async function() {
+  console.log('🧪 Testing banner repository connection...');
+  try {
+    const result = await BANNER_CONFIG.fetchBannersFromGitHub();
+    console.log('✅ Repository test result:', result);
+    console.log('📊 Cached banners:', {
+      top: BANNER_CONFIG.TOP_BANNERS.length,
+      bottom: BANNER_CONFIG.BOTTOM_BANNERS.length
+    });
+    return result;
+  } catch (error) {
+    console.error('❌ Repository test failed:', error);
+    return false;
+  }
+};
+
+console.log('🎯 Banner configuration loaded:', {
+  topBannerPrice: BANNER_CONFIG.PRICING.TOP_BANNER,
+  bottomBannerPrice: BANNER_CONFIG.PRICING.BOTTOM_BANNER,
+  rotationInterval: BANNER_CONFIG.PRICING.ROTATION_INTERVAL / 1000 / 60 + ' minutes',
+  maxProjectsPerSlot: BANNER_CONFIG.PRICING.MAX_PROJECTS_PER_SLOT,
+  apiEndpoints: BANNER_CONFIG.API_CONFIG.endpoints
+});
