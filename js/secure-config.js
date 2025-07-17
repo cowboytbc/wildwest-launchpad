@@ -64,7 +64,22 @@ class SecureConfig {
       return window.GITHUB_SECRETS.PERSONAL_ACCESS_TOKEN;
     }
     
-    // Method 4: Hardcoded production token (temporary for testing)
+    // Method 4: Check for fallback token function
+    if (typeof window !== 'undefined' && window.getProductionToken) {
+      const fallbackToken = window.getProductionToken();
+      if (fallbackToken) {
+        console.log('✅ Service GitHub token loaded from fallback detection');
+        return fallbackToken;
+      }
+    }
+    
+    // Method 5: Check manual token setting from console
+    if (typeof window !== 'undefined' && window.MANUAL_GITHUB_TOKEN) {
+      console.log('✅ Service GitHub token loaded from manual setting');
+      return window.MANUAL_GITHUB_TOKEN;
+    }
+    
+    // Method 6: Hardcoded production token (temporary for testing)
     // This should be replaced by proper GitHub Secrets injection
     console.log('⚠️ Using fallback token detection...');
     console.log('📍 Available globals:', Object.keys(window).filter(k => k.includes('TOKEN') || k.includes('GITHUB') || k.includes('SECRET')));

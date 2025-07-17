@@ -1574,10 +1574,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('🧪 Setting temporary token for testing...');
     
+    // Set token in multiple places for maximum compatibility
+    window.MANUAL_GITHUB_TOKEN = token;
+    
     // Temporarily override the token
     if (window.PRODUCTION_CONFIG) {
       window.PRODUCTION_CONFIG.token = token;
       window.PRODUCTION_CONFIG.environment = 'manual-test';
+    }
+    
+    // Update ENV_CONFIG if available
+    if (window.ENV_CONFIG && typeof window.ENV_CONFIG.updateFromSecureAPI === 'function') {
+      window.ENV_CONFIG.updateFromSecureAPI({
+        github: { token: token }
+      });
     }
     
     // Force refresh of SECURE_CONFIG
@@ -1586,7 +1596,9 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('🔄 Cleared SECURE_CONFIG cache');
     }
     
-    console.log('✅ Temporary token set. Try running testGitHubAccess() now');
+    console.log('✅ Temporary token set in multiple locations');
+    console.log('🔄 Try running testGitHubAccess() now');
+    console.log('🔄 Or refresh banners with: inspectBottomBanner()');
   };
   
   window.inspectBottomBanner = function() {
