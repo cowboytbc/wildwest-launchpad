@@ -5,12 +5,11 @@
   "scripts": {
     "dev": "http-server . -p 3000",
     "build": "echo 'No build needed for static site'",
-    "deploy": "gh-pages -d ."
+    "deploy": "echo 'Deployment handled by GitHub Actions - push to main branch'"
   },
   "dependencies": {},
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "gh-pages": "^6.0.0"
+    "http-server": "^14.1.1"
   },
   "engines": {
     "node": ">=18.0.0"
