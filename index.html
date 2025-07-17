@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wild West Launchpad</title>
   <link rel="stylesheet" href="css/styles.css">
-  <!-- RPC Configuration -->
-  <script src="js/rpc-config.js"></script>
-  <!-- Environment Configuration (must load before secure-config) -->
+  <!-- Environment Configuration (must load first) -->
   <script src="js/env-config.js"></script>
   <!-- Secure Configuration -->
   <script src="js/token-config.js"></script>
@@ -23,21 +21,23 @@
   </script>
   <!-- Payment Configuration -->
   <script src="js/payment-config.js"></script>
-  <!-- Banner Configuration and Rotation -->
-  <script src="js/banner-config.js"></script>
-  <script src="js/banner-rotation.js"></script>
-  <!-- Banner Deletion Script -->
-  <script src="delete-bottom-banners.js"></script>
-  <!-- Banner Management Tools -->
-  <script src="delete-bottom-banners.js"></script>
-  <!-- Banner Management Tools -->
-  <script src="delete-bottom-banners.js"></script>
+  <!-- Wallet Integration -->
+  <script src="js/wallet.js"></script>
+  <!-- GitHub Actions Uploader (core functionality) -->
+  <script src="js/github-actions-uploader.js"></script>
+  <!-- GitHub Image Uploader (admin panel wrapper) -->
+  <script src="js/github-image-uploader.js"></script>
   <!-- Ethers.js for Web3 functionality -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Solana Web3.js for Solana support -->
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-  <!-- Shared wallet logic -->
-  <script src="js/wallet.js"></script>
+  <!-- RPC Configuration -->
+  <script src="js/rpc-config.js"></script>
+  <!-- Banner Configuration and Rotation -->
+  <script src="js/banner-config.js"></script>
+  <script src="js/banner-rotation.js"></script>
+  <!-- Banner Deletion Script (load only once) -->
+  <script src="delete-bottom-banners.js"></script>
   <!-- Add Google Fonts for Ewert, UnifrakturMaguntia, Creepster -->
   <link href="https://fonts.googleapis.com/css2?family=Ewert&family=UnifrakturMaguntia&family=Creepster&display=swap" rel="stylesheet">
   <style>
@@ -1480,6 +1480,61 @@ document.addEventListener('DOMContentLoaded', function() {
   if (window.SECURE_CONFIG) {
     initializeBannerSystem();
   }
+  
+  // Debug functions for troubleshooting
+  window.debugTokenStatus = function() {
+    console.log('🔍 Token Debug Information:');
+    console.log('  - window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
+    console.log('  - window.PRODUCTION_CONFIG.token exists:', !!(window.PRODUCTION_CONFIG && window.PRODUCTION_CONFIG.token));
+    console.log('  - window.PRODUCTION_CONFIG.environment:', window.PRODUCTION_CONFIG ? window.PRODUCTION_CONFIG.environment : 'N/A');
+    console.log('  - window.SECURE_CONFIG exists:', !!window.SECURE_CONFIG);
+    
+    if (window.SECURE_CONFIG) {
+      const githubConfig = window.SECURE_CONFIG.getGitHubConfig();
+      console.log('  - GitHub config:', githubConfig);
+      console.log('  - Token available in config:', !!githubConfig.token);
+      console.log('  - Token length:', githubConfig.token ? githubConfig.token.length : 0);
+      console.log('  - Repository:', `${githubConfig.owner}/${githubConfig.repo}`);
+    }
+    
+    return {
+      productionConfig: window.PRODUCTION_CONFIG,
+      secureConfig: window.SECURE_CONFIG ? window.SECURE_CONFIG.getGitHubConfig() : null
+    };
+  };
+  
+  window.inspectBottomBanner = function() {
+    console.log('🔍 Inspecting current bottom banner data...');
+    
+    if (!window.BANNER_CONFIG) {
+      console.error('❌ BANNER_CONFIG not available');
+      return;
+    }
+    
+    const bottomBanners = window.BANNER_CONFIG.BOTTOM_BANNERS;
+    const currentBottom = window.BANNER_CONFIG.getCurrentBanner('bottom');
+    
+    console.log('📊 Bottom Banners Cache:', bottomBanners);
+    console.log('📊 Current Bottom Banner:', currentBottom);
+    
+    if (bottomBanners && bottomBanners.length > 0) {
+      console.log('🔍 First bottom banner details:');
+      const firstBanner = bottomBanners[0];
+      console.log('  - filename:', firstBanner.filename);
+      console.log('  - projectName:', firstBanner.projectName);
+      console.log('  - link:', firstBanner.link);
+      console.log('  - linkUrl:', firstBanner.linkUrl);
+      console.log('  - position:', firstBanner.position);
+      console.log('  - isDefault:', firstBanner.isDefault);
+      console.log('  - imageUrl:', firstBanner.imageUrl?.substring(0, 50) + '...');
+    }
+    
+    return {
+      bottomBanners,
+      currentBottom,
+      bannerCount: bottomBanners?.length || 0
+    };
+  };
 });
   </script>
 
