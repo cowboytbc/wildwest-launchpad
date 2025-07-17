@@ -31,6 +31,7 @@ jobs:
       
     - name: Inject GitHub token directly into secure-config.js
       env:
+        WTFDUDE: ${{ secrets.WTFDUDE }}
         PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
@@ -44,11 +45,33 @@ jobs:
         cat js/token-config.js
         echo ""
         
+        # Check if the secrets are available
+        if [ -z "$WTFDUDE" ]; then
+          echo "❌ ERROR: WTFDUDE secret is not set or is empty"
+        else
+          echo "✅ WTFDUDE secret is available (length: ${#WTFDUDE})"
+        fi
+        
+        if [ -z "$PERSONAL_ACCESS_TOKEN" ]; then
+          echo "❌ ERROR: PERSONAL_ACCESS_TOKEN secret is not set or is empty"
+        else
+          echo "✅ PERSONAL_ACCESS_TOKEN secret is available (length: ${#PERSONAL_ACCESS_TOKEN})"
+        fi
+        
+        # Use WTFDUDE as the main token for banner operations
+        GITHUB_TOKEN="${WTFDUDE:-$PERSONAL_ACCESS_TOKEN}"
+        
+        if [ -z "$GITHUB_TOKEN" ]; then
+          echo "❌ ERROR: No GitHub token available"
+          echo "🔧 Please configure WTFDUDE or PERSONAL_ACCESS_TOKEN secret"
+          exit 1
+        fi
+        
         # Create production token config by overwriting the development file
-        cat > js/token-config.js << 'EOF'
+        cat > js/token-config.js << EOF
         // Production token configuration - injected at build time
         window.PRODUCTION_CONFIG = {
-          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}",
+          token: "$GITHUB_TOKEN",
           environment: 'production'
         };
         console.log('🚀 PRODUCTION BUILD - Token injected at build time');

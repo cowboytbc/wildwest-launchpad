@@ -11,8 +11,8 @@ jobs:
       - name: Checkout storage repository
         uses: actions/checkout@v4
         with:
-          repository: cjlovesbeverly/wildwest-banner-storage
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          repository: cowboytbc/wildwest-banner-storage
+          token: ${{ secrets.WTFDUDE }}
           path: storage
 
       - name: Decode and save image
