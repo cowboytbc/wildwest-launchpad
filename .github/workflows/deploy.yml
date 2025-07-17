@@ -35,59 +35,27 @@ jobs:
         SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
       run: |
-        echo "🔧 Injecting production token with simple Node.js approach (using wtfdude token)..."
+        echo "🔧 Directly injecting production token using simple text replacement..."
         
-        # Create a simple, reliable Node.js injection script
-        cat > inject-token.js << 'EOF'
-        const fs = require('fs');
-        const token = process.env.PERSONAL_ACCESS_TOKEN;
+        # Use sed with a more reliable pattern that matches the exact method signature
+        sed -i 's|getServiceTokenDirect() {|getServiceTokenDirect() {\
+    \/\/ Method 0: Production token from GitHub Secrets (injected at build time)\
+    const PRODUCTION_TOKEN = "${{ secrets.PERSONAL_ACCESS_TOKEN }}";\
+    if (PRODUCTION_TOKEN \&\& PRODUCTION_TOKEN.length > 10) {\
+      console.log("✅ Production GitHub token loaded from build injection");\
+      return PRODUCTION_TOKEN;\
+    }|g' js/secure-config.js
         
-        if (!token) {
-          console.error('❌ PERSONAL_ACCESS_TOKEN not found');
-          process.exit(1);
-        }
+        # Add production build marker
+        sed -i "s|console.log('🔍 SecureConfig Debug Info:');|console.log('🔍 SecureConfig Debug Info:');\
+        console.log('🚀 PRODUCTION BUILD - Token injected at build time');|g" js/secure-config.js
         
-        console.log('🔧 Token found, injecting into secure-config.js...');
-        
-        let content = fs.readFileSync('js/secure-config.js', 'utf8');
-        
-        // Find and replace the specific method
-        const oldMethod = 'getServiceTokenDirect() {\n    // Method 1: Runtime environment configuration (your service token)';
-        const newMethod = `getServiceTokenDirect() {
-    // Method 0: Production token (injected at build time)
-    const PRODUCTION_TOKEN = "${token}";
-    if (PRODUCTION_TOKEN && PRODUCTION_TOKEN.length > 10) {
-      console.log("✅ Production GitHub token loaded from build injection");
-      return PRODUCTION_TOKEN;
-    }
-    // Method 1: Runtime environment configuration (your service token)`;
-        
-        if (content.includes(oldMethod)) {
-          content = content.replace(oldMethod, newMethod);
-          console.log('✅ Method injection successful');
-        } else {
-          console.error('❌ Could not find injection point');
-          process.exit(1);
-        }
-        
-        // Add production marker
-        const oldDebug = "console.log('🔍 SecureConfig Debug Info:');";
-        const newDebug = `console.log('🔍 SecureConfig Debug Info:');
-        console.log('🚀 PRODUCTION BUILD - Token injected at build time');`;
-        
-        content = content.replace(oldDebug, newDebug);
-        
-        fs.writeFileSync('js/secure-config.js', content);
-        console.log('✅ Token injection completed');
-        EOF
-        
-        # Execute the injection
-        node inject-token.js
-        
-        # Verify the results
-        echo "🔍 Verification:"
-        grep -n "PRODUCTION_TOKEN" js/secure-config.js || echo "❌ Token not found"
-        grep -n "PRODUCTION BUILD" js/secure-config.js || echo "❌ Marker not found"
+        # Verify the injection worked
+        echo "🔍 Checking for successful injection:"
+        grep -n "PRODUCTION_TOKEN" js/secure-config.js || echo "❌ Token injection failed"
+        grep -n "PRODUCTION BUILD" js/secure-config.js || echo "❌ Marker injection failed"
+        echo "🔍 Method signature after injection:"
+        grep -A 5 "getServiceTokenDirect()" js/secure-config.js | head -6
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
