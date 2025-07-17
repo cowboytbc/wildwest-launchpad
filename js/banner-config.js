@@ -402,9 +402,11 @@ const BANNER_CONFIG = {
       return {
         imageUrl: imageUrl,
         link: decodedUrl,
+        linkUrl: decodedUrl, // Add for compatibility
         position: position,
         isDefault: false,
         filename: file.name,
+        projectName: this.extractProjectNameFromFilename(file.name), // Extract project name
         size: file.size
       };
     } catch (error) {
