@@ -1,6 +1,28 @@
 // Script to delete all bottom banners from GitHub repository
 // This will clear out all banners from the banners/bottom folder
 
+// Debug function to check token availability
+function debugTokenStatus() {
+  console.log('🔍 Token Debug Information:');
+  console.log('  - window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
+  console.log('  - window.PRODUCTION_CONFIG.token exists:', !!(window.PRODUCTION_CONFIG && window.PRODUCTION_CONFIG.token));
+  console.log('  - window.PRODUCTION_CONFIG.environment:', window.PRODUCTION_CONFIG ? window.PRODUCTION_CONFIG.environment : 'N/A');
+  console.log('  - window.SECURE_CONFIG exists:', !!window.SECURE_CONFIG);
+  
+  if (window.SECURE_CONFIG) {
+    const githubConfig = window.SECURE_CONFIG.getGitHubConfig();
+    console.log('  - GitHub config:', githubConfig);
+    console.log('  - Token available in config:', !!githubConfig.token);
+    console.log('  - Token length:', githubConfig.token ? githubConfig.token.length : 0);
+    console.log('  - Repository:', `${githubConfig.owner}/${githubConfig.repo}`);
+  }
+  
+  return {
+    productionConfig: window.PRODUCTION_CONFIG,
+    secureConfig: window.SECURE_CONFIG ? window.SECURE_CONFIG.getGitHubConfig() : null
+  };
+}
+
 async function deleteBottomBanners() {
   console.log('🗑️ Starting deletion of all bottom banners...');
   
@@ -111,8 +133,45 @@ async function deleteBottomBanners() {
   }
 }
 
-// Make function globally available
+// Debug function to inspect actual banner data
+function inspectBottomBanner() {
+  console.log('🔍 Inspecting current bottom banner data...');
+  
+  if (!window.BANNER_CONFIG) {
+    console.error('❌ BANNER_CONFIG not available');
+    return;
+  }
+  
+  const bottomBanners = window.BANNER_CONFIG.BOTTOM_BANNERS;
+  const currentBottom = window.BANNER_CONFIG.getCurrentBanner('bottom');
+  
+  console.log('📊 Bottom Banners Cache:', bottomBanners);
+  console.log('📊 Current Bottom Banner:', currentBottom);
+  
+  if (bottomBanners && bottomBanners.length > 0) {
+    console.log('🔍 First bottom banner details:');
+    const firstBanner = bottomBanners[0];
+    console.log('  - filename:', firstBanner.filename);
+    console.log('  - projectName:', firstBanner.projectName);
+    console.log('  - link:', firstBanner.link);
+    console.log('  - linkUrl:', firstBanner.linkUrl);
+    console.log('  - position:', firstBanner.position);
+    console.log('  - isDefault:', firstBanner.isDefault);
+    console.log('  - imageUrl:', firstBanner.imageUrl?.substring(0, 50) + '...');
+  }
+  
+  return {
+    bottomBanners,
+    currentBottom,
+    bannerCount: bottomBanners?.length || 0
+  };
+}
+
+// Make functions globally available
 window.deleteBottomBanners = deleteBottomBanners;
+window.debugTokenStatus = debugTokenStatus;
+window.inspectBottomBanner = inspectBottomBanner;
 
 console.log('🗑️ Bottom banner deletion script loaded');
 console.log('📝 Usage: deleteBottomBanners()');
+console.log('🔍 Debug: debugTokenStatus()');
