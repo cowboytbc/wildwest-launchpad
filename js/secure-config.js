@@ -11,11 +11,14 @@ class SecureConfig {
     // GitHub-exclusive configuration with service-wide token
     // Users upload banners using the service owner's GitHub token (hidden from them)
     
+    // Get token first to avoid circular dependency
+    const serviceToken = this.getServiceTokenDirect();
+    
     return {
       github: {
         owner: 'cowboytbc',
         repo: 'wildwest-banner-storage', // Your existing storage repository
-        token: this.getServiceToken(), // Service owner's token - hidden from users
+        token: serviceToken, // Service owner's token - hidden from users
         branch: 'main',
         folder: 'banners',
         baseUrl: 'https://cowboytbc.github.io/wildwest-banner-storage' // GitHub Pages URL for direct access
@@ -25,8 +28,8 @@ class SecureConfig {
     };
   }
 
-  // Service token retrieval - Uses owner's token for ALL uploads
-  getServiceToken() {
+  // Direct token retrieval without circular dependency
+  getServiceTokenDirect() {
     // Method 1: Runtime environment configuration (your service token)
     if (typeof window !== 'undefined' && window.ENV_CONFIG && window.ENV_CONFIG.github && window.ENV_CONFIG.github.token) {
       console.log('✅ Service GitHub token loaded - users can upload anonymously');
@@ -42,6 +45,17 @@ class SecureConfig {
     // Service not properly configured
     console.error('❌ Service GitHub token not configured - uploads unavailable');
     return null;
+  }
+
+  // Service token retrieval - Uses owner's token for ALL uploads
+  getServiceToken() {
+    // Return token from loaded config
+    if (this.config && this.config.github && this.config.github.token) {
+      return this.config.github.token;
+    }
+    
+    // Fallback to direct token retrieval
+    return this.getServiceTokenDirect();
   }
 
   // Get GitHub configuration
