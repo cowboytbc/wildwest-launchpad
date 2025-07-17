@@ -156,6 +156,16 @@ class BannerRotationManager {
     const banner = window.BANNER_CONFIG.getCurrentBanner('bottom');
     this.currentBottomBanner = banner;
     
+    // Debug: Log the actual banner data we're getting
+    console.log('🔍 Bottom Banner Retrieved:', {
+      projectName: banner.projectName,
+      link: banner.link,
+      linkUrl: banner.linkUrl,
+      filename: banner.filename,
+      isDefault: banner.isDefault,
+      fullBanner: banner
+    });
+    
     const bottomAdContent = document.querySelector('.bottom-ad .ad-content');
     if (bottomAdContent) {
       if (banner.isDefault) {

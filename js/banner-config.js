@@ -582,6 +582,19 @@ window.debugBanners = function() {
   };
 };
 
+// Debug function to force refresh banners
+window.forceRefreshBanners = function() {
+  console.log('🔄 Force refreshing banners...');
+  BANNER_CONFIG.clearCache();
+  return BANNER_CONFIG.fetchBannersFromGitHub().then(() => {
+    console.log('✅ Banners refreshed, updating rotation system...');
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.updateBanners();
+    }
+    return window.debugBanners();
+  });
+};
+
 console.log('🎯 Banner configuration loaded:', {
   topBannerPrice: BANNER_CONFIG.PRICING.TOP_BANNER,
   bottomBannerPrice: BANNER_CONFIG.PRICING.BOTTOM_BANNER,
