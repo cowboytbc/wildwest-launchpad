@@ -35,22 +35,53 @@ jobs:
         SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
       run: |
-        echo "🔧 Injecting production token directly into secure-config.js..."
+        echo "🔧 Injecting production token directly into secure-config.js using Node.js..."
         
-        # Use sed to inject the production token at the beginning of getServiceTokenDirect method
-        sed -i 's/getServiceTokenDirect() {/getServiceTokenDirect() {\
-    \/\/ Method 0: Production token from GitHub Secrets (injected at build time)\
-    const PRODUCTION_TOKEN = "${{ secrets.PERSONAL_ACCESS_TOKEN }}";\
-    if (PRODUCTION_TOKEN \&\& PRODUCTION_TOKEN.length > 10) {\
-      console.log("✅ Production GitHub token loaded from build injection");\
-      return PRODUCTION_TOKEN;\
-    }/g' js/secure-config.js
+        # Create a Node.js script to inject the token
+        cat > inject-token.js << 'EOF'
+        const fs = require('fs');
+        const token = process.env.PERSONAL_ACCESS_TOKEN;
         
-        # Add production build marker to constructor
-        sed -i 's/console\.log("🔍 SecureConfig Debug Info:");/console.log("🔍 SecureConfig Debug Info:");\
-        console.log("🚀 PRODUCTION BUILD - Token injected at build time");/g' js/secure-config.js
+        if (!token) {
+          console.error('❌ PERSONAL_ACCESS_TOKEN not found in environment');
+          process.exit(1);
+        }
         
-        # Verify the injection worked
+        console.log('🔧 Token found, length:', token.length);
+        
+        let content = fs.readFileSync('js/secure-config.js', 'utf8');
+        
+        // Inject the production token at the beginning of getServiceTokenDirect method
+        const tokenInjection = `
+        // Method 0: Production token from GitHub Secrets (injected at build time)
+        const PRODUCTION_TOKEN = "${token}";
+        if (PRODUCTION_TOKEN && PRODUCTION_TOKEN.length > 10) {
+          console.log("✅ Production GitHub token loaded from build injection");
+          return PRODUCTION_TOKEN;
+        }
+        `;
+        
+        // Replace the method signature with injection
+        content = content.replace(
+          'getServiceTokenDirect() {',
+          `getServiceTokenDirect() {${tokenInjection}`
+        );
+        
+        // Add production build marker
+        content = content.replace(
+          `console.log('🔍 SecureConfig Debug Info:');`,
+          `console.log('🔍 SecureConfig Debug Info:');
+        console.log('🚀 PRODUCTION BUILD - Token injected at build time');`
+        );
+        
+        fs.writeFileSync('js/secure-config.js', content);
+        console.log('✅ Token injection completed successfully');
+        EOF
+        
+        # Run the injection
+        node inject-token.js
+        
+        # Verify the injection
         echo "🔍 Verifying token injection:"
         grep -A 3 "PRODUCTION_TOKEN" js/secure-config.js | head -5
         echo ""
