@@ -9,9 +9,6 @@
   <script src="js/rpc-config.js"></script>
   <!-- Environment Configuration (must load before secure-config) -->
   <script src="js/env-config.js"></script>
-  <!-- Secure Configuration API -->
-  <script src="js/secure-config-loader.js"></script>
-  <script src="js/secure-integration.js"></script>
   <!-- Secure Configuration -->
   <script src="js/token-config.js"></script>
   <script src="js/secure-config.js"></script>
@@ -29,6 +26,12 @@
   <!-- Banner Configuration and Rotation -->
   <script src="js/banner-config.js"></script>
   <script src="js/banner-rotation.js"></script>
+  <!-- Banner Deletion Script -->
+  <script src="delete-bottom-banners.js"></script>
+  <!-- Banner Management Tools -->
+  <script src="delete-bottom-banners.js"></script>
+  <!-- Banner Management Tools -->
+  <script src="delete-bottom-banners.js"></script>
   <!-- Ethers.js for Web3 functionality -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Solana Web3.js for Solana support -->
@@ -2085,6 +2088,37 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('  clearTestBanners() - Remove test banners');
   console.log('  setGitHubToken("token") - Set GitHub token for real banners');
   console.log('  debugGitHubAPI() - Debug GitHub API connection');
+  console.log('  deleteBottomBanners() - Delete all bottom banners');
+  console.log('  forceRefreshBanners() - Force refresh banner cache');
+  
+  // Debug function to inspect current banner data
+  window.inspectBottomBanner = function() {
+    console.log('🔍 Inspecting current bottom banner data...');
+    
+    const currentBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+    console.log('📊 Current Bottom Banner:', currentBanner);
+    
+    const allBottomBanners = window.BANNER_CONFIG.BOTTOM_BANNERS;
+    console.log('📚 All Bottom Banners:', allBottomBanners);
+    
+    if (allBottomBanners.length > 0) {
+      console.log('🔍 First Bottom Banner Details:');
+      const firstBanner = allBottomBanners[0];
+      console.log('  - Project Name:', firstBanner.projectName);
+      console.log('  - Link:', firstBanner.link);
+      console.log('  - Link URL:', firstBanner.linkUrl);
+      console.log('  - Filename:', firstBanner.filename);
+      console.log('  - Is Default:', firstBanner.isDefault);
+      console.log('  - Full Object:', firstBanner);
+    }
+    
+    return {
+      current: currentBanner,
+      all: allBottomBanners
+    };
+  };
+  
+  console.log('  inspectBottomBanner() - Inspect bottom banner data');
   </script>
 </body>
 </html>
