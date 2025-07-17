@@ -1565,6 +1565,30 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 After adding the secret, the next deployment will inject the token into token-config.js');
   };
   
+  window.manualTokenTest = function(token) {
+    if (!token) {
+      console.log('💡 Usage: manualTokenTest("your_github_token_here")');
+      console.log('   This will temporarily set the token for testing');
+      return;
+    }
+    
+    console.log('🧪 Setting temporary token for testing...');
+    
+    // Temporarily override the token
+    if (window.PRODUCTION_CONFIG) {
+      window.PRODUCTION_CONFIG.token = token;
+      window.PRODUCTION_CONFIG.environment = 'manual-test';
+    }
+    
+    // Force refresh of SECURE_CONFIG
+    if (window.SECURE_CONFIG) {
+      window.SECURE_CONFIG.config = null; // Clear cache
+      console.log('🔄 Cleared SECURE_CONFIG cache');
+    }
+    
+    console.log('✅ Temporary token set. Try running testGitHubAccess() now');
+  };
+  
   window.inspectBottomBanner = function() {
     console.log('🔍 Inspecting current bottom banner data...');
     
