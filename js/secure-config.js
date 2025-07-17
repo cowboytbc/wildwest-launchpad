@@ -4,6 +4,14 @@
 class SecureConfig {
   constructor() {
     this.isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    
+    // Debug: Log what's available in the environment
+    console.log('🔍 SecureConfig Debug Info:');
+    console.log('  - Environment:', this.isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
+    console.log('  - window.SECURE_CONFIG exists:', !!window.SECURE_CONFIG);
+    console.log('  - window.ENV_CONFIG exists:', !!window.ENV_CONFIG);
+    console.log('  - Available window properties:', Object.keys(window).filter(k => k.includes('CONFIG') || k.includes('TOKEN')));
+    
     this.config = this.loadConfig();
   }
 
@@ -41,9 +49,22 @@ class SecureConfig {
       console.log('✅ Service GitHub token loaded from environment');
       return process.env.GITHUB_TOKEN;
     }
+    
+    // Method 3: Check for GitHub Secrets injected at build time
+    if (typeof window !== 'undefined' && window.GITHUB_SECRETS && window.GITHUB_SECRETS.PERSONAL_ACCESS_TOKEN) {
+      console.log('✅ Service GitHub token loaded from GitHub Secrets');
+      return window.GITHUB_SECRETS.PERSONAL_ACCESS_TOKEN;
+    }
+    
+    // Method 4: Hardcoded production token (temporary for testing)
+    // This should be replaced by proper GitHub Secrets injection
+    console.log('⚠️ Using fallback token detection...');
+    console.log('📍 Available globals:', Object.keys(window).filter(k => k.includes('TOKEN') || k.includes('GITHUB') || k.includes('SECRET')));
 
     // Service not properly configured
     console.error('❌ Service GitHub token not configured - uploads unavailable');
+    console.error('🔍 Debug: window.ENV_CONFIG exists?', !!window.ENV_CONFIG);
+    console.error('🔍 Debug: process.env exists?', typeof process !== 'undefined' && !!process.env);
     return null;
   }
 
