@@ -42,7 +42,9 @@ jobs:
         class SecureConfig {
           constructor() {
             this.isProduction = true;
+            this.version = 'production-${{ github.run_number }}';
             this.config = this.loadConfig();
+            console.log('🔒 Production SecureConfig v' + this.version + ' loaded with GitHub Secrets');
           }
           
           loadConfig() {
@@ -180,15 +182,21 @@ jobs:
         }
         
         window.SECURE_CONFIG = new SecureConfig();
-        console.log('🔒 Production secure configuration loaded from GitHub Secrets');
+        console.log('� PRODUCTION CONFIG ACTIVE - Banner uploads enabled with GitHub Secrets');
+        console.log('🔑 Token available:', !!(window.SECURE_CONFIG.getServiceToken()));
         EOF
         
         # Replace the dev config with production config
         mv js/secure-config-production.js js/secure-config.js
         
+        # Force cache invalidation by updating timestamp
+        echo "// Production config generated at: $(date)" >> js/secure-config.js
+        
         # Verify the production config was created
         echo "🔍 Production config created and replaced:"
         head -10 js/secure-config.js
+        echo "..."
+        tail -5 js/secure-config.js
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
