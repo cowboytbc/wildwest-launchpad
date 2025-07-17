@@ -146,7 +146,7 @@ class BannerRotationManager {
         };
         topAdContent.addEventListener('click', topAdContent._bannerClickHandler);
         
-        console.log('🖱️ Top banner click handler attached for:', banner.projectName, 'Link:', banner.linkUrl);
+        console.log('🖱️ Top banner click handler attached for:', banner.projectName, 'Link:', banner.link || banner.linkUrl);
       }
     }
   }
@@ -226,60 +226,64 @@ class BannerRotationManager {
         };
         bottomAdContent.addEventListener('click', bottomAdContent._bannerClickHandler);
         
-        console.log('🖱️ Bottom banner click handler attached for:', banner.projectName, 'Link:', banner.linkUrl);
+        console.log('🖱️ Bottom banner click handler attached for:', banner.projectName, 'Link:', banner.link || banner.linkUrl);
       }
     }
   }
 
   // Handle banner clicks
   handleBannerClick(banner, position) {
+    const targetUrl = banner.link || banner.linkUrl; // Support both properties
+    
     console.log('🖱️ Banner clicked:', {
       projectName: banner.projectName,
       position: position,
       isDefault: banner.isDefault,
-      linkUrl: banner.linkUrl
+      targetUrl: targetUrl
     });
     
     if (banner.isDefault) {
       // Do nothing for default banners - no interaction allowed
-      console.log('� Default banner clicked - no action taken');
+      console.log('🎯 Default banner clicked - no action taken');
       return;
     } else {
       // Track click and redirect for paid banners only
-      console.log('🔗 Attempting to redirect to:', banner.linkUrl);
+      console.log('🔗 Attempting to redirect to:', targetUrl);
       this.trackBannerClick(banner, position);
       
       // Validate URL before opening
-      if (banner.linkUrl && banner.linkUrl !== 'undefined') {
-        console.log('✅ Opening URL in new tab:', banner.linkUrl);
+      if (targetUrl && targetUrl !== 'undefined') {
+        console.log('✅ Opening URL in new tab:', targetUrl);
         try {
-          const opened = window.open(banner.linkUrl, '_blank');
+          const opened = window.open(targetUrl, '_blank');
           if (opened) {
             console.log('✅ Window opened successfully');
           } else {
             console.error('❌ Popup blocked or failed to open');
             // Fallback: try to navigate in current tab
-            window.location.href = banner.linkUrl;
+            window.location.href = targetUrl;
           }
         } catch (error) {
           console.error('❌ Error opening URL:', error);
           // Fallback: try to navigate in current tab
-          window.location.href = banner.linkUrl;
+          window.location.href = targetUrl;
         }
       } else {
-        console.error('❌ Invalid banner URL:', banner.linkUrl);
-        alert('Invalid banner URL: ' + banner.linkUrl);
+        console.error('❌ Invalid banner URL:', targetUrl);
+        alert('Invalid banner URL: ' + targetUrl);
       }
     }
   }
 
   // Track banner clicks for analytics
   trackBannerClick(banner, position) {
+    const targetUrl = banner.link || banner.linkUrl; // Support both properties
+    
     console.log('📊 Banner Click Tracked:', {
       banner: banner.projectName,
       position: position,
       timestamp: new Date().toISOString(),
-      url: banner.linkUrl
+      url: targetUrl
     });
     
     // Here you could send analytics to your backend
