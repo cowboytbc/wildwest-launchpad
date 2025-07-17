@@ -36,8 +36,6 @@
   <!-- Banner Configuration and Rotation -->
   <script src="js/banner-config.js"></script>
   <script src="js/banner-rotation.js"></script>
-  <!-- Banner Deletion Script (load only once) -->
-  <script src="delete-bottom-banners.js"></script>
   <!-- Add Google Fonts for Ewert, UnifrakturMaguntia, Creepster -->
   <link href="https://fonts.googleapis.com/css2?family=Ewert&family=UnifrakturMaguntia&family=Creepster&display=swap" rel="stylesheet">
   <style>
@@ -1501,6 +1499,70 @@ document.addEventListener('DOMContentLoaded', function() {
       productionConfig: window.PRODUCTION_CONFIG,
       secureConfig: window.SECURE_CONFIG ? window.SECURE_CONFIG.getGitHubConfig() : null
     };
+  };
+  
+  window.testGitHubAccess = async function() {
+    console.log('🧪 Testing GitHub API access...');
+    
+    if (!window.SECURE_CONFIG) {
+      console.error('❌ SECURE_CONFIG not available');
+      return false;
+    }
+    
+    const githubConfig = window.SECURE_CONFIG.getGitHubConfig();
+    if (!githubConfig.token) {
+      console.error('❌ No GitHub token available for testing');
+      return false;
+    }
+    
+    try {
+      const testUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}`;
+      console.log('🌐 Testing access to:', testUrl);
+      
+      const response = await fetch(testUrl, {
+        headers: {
+          'Authorization': `token ${githubConfig.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      
+      if (response.ok) {
+        const repoData = await response.json();
+        console.log('✅ GitHub API access successful!');
+        console.log('📊 Repository info:', {
+          name: repoData.name,
+          private: repoData.private,
+          permissions: repoData.permissions
+        });
+        return true;
+      } else {
+        console.error('❌ GitHub API access failed:', response.status, response.statusText);
+        if (response.status === 404) {
+          console.error('   Possible causes: Repository not found, token invalid, or insufficient permissions');
+        } else if (response.status === 401) {
+          console.error('   Possible causes: Invalid token or token expired');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ GitHub API test error:', error);
+      return false;
+    }
+  };
+  
+  window.checkGitHubSecret = function() {
+    console.log('🔐 GitHub Secret Configuration Check:');
+    console.log('   The PERSONAL_ACCESS_TOKEN should be configured in:');
+    console.log('   https://github.com/cowboytbc/wildwest-launchpad/settings/secrets/actions');
+    console.log('');
+    console.log('🔧 To fix the token issue:');
+    console.log('   1. Go to GitHub repository settings');
+    console.log('   2. Navigate to Secrets and variables → Actions');
+    console.log('   3. Add a new secret named: PERSONAL_ACCESS_TOKEN');
+    console.log('   4. Value should be a GitHub Personal Access Token with repo permissions');
+    console.log('   5. Push a commit to trigger the workflow and inject the token');
+    console.log('');
+    console.log('🚀 After adding the secret, the next deployment will inject the token into token-config.js');
   };
   
   window.inspectBottomBanner = function() {
