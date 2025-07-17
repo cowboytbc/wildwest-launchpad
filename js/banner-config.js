@@ -446,6 +446,57 @@ window.testBannerRepository = async function() {
   }
 };
 
+// Debug function to test URL decoding
+window.testUrlDecoding = function(filename) {
+  console.log('🧪 Testing URL decoding for filename:', filename);
+  
+  try {
+    const parts = filename.split('_');
+    console.log('📍 Filename parts:', parts);
+    
+    if (parts.length >= 4) {
+      const encodedUrlPart = parts[3].split('.')[0];
+      console.log('📍 Encoded URL part:', encodedUrlPart);
+      
+      const base64Url = encodedUrlPart.replace(/-/g, '+').replace(/_/g, '/');
+      console.log('📍 Restored base64:', base64Url);
+      
+      const paddedBase64 = base64Url + '='.repeat((4 - base64Url.length % 4) % 4);
+      console.log('📍 Padded base64:', paddedBase64);
+      
+      const decodedUrl = atob(paddedBase64);
+      console.log('🔗 Final decoded URL:', decodedUrl);
+      
+      return decodedUrl;
+    } else {
+      console.log('❌ Filename does not have enough parts');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Decoding failed:', error);
+    return null;
+  }
+};
+
+// Debug function to check current banners
+window.debugBanners = function() {
+  console.log('🧪 Current banner data:');
+  console.log('Top banners:', BANNER_CONFIG.TOP_BANNERS);
+  console.log('Bottom banners:', BANNER_CONFIG.BOTTOM_BANNERS);
+  
+  // Test current banners
+  const currentTop = BANNER_CONFIG.getCurrentBanner('top');
+  const currentBottom = BANNER_CONFIG.getCurrentBanner('bottom');
+  
+  console.log('Current top banner:', currentTop);
+  console.log('Current bottom banner:', currentBottom);
+  
+  return {
+    top: currentTop,
+    bottom: currentBottom
+  };
+};
+
 console.log('🎯 Banner configuration loaded:', {
   topBannerPrice: BANNER_CONFIG.PRICING.TOP_BANNER,
   bottomBannerPrice: BANNER_CONFIG.PRICING.BOTTOM_BANNER,
