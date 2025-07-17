@@ -268,9 +268,33 @@ const BANNER_CONFIG = {
         position = 'top';
       }
       
+      // Extract URL from filename format: ProjectName_YYYY-MM-DD_timestamp_encodedUrl.ext
+      let decodedUrl = 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry'; // fallback
+      
+      try {
+        const parts = file.name.split('_');
+        if (parts.length >= 4) {
+          // Get the encoded URL part (4th part, before file extension)
+          const encodedUrlPart = parts[3].split('.')[0]; // Remove file extension
+          
+          // Reverse the URL-safe base64 encoding: restore +, /, and =
+          const base64Url = encodedUrlPart.replace(/-/g, '+').replace(/_/g, '/');
+          
+          // Pad with = if needed for proper base64 decoding
+          const paddedBase64 = base64Url + '='.repeat((4 - base64Url.length % 4) % 4);
+          
+          // Decode from base64
+          decodedUrl = atob(paddedBase64);
+          
+          console.log(`🔗 Decoded banner URL: ${file.name} -> ${decodedUrl}`);
+        }
+      } catch (urlError) {
+        console.warn(`⚠️ Could not decode URL from filename ${file.name}, using fallback:`, urlError);
+      }
+      
       return {
         imageUrl: imageUrl,
-        link: 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry',
+        link: decodedUrl,
         position: position,
         isDefault: false,
         filename: file.name,
