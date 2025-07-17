@@ -69,6 +69,14 @@ jobs:
             return this.config.github.token;
           }
           
+          getServiceToken() {
+            return this.config.github.token;
+          }
+          
+          isServiceReady() {
+            return !!(this.config.github.token);
+          }
+          
           getRPCConfig() {
             return this.config.rpc;
           }
