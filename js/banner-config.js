@@ -217,13 +217,66 @@ const BANNER_CONFIG = {
 
   // Process banner data from serverless API
   processBannerData(banners) {
-    // Cache the banners
-    this._bannerCache.top = banners.top || [];
-    this._bannerCache.bottom = banners.bottom || [];
+    // Process banners and decode URLs
+    const processedBanners = { top: [], bottom: [] };
+    
+    // Process top banners
+    if (banners.top && Array.isArray(banners.top)) {
+      processedBanners.top = banners.top.map(banner => {
+        return this.decodeBannerUrl(banner);
+      });
+    }
+    
+    // Process bottom banners  
+    if (banners.bottom && Array.isArray(banners.bottom)) {
+      processedBanners.bottom = banners.bottom.map(banner => {
+        return this.decodeBannerUrl(banner);
+      });
+    }
+    
+    // Cache the processed banners
+    this._bannerCache.top = processedBanners.top;
+    this._bannerCache.bottom = processedBanners.bottom;
     this._bannerCache.lastFetch = Date.now();
     
     console.log(`✅ Processed ${this._bannerCache.top.length} top banners and ${this._bannerCache.bottom.length} bottom banners`);
     return true;
+  },
+
+  // Helper function to decode banner URL from filename
+  decodeBannerUrl(banner) {
+    if (!banner.filename && !banner.name) return banner;
+    
+    const filename = banner.filename || banner.name;
+    let decodedUrl = 'mailto:ads@wildwestlaunchpad.com?subject=Banner Advertising Inquiry'; // fallback
+    
+    try {
+      const parts = filename.split('_');
+      if (parts.length >= 4) {
+        // Get the encoded URL part (4th part, before file extension)
+        const encodedUrlPart = parts[3].split('.')[0]; // Remove file extension
+        
+        // Reverse the URL-safe base64 encoding: restore +, /, and =
+        const base64Url = encodedUrlPart.replace(/-/g, '+').replace(/_/g, '/');
+        
+        // Pad with = if needed for proper base64 decoding
+        const paddedBase64 = base64Url + '='.repeat((4 - base64Url.length % 4) % 4);
+        
+        // Decode from base64
+        decodedUrl = atob(paddedBase64);
+        
+        console.log(`🔗 Decoded banner URL (decodeBannerUrl): ${filename} -> ${decodedUrl}`);
+      }
+    } catch (urlError) {
+      console.warn(`⚠️ Could not decode URL from filename ${filename}, using fallback:`, urlError);
+    }
+    
+    // Return banner with decoded URL
+    return {
+      ...banner,
+      link: decodedUrl,
+      linkUrl: decodedUrl
+    };
   },
 
   // Process banner files from direct GitHub API
