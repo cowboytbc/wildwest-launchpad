@@ -224,9 +224,32 @@ class SecureConfig {
       
       // Get GitHub configuration
       const githubConfig = this.getGitHubConfig();
-      if (!githubConfig.token) {
-        throw new Error('GitHub token not available from secrets');
+      
+      // Direct token check with enhanced debugging
+      console.log('🔍 Token Debug:');
+      console.log('  - githubConfig.token:', !!githubConfig.token);
+      console.log('  - getServiceToken():', !!this.getServiceToken());
+      console.log('  - config.github.token:', !!this.config?.github?.token);
+      
+      let token = githubConfig.token || this.getServiceToken();
+      
+      // Emergency fallback - check if there's a production config available
+      if (!token && window.SECURE_CONFIG && window.SECURE_CONFIG !== this) {
+        console.log('🔧 Trying production SECURE_CONFIG fallback...');
+        token = window.SECURE_CONFIG.getGitHubToken?.() || window.SECURE_CONFIG.getServiceToken?.();
+        console.log('  - Production config token available:', !!token);
       }
+      
+      if (!token) {
+        console.error('❌ No token found in any source:');
+        console.error('  - window.ENV_CONFIG:', !!window.ENV_CONFIG);
+        console.error('  - window.SECURE_CONFIG:', !!window.SECURE_CONFIG);
+        console.error('  - process.env:', typeof process !== 'undefined');
+        throw new Error('GitHub token not available from any source - check deployment configuration');
+      }
+      
+      console.log('✅ Using GitHub token for upload');
+      githubConfig.token = token; // Set it for this upload
       
       // Determine folder path
       let folderPath = '';
