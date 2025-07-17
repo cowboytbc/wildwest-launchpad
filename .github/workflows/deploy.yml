@@ -187,15 +187,20 @@ jobs:
         EOF
         
         # Replace the dev config with production config
+        rm -f js/secure-config.js
         mv js/secure-config-production.js js/secure-config.js
         
         # Force cache invalidation by updating timestamp
         echo "// Production config generated at: $(date)" >> js/secure-config.js
+        echo "// GitHub Actions Run: ${{ github.run_number }}" >> js/secure-config.js
         
         # Verify the production config was created
         echo "🔍 Production config created and replaced:"
+        echo "📏 File size: $(wc -c < js/secure-config.js) bytes"
+        echo "📄 First 10 lines:"
         head -10 js/secure-config.js
         echo "..."
+        echo "📄 Last 5 lines:"
         tail -5 js/secure-config.js
         
     - name: Setup Pages
