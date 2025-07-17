@@ -10,6 +10,7 @@ class SecureConfig {
     console.log('  - Environment:', this.isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
     console.log('  - window.SECURE_CONFIG exists:', !!window.SECURE_CONFIG);
     console.log('  - window.ENV_CONFIG exists:', !!window.ENV_CONFIG);
+    console.log('  - window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
     console.log('  - Available window properties:', Object.keys(window).filter(k => k.includes('CONFIG') || k.includes('TOKEN')));
     
     this.config = this.loadConfig();
@@ -38,6 +39,12 @@ class SecureConfig {
 
   // Direct token retrieval without circular dependency
   getServiceTokenDirect() {
+    // Method 0: Production token configuration (injected at build time)
+    if (typeof window !== 'undefined' && window.PRODUCTION_CONFIG && window.PRODUCTION_CONFIG.token) {
+      console.log('✅ Production GitHub token loaded from build-time injection');
+      return window.PRODUCTION_CONFIG.token;
+    }
+
     // Method 1: Runtime environment configuration (your service token)
     if (typeof window !== 'undefined' && window.ENV_CONFIG && window.ENV_CONFIG.github && window.ENV_CONFIG.github.token) {
       console.log('✅ Service GitHub token loaded - users can upload anonymously');
