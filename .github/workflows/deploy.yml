@@ -178,6 +178,10 @@ jobs:
         # Replace the dev config with production config
         mv js/secure-config-production.js js/secure-config.js
         
+        # Verify the production config was created
+        echo "🔍 Production config created and replaced:"
+        head -10 js/secure-config.js
+        
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
