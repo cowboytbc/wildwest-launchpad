@@ -36,6 +36,10 @@ jobs:
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
       run: |
         echo "🔧 Creating production token configuration file..."
+        echo "📍 Current working directory: $(pwd)"
+        echo "📁 Files in js/ directory before injection:"
+        ls -la js/
+        echo ""
         
         # Create production token config by overwriting the development file
         cat > js/token-config.js << 'EOF'
@@ -48,12 +52,16 @@ jobs:
         console.log('✅ Production token configuration loaded');
         EOF
         
-        # Verify the token was injected
+        echo "📁 Files in js/ directory after injection:"
+        ls -la js/
+        echo ""
         echo "🔍 Verification - token-config.js contains:"
         cat js/token-config.js
         echo ""
         echo "🔍 Token length check:"
-        grep -o "token: \"[^\"]*\"" js/token-config.js | wc -c
+        grep -o 'token: "[^"]*"' js/token-config.js | wc -c
+        echo "🔍 Environment check:"
+        grep "environment:" js/token-config.js
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
