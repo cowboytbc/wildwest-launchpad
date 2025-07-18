@@ -15,15 +15,14 @@ class WildWestWallet {
   }
 
   async init() {
-    // Check if already connected
-    await this.checkConnection();
-    // Setup UI handlers
+    // Setup UI handlers only - no automatic connection
     this.setupEventHandlers();
   }
 
   async checkConnection() {
     try {
-      // Check for existing EVM wallet connections
+      // Only check connection status - do not automatically connect
+      // This method should only be called when user explicitly wants to reconnect
       const availableWallets = this.detectEVMWallets();
       if (availableWallets.length > 0) {
         const primaryWallet = availableWallets[0];
@@ -37,11 +36,14 @@ class WildWestWallet {
           this.currentChain = network.chainId;
           this.updateWalletUI();
           console.log(`Wallet already connected via ${primaryWallet.name}:`, this.account);
+          return true;
         }
       }
+      return false;
     } catch (error) {
       console.error('Error checking connection:', error);
       this.updateWalletUI();
+      return false;
     }
   }
 
@@ -213,27 +215,7 @@ class WildWestWallet {
       const selectedWallet = availableWallets[0];
       console.log(`Using EVM wallet: ${selectedWallet.name}`);
       
-      // Check if already connected first
-      const existingAccounts = await selectedWallet.provider.request({ method: 'eth_accounts' });
-      if (existingAccounts && existingAccounts.length > 0) {
-        this.account = existingAccounts[0];
-        this.isConnected = true;
-        this.provider = new ethers.providers.Web3Provider(selectedWallet.provider);
-        this.signer = this.provider.getSigner();
-        
-        // Switch to Base network
-        await this.switchToBase(selectedWallet.provider);
-        
-        const network = await this.provider.getNetwork();
-        this.currentChain = network.chainId;
-        
-        this.updateWalletUI();
-        this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
-        localStorage.setItem('wildwest_wallet_connected', 'base');
-        return true;
-      }
-
-      // Request connection
+      // Always request user approval for connection
       const accounts = await selectedWallet.provider.request({ method: 'eth_requestAccounts' });
       
       if (accounts && accounts.length > 0) {
@@ -827,9 +809,28 @@ class WildWestWallet {
     try {
       this.isConnecting = true;
       
-      // If no chain specified, ALWAYS show chain selection first
+      // If no chain specified, check if we're in a specific wallet browser
       if (!chain) {
-        console.log('✅ No chain specified, showing chain selection modal');
+        // Check if we're in Coinbase Wallet browser - default to Base
+        if (window.ethereum?.isCoinbaseWallet || window.ethereum?.selectedProvider?.isCoinbaseWallet) {
+          console.log('🔵 Coinbase Wallet detected, defaulting to Base');
+          return await this.connectBaseWallet();
+        }
+        
+        // Check if we're in another EVM wallet - default to Base
+        if (window.ethereum && !window.solana) {
+          console.log('🔵 EVM wallet detected, defaulting to Base');
+          return await this.connectBaseWallet();
+        }
+        
+        // Check if we're in Solana wallet - default to Solana
+        if (window.solana && !window.ethereum) {
+          console.log('🟣 Solana wallet detected, defaulting to Solana');
+          return await this.connectSolanaWallet();
+        }
+        
+        // If both or neither detected, show chain selection
+        console.log('✅ Multiple or no wallets detected, showing chain selection modal');
         return await this.connectWithChainSelection();
       }
       

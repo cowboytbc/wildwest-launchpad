@@ -893,6 +893,43 @@
         min-width: 0;
         min-height: 0;
       }
+      
+      /* Additional mobile performance optimizations */
+      @media (max-width: 480px) {
+        /* Disable heavy animations on very small screens */
+        body::before {
+          animation: none;
+          background: linear-gradient(180deg, #ff1a1a22 0%, transparent 100%);
+          filter: none;
+        }
+        
+        body::after {
+          animation: none;
+          background: radial-gradient(circle at 50% 50%, #ff1a1a11 0%, transparent 60%);
+          filter: none;
+        }
+        
+        .big-fire-title {
+          animation: flicker 4s infinite alternate;
+        }
+        
+        .fire-banner::before {
+          animation: fireBanner 5s linear infinite;
+        }
+        
+        .connect-btn {
+          animation: none;
+        }
+        
+        .burn-btn {
+          animation: none;
+        }
+        
+        .ember {
+          animation: none;
+        }
+      }
+      
       .fire-animation {
         width: 60px;
         height: 24px;
