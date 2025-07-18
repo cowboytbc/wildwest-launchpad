@@ -221,13 +221,13 @@
     }
     @media (max-width: 400px) {
       .wildwest-title {
-        font-size: 2.2em;
+        font-size: 3.5em;
         margin-top: 0.5em;
         margin-bottom: 0.18em;
         letter-spacing: 0.08em;
       }
       .wildwest-subtitle {
-        font-size: 0.85em;
+        font-size: 1.1em;
         margin-bottom: 0.2em;
       }
       .arcade-emoji { font-size: 1.1em; }
@@ -953,26 +953,14 @@
       
       /* Fix project grid overflow for mobile */
       .all-projects-grid {
-        display: grid;
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 1rem;
         width: 100%;
         max-width: 100%;
         margin: 0 auto 2rem auto;
         padding: 0 0.25rem;
-        box-sizing: border-box;
-      }
-      
-      .all-projects-grid .project-slot {
-        width: 100%;
-        min-width: auto;
-        max-width: 100%;
-        margin: 0;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
         box-sizing: border-box;
       }
       
