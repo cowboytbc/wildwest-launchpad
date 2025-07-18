@@ -1353,9 +1353,9 @@ function showChainSelectionModal() {
         console.log('Base chain selected'); // Debug
         // Use wallet.js for Base connection
         if (window.wildWestWallet) {
-          console.log('wildWestWallet found, attempting connection'); // Debug
+          console.log('wildWestWallet found, attempting Base connection'); // Debug
           try {
-            const connected = await window.wildWestWallet.connectWallet();
+            const connected = await window.wildWestWallet.connectBaseWallet();
             console.log('Base wallet connection result:', connected); // Debug
             if (connected) {
               console.log('Base wallet connected successfully'); // Debug

@@ -682,17 +682,16 @@ class WildWestWallet {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
-          color: white;
-          font-size: 1.4rem;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          font-size: 1.8rem;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .base-icon {
-          background: linear-gradient(135deg, #0052ff, #0041cc);
+          background: rgba(0, 82, 255, 0.1);
           border: 1px solid rgba(0, 82, 255, 0.3);
         }
         .solana-icon {
-          background: linear-gradient(135deg, #9945ff, #7c3aed);
+          background: rgba(153, 69, 255, 0.1);
           border: 1px solid rgba(153, 69, 255, 0.3);
         }
         .chain-info {
@@ -703,13 +702,7 @@ class WildWestWallet {
         }
         .chain-name {
           font-weight: 600;
-          margin-bottom: 0.3rem;
           font-size: 1.1rem;
-        }
-        .chain-desc {
-          font-size: 0.85rem;
-          color: #aaa;
-          line-height: 1.3;
         }
         .chain-arrow {
           color: #00eaff;
@@ -772,18 +765,16 @@ class WildWestWallet {
         </div>
         <div style="padding: 1.5rem;">
           <button class="chain-option" data-chain="base">
-            <div class="chain-icon base-icon">B</div>
+            <div class="chain-icon base-icon">🔵</div>
             <div class="chain-info">
-              <span class="chain-name">Base Network</span>
-              <span class="chain-desc">EVM Compatible • Low fees • MetaMask, Coinbase, Trust Wallet</span>
+              <span class="chain-name">BASE</span>
             </div>
             <div class="chain-arrow">→</div>
           </button>
           <button class="chain-option" data-chain="solana">
-            <div class="chain-icon solana-icon">S</div>
+            <div class="chain-icon solana-icon">🟣</div>
             <div class="chain-info">
-              <span class="chain-name">Solana Network</span>
-              <span class="chain-desc">Fast & Ultra-low fees • Phantom, Solflare, Backpack</span>
+              <span class="chain-name">SOLANA</span>
             </div>
             <div class="chain-arrow">→</div>
           </button>
