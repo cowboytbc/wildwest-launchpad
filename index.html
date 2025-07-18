@@ -1603,11 +1603,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const disconnectBtn = document.getElementById('disconnectBtn');
     const walletDropdownMenu = document.getElementById('walletDropdownMenu');
     
+    console.log('🔍 Wallet initialization debug:');
+    console.log('  - connectBtn found:', !!connectBtn);
+    console.log('  - disconnectBtn found:', !!disconnectBtn);
+    console.log('  - walletDropdownMenu found:', !!walletDropdownMenu);
+    console.log('  - window.wildWestWallet exists:', !!window.wildWestWallet);
+    
     if (connectBtn && window.wildWestWallet) {
+      console.log('✅ Setting up wallet connection button...');
+      
       // Setup wallet connection button
       connectBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         e.stopPropagation();
+        
+        console.log('🔘 Wallet button clicked! Current state:', {
+          isConnected: window.wildWestWallet.isConnected,
+          account: window.wildWestWallet.account
+        });
         
         // If already connected, show dropdown menu
         if (window.wildWestWallet.isConnected) {
@@ -1616,9 +1629,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           // Show chain selection modal - this will call connectWithChainSelection
           try {
+            console.log('🔗 Attempting to connect wallet...');
             const connected = await window.wildWestWallet.connectWallet();
             if (connected) {
               console.log('✅ Wallet connected successfully!');
+            } else {
+              console.log('❌ Wallet connection failed or cancelled');
             }
           } catch (error) {
             console.error('❌ Wallet connection failed:', error);
@@ -1629,6 +1645,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Setup disconnect button
       if (disconnectBtn) {
         disconnectBtn.addEventListener('click', function() {
+          console.log('🔌 Disconnecting wallet...');
           window.wildWestWallet.disconnectWallet();
           walletDropdownMenu.style.display = 'none';
         });
@@ -1643,22 +1660,36 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Check for existing connection on page load
       if (window.wildWestWallet.isConnected) {
+        console.log('🔗 Existing wallet connection detected');
         window.wildWestWallet.updateWalletUI();
       }
+    } else {
+      console.log('❌ Wallet initialization failed - missing elements or wildWestWallet');
     }
   }
   
   // Initialize wallet connection when wallet.js is ready
   if (window.wildWestWallet) {
+    console.log('🚀 wildWestWallet already available - initializing immediately');
     initializeWalletConnection();
   } else {
+    console.log('⏳ Waiting for wildWestWallet to load...');
     // Wait for wallet.js to load
     const checkWalletInterval = setInterval(() => {
       if (window.wildWestWallet) {
+        console.log('🚀 wildWestWallet now available - initializing');
         clearInterval(checkWalletInterval);
         initializeWalletConnection();
       }
     }, 100);
+    
+    // Add timeout to prevent infinite waiting
+    setTimeout(() => {
+      if (!window.wildWestWallet) {
+        console.error('❌ wildWestWallet failed to load after 10 seconds');
+        clearInterval(checkWalletInterval);
+      }
+    }, 10000);
   }
   
   // Initialize Secure Configuration System
