@@ -560,29 +560,38 @@
     
     @media (max-width: 768px) {
       .project-grid {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
         width: 100%;
-        padding: 0;
+        max-width: 350px;
         margin: 0 auto;
+        padding: 0;
       }
       
       .project-slot {
-        width: 300px;
-        min-width: 300px;
-        max-width: 300px;
-        margin: 0 auto;
+        width: 100%;
+        min-width: auto;
+        max-width: 100%;
+        margin: 0;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
       }
       
       .trending-title {
         font-size: 1.3rem;
         margin-bottom: 2rem;
+        text-align: center;
       }
       
       .trending-category {
         margin-bottom: 3rem;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto 3rem auto;
       }
       
       .trending-section {
@@ -596,6 +605,31 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .project-grid {
+        max-width: 300px;
+        gap: 0.8rem;
+      }
+      
+      .project-slot {
+        padding: 0.8rem;
+      }
+      
+      .trending-title {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .trending-category {
+        margin-bottom: 2rem;
+        max-width: 320px;
+      }
+      
+      .trending-section {
+        padding: 1.5rem 0.5rem;
       }
     }
     
@@ -734,8 +768,8 @@
     
     @media (max-width: 768px) {
       .search-container {
-        max-width: 300px;
-        margin: 0 auto 3rem auto;
+        max-width: 350px;
+        margin: 0 auto 2rem auto;
       }
       
       .search-bar {
@@ -749,20 +783,55 @@
       }
       
       .all-projects-grid {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
         width: 100%;
-        margin: 0 auto 3rem auto;
+        max-width: 350px;
+        margin: 0 auto 2rem auto;
       }
       
       .all-projects-grid .project-slot {
-        width: 300px;
-        min-width: 300px;
-        max-width: 300px;
-        margin: 0 auto;
+        width: 100%;
+        min-width: auto;
+        max-width: 100%;
+        margin: 0;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
       }
+      
+      .load-more-btn {
+        max-width: 280px;
+        width: 100%;
+        margin: 0 auto;
+        display: block;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .search-container {
+        max-width: 300px;
+        margin: 0 auto 1.5rem auto;
+      }
+      
+      .all-projects-grid {
+        max-width: 300px;
+        gap: 0.8rem;
+      }
+      
+      .all-projects-grid .project-slot {
+        padding: 0.8rem;
+      }
+      
+      .load-more-btn {
+        max-width: 260px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+      }
+    }
       
       .load-more-btn {
         width: 300px;
@@ -794,7 +863,62 @@
       }
     }
     
-    /* Ad Banner Styles */
+    /* Mobile-first responsive improvements */
+    @media (max-width: 768px) {
+      body {
+        font-size: 14px;
+      }
+      
+      .header {
+        padding: 1rem 0.5rem;
+      }
+      
+      /* Ensure all sections fit well on mobile */
+      section {
+        padding: 1.5rem 0.5rem;
+      }
+      
+      /* Improve mobile scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Prevent horizontal scrolling */
+      body {
+        overflow-x: hidden;
+      }
+      
+      /* Ensure all content respects mobile viewport */
+      * {
+        box-sizing: border-box;
+      }
+      
+      /* Improve tap targets for mobile */
+      button, .wallet-connect-btn, .load-more-btn, .advertise-btn {
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        font-size: 13px;
+      }
+      
+      .header {
+        padding: 0.8rem 0.25rem;
+      }
+      
+      section {
+        padding: 1rem 0.25rem;
+      }
+      
+      /* Smaller margins for very small screens */
+      .trending-section,
+      .explore-section {
+        margin: 0.5rem 0;
+      }
+    }
     .ad-banner {
       padding: 2rem 1rem;
       position: relative;
@@ -973,39 +1097,71 @@
     
     @media (max-width: 768px) {
       .ad-banner {
-        padding: 1.5rem 1rem;
-      }
-      
-      .ad-content {
-        height: 300px;
-        padding: 1.5rem;
-        width: 100%;
-        max-width: 320px;
-        margin: 0 auto;
-      }
-      
-      .top-ad .ad-text,
-      .bottom-ad .ad-text {
-        font-size: 1.4rem;
-        letter-spacing: 1px;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .ad-banner {
         padding: 1rem 0.5rem;
       }
       
       .ad-content {
-        height: 250px;
+        height: 200px;
         padding: 1rem;
-        max-width: 300px;
+        width: calc(100vw - 2rem);
+        max-width: 350px;
+        margin: 0 auto;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      
+      .ad-content img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
       }
       
       .top-ad .ad-text,
       .bottom-ad .ad-text {
         font-size: 1.2rem;
+        letter-spacing: 1px;
+        line-height: 1.4;
+      }
+      
+      .advertise-btn {
+        padding: 12px 24px !important;
+        font-size: 0.9rem !important;
+        margin: 1rem auto !important;
+        max-width: 280px;
+        width: 100%;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .ad-banner {
+        padding: 0.8rem 0.25rem;
+      }
+      
+      .ad-content {
+        height: 160px;
+        width: calc(100vw - 1rem);
+        max-width: 320px;
+        padding: 0.8rem;
+      }
+      
+      .ad-content img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .top-ad .ad-text,
+      .bottom-ad .ad-text {
+        font-size: 1rem;
         letter-spacing: 0.5px;
+      }
+      
+      .advertise-btn {
+        padding: 10px 20px !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 1px !important;
+        max-width: 260px;
       }
     }
     
