@@ -365,6 +365,23 @@ class WildWestWallet {
 
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
+    // Add CSS animations if not already added
+    if (!document.getElementById('mobile-wallet-animations')) {
+      const style = document.createElement('style');
+      style.id = 'mobile-wallet-animations';
+      style.textContent = `
+        @keyframes slideUp {
+          from { transform: translateY(30px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
     const modal = document.createElement('div');
     modal.style.cssText = `
       position: fixed;
@@ -423,19 +440,6 @@ class WildWestWallet {
                  transition: all 0.2s;
                  font-family: inherit;
                ">
-              <div style="
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(135deg, #f6851b, #e2761b);
-                border-radius: 10px;
-                margin-right: 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                color: white;
-                font-size: 1.3rem;
-              ">M</div>
               <div style="text-align: left; flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 0.2rem;">MetaMask</div>
                 <div style="font-size: 0.8rem; color: #aaa;">Most popular Web3 wallet</div>
@@ -455,19 +459,6 @@ class WildWestWallet {
                  transition: all 0.2s;
                  font-family: inherit;
                ">
-              <div style="
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(135deg, #0052ff, #0041cc);
-                border-radius: 10px;
-                margin-right: 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                color: white;
-                font-size: 1.3rem;
-              ">C</div>
               <div style="text-align: left; flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 0.2rem;">Coinbase Wallet</div>
                 <div style="font-size: 0.8rem; color: #aaa;">Easy to use & secure</div>
@@ -487,19 +478,6 @@ class WildWestWallet {
                  transition: all 0.2s;
                  font-family: inherit;
                ">
-              <div style="
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(135deg, #3375bb, #2e68a8);
-                border-radius: 10px;
-                margin-right: 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                color: white;
-                font-size: 1.3rem;
-              ">T</div>
               <div style="text-align: left; flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 0.2rem;">Trust Wallet</div>
                 <div style="font-size: 0.8rem; color: #aaa;">Multi-chain support</div>
@@ -519,19 +497,6 @@ class WildWestWallet {
                  transition: all 0.2s;
                  font-family: inherit;
                ">
-              <div style="
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(135deg, #ab9ff2, #9945ff);
-                border-radius: 10px;
-                margin-right: 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                color: white;
-                font-size: 1.3rem;
-              ">P</div>
               <div style="text-align: left; flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 0.2rem;">Phantom</div>
                 <div style="font-size: 0.8rem; color: #aaa;">Leading Solana wallet</div>
@@ -551,19 +516,6 @@ class WildWestWallet {
                  transition: all 0.2s;
                  font-family: inherit;
                ">
-              <div style="
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(135deg, #fc8c03, #f57c00);
-                border-radius: 10px;
-                margin-right: 1rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                color: white;
-                font-size: 1.3rem;
-              ">S</div>
               <div style="text-align: left; flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 0.2rem;">Solflare</div>
                 <div style="font-size: 0.8rem; color: #aaa;">Feature-rich & secure</div>
@@ -588,16 +540,38 @@ class WildWestWallet {
     
     document.body.appendChild(modal);
     
+    // Prevent background scrolling while modal is open
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    
+    // Auto-scroll to ensure modal is visible and add focus
+    setTimeout(() => {
+      // Scroll to top of page to ensure modal is visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Add a subtle pulse animation to draw attention
+      const modalContent = modal.querySelector('div');
+      if (modalContent) {
+        modalContent.style.animation = 'slideUp 0.3s ease-out, pulse 2s ease-in-out';
+      }
+    }, 100);
+    
+    // Function to close modal and restore scrolling
+    const closeModal = () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.removeChild(modal);
+    };
+    
     // Add close button functionality
     const closeBtn = modal.querySelector('button');
-    closeBtn.addEventListener('click', () => {
-      document.body.removeChild(modal);
-    });
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
     
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
-        document.body.removeChild(modal);
+        closeModal();
       }
     });
   }
