@@ -1597,6 +1597,70 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Note: Ad banner click functionality is now handled by banner-rotation.js
   
+  // Initialize Wallet Connection System
+  function initializeWalletConnection() {
+    const connectBtn = document.getElementById('connectWalletBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const walletDropdownMenu = document.getElementById('walletDropdownMenu');
+    
+    if (connectBtn && window.wildWestWallet) {
+      // Setup wallet connection button
+      connectBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // If already connected, show dropdown menu
+        if (window.wildWestWallet.isConnected) {
+          walletDropdownMenu.style.display = 
+            walletDropdownMenu.style.display === 'none' ? 'flex' : 'none';
+        } else {
+          // Show chain selection modal - this will call connectWithChainSelection
+          try {
+            const connected = await window.wildWestWallet.connectWallet();
+            if (connected) {
+              console.log('✅ Wallet connected successfully!');
+            }
+          } catch (error) {
+            console.error('❌ Wallet connection failed:', error);
+          }
+        }
+      });
+      
+      // Setup disconnect button
+      if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', function() {
+          window.wildWestWallet.disconnectWallet();
+          walletDropdownMenu.style.display = 'none';
+        });
+      }
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!connectBtn.contains(e.target) && !walletDropdownMenu.contains(e.target)) {
+          walletDropdownMenu.style.display = 'none';
+        }
+      });
+      
+      // Check for existing connection on page load
+      if (window.wildWestWallet.isConnected) {
+        window.wildWestWallet.updateWalletUI();
+      }
+    }
+  }
+  
+  // Initialize wallet connection when wallet.js is ready
+  if (window.wildWestWallet) {
+    initializeWalletConnection();
+  } else {
+    // Wait for wallet.js to load
+    const checkWalletInterval = setInterval(() => {
+      if (window.wildWestWallet) {
+        clearInterval(checkWalletInterval);
+        initializeWalletConnection();
+      }
+    }, 100);
+  }
+  
   // Initialize Secure Configuration System
   console.log('🔒 Initializing secure configuration...');
   if (window.SECURE_CONFIG) {

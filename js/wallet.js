@@ -493,14 +493,16 @@ class WildWestWallet {
         border-radius: 20px;
         padding: 2rem;
         max-width: 400px;
-        width: 100%;
+        width: 90vw;
         text-align: center;
         color: white;
         font-family: Arial, sans-serif;
+        box-sizing: border-box;
+        margin: 1rem;
       ">
-        <h2 style="color: #9945ff; margin-bottom: 1rem;">📱 Solana Mobile Wallet Required</h2>
+        <h2 style="color: #9945ff; margin-bottom: 1rem; font-size: 1.25rem;">📱 Solana Mobile Wallet Required</h2>
         
-        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.9rem;">
+        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.4;">
           To make SOL payments on mobile, open this page in a Solana wallet app browser:
         </p>
         
@@ -515,9 +517,71 @@ class WildWestWallet {
                border-radius: 10px;
                text-decoration: none;
                color: white;
+               transition: all 0.2s;
+               box-sizing: border-box;
              ">
             <span style="font-size: 1.5rem; margin-right: 1rem;">👻</span>
-            <div style="text-align: left;">
+            <div style="text-align: left; flex: 1;">
+              <div style="font-weight: 600;">Phantom</div>
+              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Phantom</div>
+            </div>
+          </a>
+          
+          <a href="solflare://v1/browse/${encodeURIComponent(window.location.href)}" 
+             style="
+               display: flex;
+               align-items: center;
+               padding: 1rem;
+               background: rgba(154, 69, 255, 0.1);
+               border: 1px solid rgba(154, 69, 255, 0.3);
+               border-radius: 10px;
+               text-decoration: none;
+               color: white;
+               transition: all 0.2s;
+               box-sizing: border-box;
+             ">
+            <span style="font-size: 1.5rem; margin-right: 1rem;">🌟</span>
+            <div style="text-align: left; flex: 1;">
+              <div style="font-weight: 600;">Solflare</div>
+              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Solflare</div>
+            </div>
+          </a>
+          
+          <a href="https://phantom.app/ul/browse/${encodeURIComponent(window.location.origin + window.location.pathname)}?ref=homepage" 
+             style="
+               display: flex;
+               align-items: center;
+               padding: 1rem;
+               background: rgba(154, 69, 255, 0.1);
+               border: 1px solid rgba(154, 69, 255, 0.3);
+               border-radius: 10px;
+               text-decoration: none;
+               color: white;
+               transition: all 0.2s;
+               box-sizing: border-box;
+             ">
+            <span style="font-size: 1.5rem; margin-right: 1rem;">🔗</span>
+            <div style="text-align: left; flex: 1;">
+              <div style="font-weight: 600;">Universal Link</div>
+              <div style="font-size: 0.8rem; color: #aaa;">Alternative Phantom link</div>
+            </div>
+          </a>
+        </div>
+        
+        <button onclick="this.parentElement.parentElement.remove()" style="
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border: 1px solid #666;
+          padding: 10px 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: all 0.2s;
+          width: 100%;
+          box-sizing: border-box;
+        ">Close</button>
+      </div>
+    `;
               <div style="font-weight: 600;">Phantom</div>
               <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Phantom</div>
             </div>
@@ -651,6 +715,7 @@ class WildWestWallet {
         max-height: 80vh;
         overflow: hidden;
         animation: slideUp 0.3s ease-out;
+        margin: 1rem;
       ">
         <div class="modal-header" style="
           padding: 1.5rem;
@@ -688,6 +753,10 @@ class WildWestWallet {
             transition: all 0.2s;
             color: white;
             text-decoration: none;
+            font-size: 1rem;
+            font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
           ">
             <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🔵</div>
             <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
@@ -707,6 +776,10 @@ class WildWestWallet {
             transition: all 0.2s;
             color: white;
             text-decoration: none;
+            font-size: 1rem;
+            font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
           ">
             <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🟣</div>
             <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">

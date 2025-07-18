@@ -282,7 +282,7 @@ body {
   }
   
   /* Improve wallet connect button for mobile */
-  .wallet-connect-btn {
+  .wallet-connect-btn, .connect-btn, .switch-btn {
     padding: 12px 16px !important;
     font-size: 0.9rem !important;
     min-width: 140px;
@@ -292,7 +292,7 @@ body {
   }
   
   /* Improve wallet dropdown for mobile */
-  .wallet-dropdown-content {
+  .wallet-dropdown-content, .wallet-dropdown-menu {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
@@ -306,7 +306,7 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
   }
   
-  .wallet-dropdown-content::before {
+  .wallet-dropdown-content::before, .wallet-dropdown-menu::before {
     content: '';
     position: fixed;
     top: 0;
@@ -336,6 +336,51 @@ body {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
+  
+  /* Chain selection modal improvements for mobile */
+  .chain-selection-modal {
+    width: 90vw !important;
+    max-width: 320px !important;
+    border-radius: 12px !important;
+  }
+  
+  .chain-option {
+    padding: 16px 20px !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .chain-option:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 234, 255, 0.3);
+  }
+  
+  /* Wallet menu improvements for mobile */
+  .wallet-menu {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90vw !important;
+    max-width: 320px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    z-index: 10000 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  .wallet-menu::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
 }
 
 @media (max-width: 480px) {
@@ -351,13 +396,13 @@ body {
     font-size: 0.9rem !important;
   }
   
-  .wallet-connect-btn {
+  .wallet-connect-btn, .connect-btn, .switch-btn {
     padding: 10px 12px !important;
     font-size: 0.8rem !important;
     min-width: 120px;
   }
   
-  .wallet-dropdown-content {
+  .wallet-dropdown-content, .wallet-dropdown-menu {
     width: 95vw !important;
     max-width: 280px !important;
   }
@@ -366,5 +411,20 @@ body {
     padding: 6px 10px !important;
     font-size: 0.8rem !important;
     max-width: 120px !important;
+  }
+  
+  .chain-selection-modal {
+    width: 95vw !important;
+    max-width: 280px !important;
+  }
+  
+  .chain-option {
+    padding: 12px 16px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .wallet-menu {
+    width: 95vw !important;
+    max-width: 280px !important;
   }
 }
