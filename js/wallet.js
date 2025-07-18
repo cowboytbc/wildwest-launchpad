@@ -582,58 +582,6 @@ class WildWestWallet {
         ">Close</button>
       </div>
     `;
-              <div style="font-weight: 600;">Phantom</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Phantom</div>
-            </div>
-          </a>
-          
-          <a href="solflare://v1/browse/${encodeURIComponent(window.location.href)}" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(154, 69, 255, 0.1);
-               border: 1px solid rgba(154, 69, 255, 0.3);
-               border-radius: 10px;
-               text-decoration: none;
-               color: white;
-             ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🌟</span>
-            <div style="text-align: left;">
-              <div style="font-weight: 600;">Solflare</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Solflare</div>
-            </div>
-          </a>
-          
-          <a href="https://phantom.app/ul/browse/${encodeURIComponent(window.location.origin + window.location.pathname)}?ref=homepage" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(154, 69, 255, 0.1);
-               border: 1px solid rgba(154, 69, 255, 0.3);
-               border-radius: 10px;
-               text-decoration: none;
-               color: white;
-             ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🔗</span>
-            <div style="text-align: left;">
-              <div style="font-weight: 600;">Universal Link</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Alternative Phantom link</div>
-            </div>
-          </a>
-        </div>
-        
-        <button onclick="this.parentElement.parentElement.remove()" style="
-          background: rgba(255,255,255,0.1);
-          color: #fff;
-          border: 1px solid #666;
-          padding: 10px 20px;
-          border-radius: 10px;
-          cursor: pointer;
-        ">Close</button>
-      </div>
-    `;
     
     document.body.appendChild(modal);
   }
