@@ -71,12 +71,41 @@
       color: #ffffff;
       margin-top: -0.3em;
       margin-bottom: 0.5em;
-      text-shadow: 0 0 20px #00eaff, 0 0 10px #00fff7, 0 0 5px #fff, 0 0 2px #000;
-      filter: drop-shadow(0 0 12px #00eaff);
+      text-shadow: 0 0 8px #00eaff, 0 0 4px #00fff7, 0 0 2px #fff;
+      filter: drop-shadow(0 0 6px #00eaff);
       background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+    
+    /* Mobile title and subtitle improvements */
+    @media (max-width: 768px) {
+      .wildwest-title {
+        font-size: 3.5em;
+        letter-spacing: 0.1em;
+      }
+      
+      .wildwest-subtitle {
+        font-size: 1.1em;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 6px #00eaff, 0 0 3px #00fff7, 0 0 1px #fff;
+        filter: drop-shadow(0 0 4px #00eaff);
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .wildwest-title {
+        font-size: 2.8em;
+        letter-spacing: 0.08em;
+      }
+      
+      .wildwest-subtitle {
+        font-size: 1em;
+        letter-spacing: 0.08em;
+        text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7;
+        filter: drop-shadow(0 0 3px #00eaff);
+      }
     }
     @keyframes wildwestBlueGlow {
       0% { background-position: 0% 50%; filter: drop-shadow(0 0 32px #00eaff) drop-shadow(0 0 8px #00fff7); }
@@ -808,11 +837,11 @@
       }
       
       .search-container {
-        padding: 0 0.25rem;
+        padding: 0 0.125rem;
       }
       
       .all-projects-grid {
-        padding: 0 0.25rem;
+        padding: 0 0.125rem;
         gap: 0.8rem;
       }
       
@@ -821,18 +850,18 @@
       }
       
       .project-grid {
-        padding: 0 0.25rem;
+        padding: 0 0.125rem;
       }
       
       .load-more-btn {
-        width: calc(100% - 1rem);
-        margin: 0 0.5rem;
+        width: calc(100% - 0.5rem);
+        margin: 0 0.25rem;
         padding: 12px 20px;
         font-size: 0.9rem;
       }
       
       .explore-container {
-        padding: 0 0.25rem;
+        padding: 0 0.125rem;
       }
     }
       
@@ -880,7 +909,7 @@
       /* Fix sections to prevent horizontal overflow */
       .trending-section,
       .explore-section {
-        padding: 1.5rem 0.5rem;
+        padding: 1.5rem 0.25rem;
         width: 100%;
         box-sizing: border-box;
       }
@@ -890,7 +919,7 @@
         width: 100%;
         max-width: 100%;
         margin: 0 auto;
-        padding: 0 0.5rem;
+        padding: 0 0.25rem;
         box-sizing: border-box;
       }
       
@@ -904,7 +933,7 @@
       .main-nav ul {
         flex-direction: column;
         gap: 0.5rem;
-        padding: 0.5rem;
+        padding: 0.25rem;
         width: 100%;
         box-sizing: border-box;
       }
@@ -917,7 +946,7 @@
         width: 100%;
         max-width: 100%;
         margin: 0 auto 2rem auto;
-        padding: 0 0.5rem;
+        padding: 0 0.25rem;
         box-sizing: border-box;
       }
       
@@ -942,7 +971,7 @@
         width: 100%;
         max-width: 100%;
         margin: 0 auto;
-        padding: 0 0.5rem;
+        padding: 0 0.25rem;
         box-sizing: border-box;
       }
       
@@ -964,15 +993,15 @@
         width: 100%;
         max-width: 100%;
         margin: 0 auto 1.5rem auto;
-        padding: 0 0.5rem;
+        padding: 0 0.25rem;
         box-sizing: border-box;
       }
       
       /* Fix load more button */
       .load-more-btn {
         max-width: 100%;
-        width: calc(100% - 2rem);
-        margin: 0 1rem;
+        width: calc(100% - 1rem);
+        margin: 0 0.5rem;
         display: block;
         box-sizing: border-box;
       }
@@ -1187,16 +1216,19 @@
     @media (max-width: 768px) {
       .ad-banner {
         padding: 1rem 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
       }
       
       .ad-content {
         height: 200px;
         padding: 1rem;
-        width: calc(100vw - 2rem);
-        max-width: 350px;
+        width: 100%;
+        max-width: 100%;
         margin: 0 auto;
         border-radius: 8px;
         overflow: hidden;
+        box-sizing: border-box;
       }
       
       .ad-content img {
@@ -1218,20 +1250,24 @@
         font-size: 0.9rem !important;
         margin: 1rem auto !important;
         max-width: 280px;
-        width: 100%;
+        width: calc(100% - 2rem);
+        box-sizing: border-box;
       }
     }
     
     @media (max-width: 480px) {
       .ad-banner {
         padding: 0.8rem 0.25rem;
+        width: 100%;
+        box-sizing: border-box;
       }
       
       .ad-content {
         height: 160px;
-        width: calc(100vw - 1rem);
-        max-width: 320px;
+        width: 100%;
+        max-width: 100%;
         padding: 0.8rem;
+        box-sizing: border-box;
       }
       
       .ad-content img {
