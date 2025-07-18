@@ -129,9 +129,9 @@ class WildWestWallet {
       
       if (availableWallets.length === 0) {
         if (isMobile) {
-          // Show mobile Solana wallet modal
-          this.showMobileSolanaWalletOptions();
-          throw new Error('No wallet detected. Please open this page in Phantom app, Solflare app, or another Solana wallet browser.');
+          // Show wallet installation guide
+          this.showWalletInstallationGuide('solana');
+          return false;
         } else {
           throw new Error('No Solana wallet found. Please install Phantom, Solflare, or another Solana wallet.');
         }
@@ -140,7 +140,7 @@ class WildWestWallet {
       // Use the first available wallet (priority order)
       const selectedWallet = availableWallets[0];
       const wallet = selectedWallet.provider;
-      console.log(`🟣 Using Solana wallet: ${selectedWallet.name} (Mobile: ${selectedWallet.mobile})`);
+      console.log(`Using Solana wallet: ${selectedWallet.name}`);
 
       // Ensure wallet has connect method
       if (!wallet.connect || typeof wallet.connect !== 'function') {
@@ -183,7 +183,7 @@ class WildWestWallet {
       this.provider = wallet;
       
       this.updateWalletUI();
-      this.showStatus(`Solana wallet connected successfully via ${selectedWallet.name}!`, 'success');
+      this.showStatus(`Solana wallet connected via ${selectedWallet.name}`, 'success');
       localStorage.setItem('wildwest_wallet_connected', 'solana');
       return true;
     } catch (error) {
@@ -201,8 +201,9 @@ class WildWestWallet {
       
       if (availableWallets.length === 0) {
         if (isMobile) {
-          // Mobile-specific error with wallet suggestions
-          throw new Error('No wallet detected. Please open this page in MetaMask app, Coinbase Wallet app, or Trust Wallet browser.');
+          // On mobile, show wallet installation guide
+          this.showWalletInstallationGuide('base');
+          return false;
         } else {
           throw new Error('No EVM wallet detected. Please install MetaMask, Coinbase Wallet, or another Web3 wallet.');
         }
@@ -210,7 +211,7 @@ class WildWestWallet {
       
       // Use the first available wallet (priority order: MetaMask, Coinbase, others)
       const selectedWallet = availableWallets[0];
-      console.log(`🔵 Using EVM wallet: ${selectedWallet.name} (Mobile: ${selectedWallet.mobile})`);
+      console.log(`Using EVM wallet: ${selectedWallet.name}`);
       
       // Check if already connected first
       const existingAccounts = await selectedWallet.provider.request({ method: 'eth_accounts' });
@@ -227,7 +228,7 @@ class WildWestWallet {
         this.currentChain = network.chainId;
         
         this.updateWalletUI();
-        this.showStatus(`Base wallet already connected via ${selectedWallet.name}!`, 'success');
+        this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
         localStorage.setItem('wildwest_wallet_connected', 'base');
         return true;
       }
@@ -248,7 +249,7 @@ class WildWestWallet {
         this.currentChain = network.chainId;
         
         this.updateWalletUI();
-        this.showStatus(`Base wallet connected successfully via ${selectedWallet.name}!`, 'success');
+        this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
         localStorage.setItem('wildwest_wallet_connected', 'base');
         return true;
       }
@@ -362,139 +363,199 @@ class WildWestWallet {
     return wallets;
   }
 
-  // Show mobile wallet options when no wallet is detected
-  showMobileWalletOptions() {
+  // Show wallet installation guide for mobile users
+  showWalletInstallationGuide(network) {
     const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-      padding: 20px;
-      box-sizing: border-box;
-    `;
+    modal.className = 'wallet-modal-overlay';
+    
+    const isBase = network === 'base';
+    const networkName = isBase ? 'Base' : 'Solana';
+    const borderColor = isBase ? '#00eaff' : '#9945ff';
     
     modal.innerHTML = `
       <div style="
         background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 2px solid #00eaff;
+        border: 2px solid ${borderColor};
         border-radius: 16px;
         padding: 2rem;
-        max-width: 400px;
-        width: 100%;
+        max-width: 420px;
+        width: 90vw;
         text-align: center;
         color: white;
         font-family: 'Orbitron', Arial, sans-serif;
-        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+        box-shadow: 0 0 30px rgba(${isBase ? '0, 234, 255' : '153, 69, 255'}, 0.3);
+        animation: slideUp 0.3s ease-out;
       ">
-        <h2 style="color: #00eaff; margin-bottom: 1rem; font-size: 1.25rem;">Mobile Wallet Required</h2>
+        <h2 style="color: ${borderColor}; margin-bottom: 1.5rem; font-size: 1.3rem; font-weight: 600;">
+          ${networkName} Wallet Required
+        </h2>
         
-        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.4;">
-          To connect on mobile, open this page in a wallet app browser:
+        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">
+          To use ${networkName}, open this page in a wallet app:
         </p>
         
         <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-          <a href="https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(0, 234, 255, 0.05);
-               border: 1px solid rgba(0, 234, 255, 0.2);
-               border-radius: 12px;
-               text-decoration: none;
-               color: white;
-               transition: all 0.2s;
-               font-family: inherit;
-             ">
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: linear-gradient(135deg, #f6851b, #e2761b);
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 1.2rem;
-            ">M</div>
-            <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 600;">MetaMask</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in MetaMask</div>
-            </div>
-          </a>
-          
-          <a href="https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(0, 234, 255, 0.05);
-               border: 1px solid rgba(0, 234, 255, 0.2);
-               border-radius: 12px;
-               text-decoration: none;
-               color: white;
-               transition: all 0.2s;
-               font-family: inherit;
-             ">
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: linear-gradient(135deg, #0052ff, #0041cc);
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 1.2rem;
-            ">C</div>
-            <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 600;">Coinbase Wallet</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Coinbase</div>
-            </div>
-          </a>
-          
-          <a href="https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(0, 234, 255, 0.05);
-               border: 1px solid rgba(0, 234, 255, 0.2);
-               border-radius: 12px;
-               text-decoration: none;
-               color: white;
-               transition: all 0.2s;
-               font-family: inherit;
-             ">
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: linear-gradient(135deg, #3375bb, #2e68a8);
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 1.2rem;
-            ">T</div>
-            <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 600;">Trust Wallet</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Trust Wallet</div>
-            </div>
-          </a>
+          ${isBase ? `
+            <a href="https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}" 
+               style="
+                 display: flex;
+                 align-items: center;
+                 padding: 1rem;
+                 background: rgba(0, 234, 255, 0.05);
+                 border: 1px solid rgba(0, 234, 255, 0.2);
+                 border-radius: 12px;
+                 text-decoration: none;
+                 color: white;
+                 transition: all 0.2s;
+                 font-family: inherit;
+               ">
+              <div style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #f6851b, #e2761b);
+                border-radius: 10px;
+                margin-right: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 1.3rem;
+              ">M</div>
+              <div style="text-align: left; flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 0.2rem;">MetaMask</div>
+                <div style="font-size: 0.8rem; color: #aaa;">Most popular Web3 wallet</div>
+              </div>
+            </a>
+            
+            <a href="https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}" 
+               style="
+                 display: flex;
+                 align-items: center;
+                 padding: 1rem;
+                 background: rgba(0, 234, 255, 0.05);
+                 border: 1px solid rgba(0, 234, 255, 0.2);
+                 border-radius: 12px;
+                 text-decoration: none;
+                 color: white;
+                 transition: all 0.2s;
+                 font-family: inherit;
+               ">
+              <div style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #0052ff, #0041cc);
+                border-radius: 10px;
+                margin-right: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 1.3rem;
+              ">C</div>
+              <div style="text-align: left; flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 0.2rem;">Coinbase Wallet</div>
+                <div style="font-size: 0.8rem; color: #aaa;">Easy to use & secure</div>
+              </div>
+            </a>
+            
+            <a href="https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}" 
+               style="
+                 display: flex;
+                 align-items: center;
+                 padding: 1rem;
+                 background: rgba(0, 234, 255, 0.05);
+                 border: 1px solid rgba(0, 234, 255, 0.2);
+                 border-radius: 12px;
+                 text-decoration: none;
+                 color: white;
+                 transition: all 0.2s;
+                 font-family: inherit;
+               ">
+              <div style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #3375bb, #2e68a8);
+                border-radius: 10px;
+                margin-right: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 1.3rem;
+              ">T</div>
+              <div style="text-align: left; flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 0.2rem;">Trust Wallet</div>
+                <div style="font-size: 0.8rem; color: #aaa;">Multi-chain support</div>
+              </div>
+            </a>
+          ` : `
+            <a href="phantom://browse/${encodeURIComponent(window.location.href)}" 
+               style="
+                 display: flex;
+                 align-items: center;
+                 padding: 1rem;
+                 background: rgba(153, 69, 255, 0.05);
+                 border: 1px solid rgba(153, 69, 255, 0.2);
+                 border-radius: 12px;
+                 text-decoration: none;
+                 color: white;
+                 transition: all 0.2s;
+                 font-family: inherit;
+               ">
+              <div style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #ab9ff2, #9945ff);
+                border-radius: 10px;
+                margin-right: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 1.3rem;
+              ">P</div>
+              <div style="text-align: left; flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 0.2rem;">Phantom</div>
+                <div style="font-size: 0.8rem; color: #aaa;">Leading Solana wallet</div>
+              </div>
+            </a>
+            
+            <a href="solflare://v1/browse/${encodeURIComponent(window.location.href)}" 
+               style="
+                 display: flex;
+                 align-items: center;
+                 padding: 1rem;
+                 background: rgba(153, 69, 255, 0.05);
+                 border: 1px solid rgba(153, 69, 255, 0.2);
+                 border-radius: 12px;
+                 text-decoration: none;
+                 color: white;
+                 transition: all 0.2s;
+                 font-family: inherit;
+               ">
+              <div style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #fc8c03, #f57c00);
+                border-radius: 10px;
+                margin-right: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 1.3rem;
+              ">S</div>
+              <div style="text-align: left; flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 0.2rem;">Solflare</div>
+                <div style="font-size: 0.8rem; color: #aaa;">Feature-rich & secure</div>
+              </div>
+            </a>
+          `}
         </div>
         
         <button onclick="this.parentElement.parentElement.remove()" style="
@@ -506,148 +567,7 @@ class WildWestWallet {
           cursor: pointer;
           font-family: inherit;
           transition: all 0.2s;
-        ">Close</button>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-  }
-
-  // Show mobile Solana wallet options when no wallet is detected
-  showMobileSolanaWalletOptions() {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-      padding: 20px;
-      box-sizing: border-box;
-    `;
-    
-    modal.innerHTML = `
-      <div style="
-        background: rgba(30,34,44,0.95);
-        border: 2px solid #9945ff;
-        border-radius: 20px;
-        padding: 2rem;
-        max-width: 400px;
-        width: 90vw;
-        text-align: center;
-        color: white;
-        font-family: Arial, sans-serif;
-        box-sizing: border-box;
-        margin: 1rem;
-      ">
-        <h2 style="color: #9945ff; margin-bottom: 1rem; font-size: 1.25rem;">📱 Solana Mobile Wallet Required</h2>
-        
-        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.4;">
-          To make SOL payments on mobile, open this page in a Solana wallet app browser:
-        </p>
-        
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-          <a href="phantom://browse/${encodeURIComponent(window.location.href)}" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(154, 69, 255, 0.1);
-               border: 1px solid rgba(154, 69, 255, 0.3);
-               border-radius: 10px;
-               text-decoration: none;
-               color: white;
-               transition: all 0.2s;
-               box-sizing: border-box;
-             ">
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: linear-gradient(135deg, #ab9ff2, #9945ff);
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 1.2rem;
-            ">P</div>
-            <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 600;">Phantom</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Phantom</div>
-            </div>
-          </a>
-          
-          <a href="solflare://v1/browse/${encodeURIComponent(window.location.href)}" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(154, 69, 255, 0.1);
-               border: 1px solid rgba(154, 69, 255, 0.3);
-               border-radius: 10px;
-               text-decoration: none;
-               color: white;
-               transition: all 0.2s;
-               box-sizing: border-box;
-             ">
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: linear-gradient(135deg, #fc8c03, #f57c00);
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 1.2rem;
-            ">S</div>
-            <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 600;">Solflare</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Solflare</div>
-            </div>
-          </a>
-          
-          <a href="https://phantom.app/ul/browse/${encodeURIComponent(window.location.origin + window.location.pathname)}?ref=homepage" 
-             style="
-               display: flex;
-               align-items: center;
-               padding: 1rem;
-               background: rgba(154, 69, 255, 0.1);
-               border: 1px solid rgba(154, 69, 255, 0.3);
-               border-radius: 10px;
-               text-decoration: none;
-               color: white;
-               transition: all 0.2s;
-               box-sizing: border-box;
-             ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🔗</span>
-            <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 600;">Universal Link</div>
-              <div style="font-size: 0.8rem; color: #aaa;">Alternative Phantom link</div>
-            </div>
-          </a>
-        </div>
-        
-        <button onclick="this.parentElement.parentElement.remove()" style="
-          background: rgba(255,255,255,0.1);
-          color: #fff;
-          border: 1px solid #666;
-          padding: 10px 20px;
-          border-radius: 8px;
-          cursor: pointer;
           font-size: 0.9rem;
-          transition: all 0.2s;
-          width: 100%;
-          box-sizing: border-box;
         ">Close</button>
       </div>
     `;
@@ -681,6 +601,7 @@ class WildWestWallet {
   }
 
   async connectWithChainSelection() {
+    console.log('🔍 connectWithChainSelection called - showing chain selection modal');
     // For index page - show chain selection modal
     return new Promise((resolve) => {
       this.showChainSelectionModal(resolve);
@@ -701,47 +622,138 @@ class WildWestWallet {
           from { transform: translateY(30px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
+        .wallet-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          animation: fadeIn 0.3s ease-out;
+        }
+        .chain-selection-modal {
+          background: linear-gradient(135deg, #1a1a2e, #16213e);
+          border: 2px solid #00eaff;
+          border-radius: 16px;
+          box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+          max-width: 450px;
+          width: 90vw;
+          max-height: 80vh;
+          overflow: hidden;
+          animation: slideUp 0.3s ease-out;
+          margin: 1rem;
+          font-family: 'Orbitron', Arial, sans-serif;
+        }
+        .chain-option {
+          display: flex;
+          align-items: center;
+          padding: 1.2rem;
+          background: rgba(0, 234, 255, 0.03);
+          border: 1px solid rgba(0, 234, 255, 0.15);
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          color: white;
+          text-decoration: none;
+          font-size: 1rem;
+          font-family: inherit;
+          width: 100%;
+          box-sizing: border-box;
+          margin-bottom: 0.8rem;
+        }
+        .chain-option:hover {
+          background: rgba(0, 234, 255, 0.08);
+          border-color: rgba(0, 234, 255, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(0, 234, 255, 0.2);
+        }
+        .chain-option:active {
+          transform: translateY(0);
+        }
+        .chain-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          margin-right: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          color: white;
+          font-size: 1.4rem;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .base-icon {
+          background: linear-gradient(135deg, #0052ff, #0041cc);
+          border: 1px solid rgba(0, 82, 255, 0.3);
+        }
+        .solana-icon {
+          background: linear-gradient(135deg, #9945ff, #7c3aed);
+          border: 1px solid rgba(153, 69, 255, 0.3);
+        }
+        .chain-info {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .chain-name {
+          font-weight: 600;
+          margin-bottom: 0.3rem;
+          font-size: 1.1rem;
+        }
+        .chain-desc {
+          font-size: 0.85rem;
+          color: #aaa;
+          line-height: 1.3;
+        }
+        .chain-arrow {
+          color: #00eaff;
+          font-weight: bold;
+          margin-left: 1rem;
+          font-size: 1.2rem;
+        }
+        @media (max-width: 480px) {
+          .chain-selection-modal {
+            width: 95vw;
+            margin: 0.5rem;
+          }
+          .chain-option {
+            padding: 1rem;
+          }
+          .chain-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+          }
+          .chain-name {
+            font-size: 1rem;
+          }
+          .chain-desc {
+            font-size: 0.8rem;
+          }
+        }
       `;
       document.head.appendChild(style);
     }
 
     const modal = document.createElement('div');
     modal.className = 'wallet-modal-overlay';
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      animation: fadeIn 0.2s ease-out;
-    `;
     
     modal.innerHTML = `
-      <div class="chain-selection-modal" style="
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 2px solid #00eaff;
-        border-radius: 16px;
-        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
-        max-width: 400px;
-        width: 90vw;
-        max-height: 80vh;
-        overflow: hidden;
-        animation: slideUp 0.3s ease-out;
-        margin: 1rem;
-      ">
-        <div class="modal-header" style="
+      <div class="chain-selection-modal">
+        <div style="
           padding: 1.5rem;
           border-bottom: 1px solid rgba(0, 234, 255, 0.2);
           display: flex;
           justify-content: space-between;
           align-items: center;
         ">
-          <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Select Network</h3>
+          <h3 style="margin: 0; color: #00eaff; font-size: 1.3rem; font-weight: 600;">Select Network</h3>
           <button class="close-modal" style="
             background: none;
             border: none;
@@ -749,8 +761,8 @@ class WildWestWallet {
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -758,52 +770,22 @@ class WildWestWallet {
             transition: background-color 0.2s;
           ">×</button>
         </div>
-        <div class="chain-options" style="padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-          <button class="chain-option" data-chain="base" style="
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            background: rgba(0, 234, 255, 0.05);
-            border: 1px solid rgba(0, 234, 255, 0.2);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            font-family: inherit;
-            width: 100%;
-            box-sizing: border-box;
-          ">
-            <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🔵</div>
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
-              <span style="font-weight: 600; margin-bottom: 0.25rem;">Base Network</span>
-              <span style="font-size: 0.875rem; color: #aaa;">EVM Compatible • MetaMask, Coinbase, Rainbow, Trust, Brave (Desktop + Mobile)</span>
+        <div style="padding: 1.5rem;">
+          <button class="chain-option" data-chain="base">
+            <div class="chain-icon base-icon">B</div>
+            <div class="chain-info">
+              <span class="chain-name">Base Network</span>
+              <span class="chain-desc">EVM Compatible • Low fees • MetaMask, Coinbase, Trust Wallet</span>
             </div>
-            <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
+            <div class="chain-arrow">→</div>
           </button>
-          <button class="chain-option" data-chain="solana" style="
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            background: rgba(0, 234, 255, 0.05);
-            border: 1px solid rgba(0, 234, 255, 0.2);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            font-family: inherit;
-            width: 100%;
-            box-sizing: border-box;
-          ">
-            <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🟣</div>
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
-              <span style="font-weight: 600; margin-bottom: 0.25rem;">Solana Network</span>
-              <span style="font-size: 0.875rem; color: #aaa;">Fast & Low Fees • Phantom, Solflare, etc.</span>
+          <button class="chain-option" data-chain="solana">
+            <div class="chain-icon solana-icon">S</div>
+            <div class="chain-info">
+              <span class="chain-name">Solana Network</span>
+              <span class="chain-desc">Fast & Ultra-low fees • Phantom, Solflare, Backpack</span>
             </div>
-            <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
+            <div class="chain-arrow">→</div>
           </button>
         </div>
       </div>
@@ -825,18 +807,6 @@ class WildWestWallet {
           callback(connected);
         }
       });
-      
-      btn.addEventListener('mouseenter', () => {
-        btn.style.background = 'rgba(0, 234, 255, 0.1)';
-        btn.style.borderColor = '#00eaff';
-        btn.style.transform = 'translateY(-1px)';
-      });
-      
-      btn.addEventListener('mouseleave', () => {
-        btn.style.background = 'rgba(0, 234, 255, 0.05)';
-        btn.style.borderColor = 'rgba(0, 234, 255, 0.2)';
-        btn.style.transform = 'translateY(0)';
-      });
     });
     
     // Handle close
@@ -854,7 +824,7 @@ class WildWestWallet {
   }
 
   async connectWallet(chain = null) {
-    console.log('connectWallet called with chain:', chain);
+    console.log('🔍 connectWallet called with chain:', chain);
     
     // Prevent multiple simultaneous connection attempts
     if (this.isConnecting) {
@@ -867,43 +837,30 @@ class WildWestWallet {
       
       // If no chain specified, ALWAYS show chain selection first
       if (!chain) {
-        console.log('No chain specified, showing chain selection modal');
+        console.log('✅ No chain specified, showing chain selection modal');
         return await this.connectWithChainSelection();
       }
       
+      console.log('🔍 Chain specified:', chain);
+      
       // Handle chain-specific connections
       if (chain === 'solana') {
+        console.log('🟣 Connecting to Solana...');
         return await this.connectSolanaWallet();
       }
       
       // For Base/EVM chains
       if (chain === 'base') {
-        const availableWallets = this.detectEVMWallets();
-        if (availableWallets.length === 0) {
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (isMobile) {
-            this.showMobileWalletOptions();
-            return false;
-          } else {
-            alert('Please install an EVM wallet (MetaMask, Coinbase Wallet, Rainbow, Trust Wallet, etc.)');
-            return false;
-          }
-        }
+        console.log('🔵 Connecting to Base...');
         return await this.connectBaseWallet();
       }
 
       // If we get here, something went wrong
+      console.log('❌ Unknown chain specified:', chain);
       return false;
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      
-      if (error.code === -32002) {
-        this.showStatus('MetaMask is already processing a request. Please check MetaMask and try again.', 'error');
-      } else if (error.code === 4001) {
-        this.showStatus('Connection rejected by user', 'error');
-      } else {
-        this.showStatus('Failed to connect wallet: ' + error.message, 'error');
-      }
+      this.showStatus('Failed to connect wallet: ' + error.message, 'error');
       return false;
     } finally {
       this.isConnecting = false;
