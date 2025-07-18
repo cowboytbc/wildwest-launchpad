@@ -366,7 +366,20 @@ class WildWestWallet {
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
     const modal = document.createElement('div');
-    modal.className = 'wallet-modal-overlay';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
     
     const isBase = network === 'base';
     const networkName = isBase ? 'Base' : 'Solana';
@@ -385,6 +398,7 @@ class WildWestWallet {
         font-family: 'Orbitron', Arial, sans-serif;
         box-shadow: 0 0 30px rgba(${isBase ? '0, 234, 255' : '153, 69, 255'}, 0.3);
         animation: slideUp 0.3s ease-out;
+        position: relative;
       ">
         <h2 style="color: ${borderColor}; margin-bottom: 1.5rem; font-size: 1.3rem; font-weight: 600;">
           ${networkName} Wallet Required
@@ -573,6 +587,19 @@ class WildWestWallet {
     `;
     
     document.body.appendChild(modal);
+    
+    // Add close button functionality
+    const closeBtn = modal.querySelector('button');
+    closeBtn.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
   }
 
   async switchToBase(provider = window.ethereum) {
