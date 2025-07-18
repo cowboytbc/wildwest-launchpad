@@ -386,13 +386,16 @@
     @media (max-width: 768px) {
       .main-nav {
         padding: 0;
+        width: 100%;
+        overflow-x: hidden;
       }
       
       .main-nav ul {
         flex-direction: column;
         gap: 0.5rem;
-        padding: 1rem;
+        padding: 0.5rem;
         width: 100%;
+        box-sizing: border-box;
       }
       
       .main-nav li {
@@ -437,6 +440,7 @@
         margin: 0.25rem 0;
         padding: 0.6rem 1rem;
         font-size: 0.9rem;
+        box-sizing: border-box;
       }
     }
     
@@ -781,44 +785,34 @@
         padding: 8px 12px;
         font-size: 1rem;
       }
-      
-      .all-projects-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        width: 100%;
-        max-width: 350px;
-        margin: 0 auto 2rem auto;
-      }
-      
-      .all-projects-grid .project-slot {
-        width: 100%;
-        min-width: auto;
-        max-width: 100%;
-        margin: 0;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-      }
-      
-      .load-more-btn {
-        max-width: 280px;
-        width: 100%;
-        margin: 0 auto;
-        display: block;
-      }
     }
     
     @media (max-width: 480px) {
+      /* Further mobile optimization */
+      .header {
+        padding: 0.5rem 0.25rem;
+      }
+      
+      .trending-section,
+      .explore-section {
+        padding: 1rem 0.25rem;
+      }
+      
+      .main-nav ul {
+        padding: 0.25rem;
+      }
+      
+      .main-nav a {
+        padding: 0.7rem 0.5rem;
+        font-size: 0.9rem;
+      }
+      
       .search-container {
-        max-width: 300px;
-        margin: 0 auto 1.5rem auto;
+        padding: 0 0.25rem;
       }
       
       .all-projects-grid {
-        max-width: 300px;
+        padding: 0 0.25rem;
         gap: 0.8rem;
       }
       
@@ -826,10 +820,19 @@
         padding: 0.8rem;
       }
       
+      .project-grid {
+        padding: 0 0.25rem;
+      }
+      
       .load-more-btn {
-        max-width: 260px;
+        width: calc(100% - 1rem);
+        margin: 0 0.5rem;
         padding: 12px 20px;
         font-size: 0.9rem;
+      }
+      
+      .explore-container {
+        padding: 0 0.25rem;
       }
     }
       
@@ -867,25 +870,111 @@
     @media (max-width: 768px) {
       body {
         font-size: 14px;
+        overflow-x: hidden;
       }
       
       .header {
         padding: 1rem 0.5rem;
       }
       
-      /* Ensure all sections fit well on mobile */
-      section {
+      /* Fix sections to prevent horizontal overflow */
+      .trending-section,
+      .explore-section {
         padding: 1.5rem 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
       }
       
-      /* Improve mobile scrolling */
-      html {
-        scroll-behavior: smooth;
+      /* Ensure all containers respect mobile viewport */
+      .explore-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+        box-sizing: border-box;
       }
       
-      /* Prevent horizontal scrolling */
-      body {
+      /* Fix navigation menu */
+      .main-nav {
+        padding: 0;
+        width: 100%;
         overflow-x: hidden;
+      }
+      
+      .main-nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      /* Fix project grid overflow */
+      .all-projects-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto 2rem auto;
+        padding: 0 0.5rem;
+        box-sizing: border-box;
+      }
+      
+      .all-projects-grid .project-slot {
+        width: 100%;
+        min-width: auto;
+        max-width: 100%;
+        margin: 0;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      
+      /* Fix trending project grid */
+      .project-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+        box-sizing: border-box;
+      }
+      
+      .project-slot {
+        width: 100%;
+        min-width: auto;
+        max-width: 100%;
+        margin: 0;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      
+      /* Fix search container */
+      .search-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto 1.5rem auto;
+        padding: 0 0.5rem;
+        box-sizing: border-box;
+      }
+      
+      /* Fix load more button */
+      .load-more-btn {
+        max-width: 100%;
+        width: calc(100% - 2rem);
+        margin: 0 1rem;
+        display: block;
+        box-sizing: border-box;
       }
       
       /* Ensure all content respects mobile viewport */
