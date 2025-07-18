@@ -382,20 +382,21 @@ class WildWestWallet {
     
     modal.innerHTML = `
       <div style="
-        background: rgba(30,34,44,0.95);
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
         border: 2px solid #00eaff;
-        border-radius: 20px;
+        border-radius: 16px;
         padding: 2rem;
         max-width: 400px;
         width: 100%;
         text-align: center;
         color: white;
-        font-family: Arial, sans-serif;
+        font-family: 'Orbitron', Arial, sans-serif;
+        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
       ">
-        <h2 style="color: #00eaff; margin-bottom: 1rem;">📱 Mobile Wallet Required</h2>
+        <h2 style="color: #00eaff; margin-bottom: 1rem; font-size: 1.25rem;">Mobile Wallet Required</h2>
         
-        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.9rem;">
-          To make payments on mobile, open this page in a wallet app browser:
+        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.4;">
+          To connect on mobile, open this page in a wallet app browser:
         </p>
         
         <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
@@ -404,14 +405,28 @@ class WildWestWallet {
                display: flex;
                align-items: center;
                padding: 1rem;
-               background: rgba(0, 234, 255, 0.1);
-               border: 1px solid rgba(0, 234, 255, 0.3);
-               border-radius: 10px;
+               background: rgba(0, 234, 255, 0.05);
+               border: 1px solid rgba(0, 234, 255, 0.2);
+               border-radius: 12px;
                text-decoration: none;
                color: white;
+               transition: all 0.2s;
+               font-family: inherit;
              ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🦊</span>
-            <div style="text-align: left;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              background: linear-gradient(135deg, #f6851b, #e2761b);
+              border-radius: 8px;
+              margin-right: 1rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              color: white;
+              font-size: 1.2rem;
+            ">M</div>
+            <div style="text-align: left; flex: 1;">
               <div style="font-weight: 600;">MetaMask</div>
               <div style="font-size: 0.8rem; color: #aaa;">Tap to open in MetaMask</div>
             </div>
@@ -422,14 +437,28 @@ class WildWestWallet {
                display: flex;
                align-items: center;
                padding: 1rem;
-               background: rgba(0, 234, 255, 0.1);
-               border: 1px solid rgba(0, 234, 255, 0.3);
-               border-radius: 10px;
+               background: rgba(0, 234, 255, 0.05);
+               border: 1px solid rgba(0, 234, 255, 0.2);
+               border-radius: 12px;
                text-decoration: none;
                color: white;
+               transition: all 0.2s;
+               font-family: inherit;
              ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🔵</span>
-            <div style="text-align: left;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              background: linear-gradient(135deg, #0052ff, #0041cc);
+              border-radius: 8px;
+              margin-right: 1rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              color: white;
+              font-size: 1.2rem;
+            ">C</div>
+            <div style="text-align: left; flex: 1;">
               <div style="font-weight: 600;">Coinbase Wallet</div>
               <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Coinbase</div>
             </div>
@@ -440,14 +469,28 @@ class WildWestWallet {
                display: flex;
                align-items: center;
                padding: 1rem;
-               background: rgba(0, 234, 255, 0.1);
-               border: 1px solid rgba(0, 234, 255, 0.3);
-               border-radius: 10px;
+               background: rgba(0, 234, 255, 0.05);
+               border: 1px solid rgba(0, 234, 255, 0.2);
+               border-radius: 12px;
                text-decoration: none;
                color: white;
+               transition: all 0.2s;
+               font-family: inherit;
              ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🛡️</span>
-            <div style="text-align: left;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              background: linear-gradient(135deg, #3375bb, #2e68a8);
+              border-radius: 8px;
+              margin-right: 1rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              color: white;
+              font-size: 1.2rem;
+            ">T</div>
+            <div style="text-align: left; flex: 1;">
               <div style="font-weight: 600;">Trust Wallet</div>
               <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Trust Wallet</div>
             </div>
@@ -458,9 +501,11 @@ class WildWestWallet {
           background: rgba(255,255,255,0.1);
           color: #fff;
           border: 1px solid #666;
-          padding: 10px 20px;
-          border-radius: 10px;
+          padding: 12px 24px;
+          border-radius: 12px;
           cursor: pointer;
+          font-family: inherit;
+          transition: all 0.2s;
         ">Close</button>
       </div>
     `;
@@ -520,7 +565,19 @@ class WildWestWallet {
                transition: all 0.2s;
                box-sizing: border-box;
              ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">👻</span>
+            <div style="
+              width: 40px;
+              height: 40px;
+              background: linear-gradient(135deg, #ab9ff2, #9945ff);
+              border-radius: 8px;
+              margin-right: 1rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              color: white;
+              font-size: 1.2rem;
+            ">P</div>
             <div style="text-align: left; flex: 1;">
               <div style="font-weight: 600;">Phantom</div>
               <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Phantom</div>
@@ -540,7 +597,19 @@ class WildWestWallet {
                transition: all 0.2s;
                box-sizing: border-box;
              ">
-            <span style="font-size: 1.5rem; margin-right: 1rem;">🌟</span>
+            <div style="
+              width: 40px;
+              height: 40px;
+              background: linear-gradient(135deg, #fc8c03, #f57c00);
+              border-radius: 8px;
+              margin-right: 1rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              color: white;
+              font-size: 1.2rem;
+            ">S</div>
             <div style="text-align: left; flex: 1;">
               <div style="font-weight: 600;">Solflare</div>
               <div style="font-size: 0.8rem; color: #aaa;">Tap to open in Solflare</div>
@@ -796,33 +865,31 @@ class WildWestWallet {
     try {
       this.isConnecting = true;
       
+      // If no chain specified, ALWAYS show chain selection first
+      if (!chain) {
+        console.log('No chain specified, showing chain selection modal');
+        return await this.connectWithChainSelection();
+      }
+      
       // Handle chain-specific connections
       if (chain === 'solana') {
         return await this.connectSolanaWallet();
       }
       
       // For Base/EVM chains
-      const availableWallets = this.detectEVMWallets();
-      if (availableWallets.length === 0) {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile) {
-          this.showMobileWalletOptions();
-          return false;
-        } else {
-          alert('Please install an EVM wallet (MetaMask, Coinbase Wallet, Rainbow, Trust Wallet, etc.)');
-          return false;
-        }
-      }
-
-      // If chain is specified as 'base', skip chain selection
       if (chain === 'base') {
+        const availableWallets = this.detectEVMWallets();
+        if (availableWallets.length === 0) {
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (isMobile) {
+            this.showMobileWalletOptions();
+            return false;
+          } else {
+            alert('Please install an EVM wallet (MetaMask, Coinbase Wallet, Rainbow, Trust Wallet, etc.)');
+            return false;
+          }
+        }
         return await this.connectBaseWallet();
-      }
-
-      // If no chain specified, show chain selection (existing token furnace behavior)
-      if (!chain) {
-        // This will be handled by the token furnace modal system
-        return await this.connectWithChainSelection();
       }
 
       // If we get here, something went wrong

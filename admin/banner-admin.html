@@ -533,23 +533,41 @@
     
     // Setup wallet event handlers
     function setupWalletEventHandlers() {
-      // Connect wallet button
-      document.getElementById('connectWalletBtn').addEventListener('click', function() {
-        document.getElementById('chainModal').style.display = 'block';
+      // Connect wallet button - use the improved wallet system
+      document.getElementById('connectWalletBtn').addEventListener('click', async function() {
+        try {
+          console.log('🔘 Wallet button clicked in banner admin');
+          
+          if (!wildWestWallet) {
+            throw new Error('Wallet system not initialized');
+          }
+          
+          // Use the improved connectWallet method that shows chain selection
+          const connected = await wildWestWallet.connectWallet();
+          if (connected) {
+            console.log('✅ Wallet connected successfully in banner admin');
+            updateWalletUI();
+          } else {
+            console.log('❌ Wallet connection failed or cancelled');
+          }
+        } catch (error) {
+          console.error('❌ Wallet connection error:', error);
+          alert('Failed to connect wallet: ' + error.message);
+        }
       });
       
-      // Close modal
+      // Close modal (keep for compatibility)
       document.getElementById('closeModal').addEventListener('click', function() {
         document.getElementById('chainModal').style.display = 'none';
       });
       
-      // Connect Base
+      // Connect Base (keep for compatibility)
       document.getElementById('connectBase').addEventListener('click', async function() {
         document.getElementById('chainModal').style.display = 'none';
         await connectBaseWallet();
       });
       
-      // Connect Solana
+      // Connect Solana (keep for compatibility)
       document.getElementById('connectSolana').addEventListener('click', async function() {
         document.getElementById('chainModal').style.display = 'none';
         await connectSolanaWallet();
