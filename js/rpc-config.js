@@ -2,19 +2,19 @@
 // Update these with your preferred RPC endpoints
 
 const RPC_CONFIG = {
-  // Solana RPC endpoints - using QuickNode when available
+  // Solana RPC endpoints - prioritizing QuickNode from GitHub Secrets
   SOLANA: {
-    PRIMARY: (window.ENV_CONFIG?.rpc?.solana) || "https://solana-mainnet.g.alchemy.com/v2/demo",
-    QUICKNODE: (window.ENV_CONFIG?.rpc?.solana) || "https://solana-mainnet.g.alchemy.com/v2/demo", 
+    PRIMARY: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://api.mainnet-beta.solana.com",
+    QUICKNODE: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://api.mainnet-beta.solana.com", 
     BACKUP: "https://api.mainnet-beta.solana.com",
     FALLBACK: "https://rpc.ankr.com/solana",
     HELIUS: "https://rpc.helius.xyz/?api-key=demo"
   },
   
-  // Base/Ethereum RPC endpoints - using QuickNode when available
+  // Base/Ethereum RPC endpoints - prioritizing QuickNode from GitHub Secrets
   BASE: {
-    PRIMARY: (window.ENV_CONFIG?.rpc?.base) || "https://mainnet.base.org",
-    QUICKNODE: (window.ENV_CONFIG?.rpc?.base) || "https://mainnet.base.org",
+    PRIMARY: (window.PRODUCTION_CONFIG?.rpc?.base) || (window.ENV_CONFIG?.rpc?.base) || "https://mainnet.base.org",
+    QUICKNODE: (window.PRODUCTION_CONFIG?.rpc?.base) || (window.ENV_CONFIG?.rpc?.base) || "https://mainnet.base.org",
     MAINNET: "https://mainnet.base.org", // Default Base RPC
   },
   

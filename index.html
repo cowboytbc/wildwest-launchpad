@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- Environment Configuration (must load first) -->
   <script src="js/env-config.js"></script>
+  <!-- Production Configuration (GitHub Secrets injection) -->
+  <script src="js/production-config.js"></script>
+  <!-- RPC Configuration -->
+  <script src="js/rpc-config.js"></script>
+  <!-- Performance optimizations for wallet browsers -->
+  <script src="js/wallet-performance.js"></script>
+  <!-- API Efficiency Monitoring -->
+  <script src="js/api-audit.js"></script>
   <!-- Console Filter - Universal console control -->
   <script src="js/console-filter.js"></script>
   <!-- Secure Configuration -->
@@ -23,6 +31,8 @@
   </script>
   <!-- Payment Configuration -->
   <script src="js/payment-config.js"></script>
+  <!-- Multi-wallet Management -->
+  <script src="js/multi-wallet-manager.js"></script>
   <!-- Wallet Integration -->
   <script src="js/wallet.js"></script>
   <!-- GitHub Actions Uploader (core functionality) -->
@@ -1949,6 +1959,12 @@ document.addEventListener('DOMContentLoaded', function() {
           account: window.wildWestWallet.account
         });
         
+        // Force refresh wallet state first to ensure we have accurate connection status
+        if (window.wildWestWallet.checkConnection) {
+          await window.wildWestWallet.checkConnection();
+          console.log('🔄 After checkConnection - isConnected:', window.wildWestWallet.isConnected);
+        }
+        
         // If already connected, show wallet details/disconnect options
         if (window.wildWestWallet.isConnected) {
           console.log('🔗 Wallet already connected, showing disconnect options');
@@ -1962,6 +1978,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const connected = await window.wildWestWallet.connectWithChainSelection();
             if (connected) {
               console.log('✅ Wallet connected successfully!');
+              // Force update the UI after successful connection with a slight delay
+              setTimeout(() => {
+                console.log('🔄 Forcing UI update after connection...');
+                if (window.wildWestWallet.updateWalletUI) {
+                  window.wildWestWallet.updateWalletUI();
+                }
+                // Double-check connection state
+                console.log('🔍 Final state check - isConnected:', window.wildWestWallet.isConnected);
+              }, 200);
             } else {
               console.log('❌ Wallet connection failed or cancelled');
             }
@@ -1988,8 +2013,20 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       // Check for existing connection on page load
-      if (window.wildWestWallet.isConnected) {
-        console.log('🔗 Existing wallet connection detected');
+      console.log('🔍 Checking for existing wallet connection on page load...');
+      if (window.wildWestWallet.checkConnection) {
+        // Use checkConnection to properly refresh the wallet state
+        window.wildWestWallet.checkConnection().then(() => {
+          console.log('🔗 Page load connection check complete - isConnected:', window.wildWestWallet.isConnected);
+          if (window.wildWestWallet.isConnected) {
+            console.log('🔗 Existing wallet connection detected and confirmed');
+            window.wildWestWallet.updateWalletUI();
+          }
+        }).catch(error => {
+          console.error('❌ Error checking connection on page load:', error);
+        });
+      } else if (window.wildWestWallet.isConnected) {
+        console.log('🔗 Existing wallet connection detected (fallback check)');
         window.wildWestWallet.updateWalletUI();
       }
     } else {
@@ -2871,9 +2908,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div style="margin-bottom: 0.5rem;">
         © 2025 Wild West Launchpad. All rights reserved.
-      </div>
-      <div style="font-size: 0.8rem; color: #888;">
-        Decentralized token launch platform • Built for the future of Web3
       </div>
     </div>
   </footer>

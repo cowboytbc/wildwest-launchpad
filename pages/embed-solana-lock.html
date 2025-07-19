@@ -7,6 +7,10 @@
   <link rel="icon" type="image/png" href="../images/locked.png">
   <!-- Console Filter - Universal console control -->
   <script src="../js/console-filter.js"></script>
+  <!-- Production Configuration (GitHub Secrets injection) -->
+  <script src="../js/production-config.js"></script>
+  <!-- RPC Configuration -->
+  <script src="../js/rpc-config.js"></script>
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
   <style>
     body {
@@ -196,7 +200,7 @@
     const lockAddr = urlParams.get('lock');
     
     // Solana connection (using your RPC)
-    const SOLANA_RPC = 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ef60836be4b1b1fea3b948cf28c518322a18147';
+    const SOLANA_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com';
     const connection = new solanaWeb3.Connection(SOLANA_RPC);
 
     // Local storage key for tracking created locks
@@ -543,9 +547,6 @@
       </div>
       <div style="margin-bottom: 0.5rem;">
         © 2025 Wild West Launchpad. All rights reserved.
-      </div>
-      <div style="font-size: 0.8rem; color: #c0c0c0;">
-        Decentralized token launch platform • Built for the future of Web3
       </div>
     </div>
   </footer>

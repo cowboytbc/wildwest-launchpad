@@ -7,7 +7,16 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
   <!-- Console Filter - Universal console control -->
   <script src="../js/console-filter.js"></script>
+  <!-- Environment Configuration -->
+  <script src="../js/env-config.js"></script>
+  <!-- Production Configuration (GitHub Secrets injection) -->
+  <script src="../js/production-config.js"></script>
+  <!-- RPC Configuration (must load before API calls) -->
   <script src="../js/rpc-config.js"></script>
+  <!-- Performance optimizations for wallet browsers -->
+  <script src="../js/wallet-performance.js"></script>
+  <!-- API Efficiency Monitoring -->
+  <script src="../js/api-audit.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Nosifer&family=Orbitron:wght@900&family=Bangers&family=Creepster&family=UnifrakturMaguntia&family=MedievalSharp&family=Ewert&display=swap" rel="stylesheet">
   <style>
@@ -55,13 +64,49 @@
       background:
         radial-gradient(circle at 60% 10%, #fff2 0%, transparent 60%),
         radial-gradient(circle at 40% 20%, #ffae0033 0%, transparent 70%),
-        linear-gradient(180deg, transparent 80%, #ff1a1a22 100%),
-        url('https://svgshare.com/i/14kA.svg') repeat-x bottom/100vw 120px;
+        linear-gradient(180deg, transparent 80%, #ff1a1a22 100%);
       mix-blend-mode: lighten;
       opacity: 0.32;
       animation: smokeBG 10s linear infinite alternate;
       will-change: filter, opacity;
     }
+
+    /* Performance optimization: Disable heavy animations on mobile and wallet browsers */
+    @media (max-width: 768px), (prefers-reduced-motion: reduce) {
+      body::before, body::after {
+        animation: none !important;
+        filter: none !important;
+        will-change: auto !important;
+        background: 
+          radial-gradient(ellipse at 60% 120%, #ff1a1a 0%, #0a0000 60%, #000 100%),
+          linear-gradient(180deg, #2d0000 0%, #0a0000 100%);
+      }
+      
+      .header {
+        box-shadow: 0 0 32px 8px #ff1a1a66, 0 0 16px #ffae0099; /* Reduced glow */
+      }
+    }
+
+    /* Detect wallet browsers and reduce animations */
+    @supports (font: -webkit-pictograph) {
+      /* Webkit-based wallet browsers */
+      body::before, body::after {
+        animation-duration: 12s !important; /* Slower animations */
+        filter: blur(0.5px) brightness(1.02) !important; /* Reduced filter effects */
+      }
+    }
+    /* Performance optimization: Reduce animations on mobile and wallet browsers */
+    @media (max-width: 768px), (prefers-reduced-motion: reduce) {
+      body::before, body::after {
+        animation: none !important;
+        filter: none !important;
+        will-change: auto !important;
+        background: 
+          radial-gradient(ellipse at 60% 120%, #ff1a1a 0%, #0a0000 60%, #000 100%),
+          linear-gradient(180deg, #2d0000 0%, #0a0000 100%);
+      }
+    }
+
     @keyframes emberBG {
       0% { filter: blur(1px) brightness(1.05); }
       50% { filter: blur(1.5px) brightness(1.08); }
@@ -90,7 +135,7 @@
     @media (min-width: 1024px) {
       .header {
         padding: 60px 0 32px 0;
-        margin-bottom: 48px;
+        margin-bottom: 24px; /* Reduced from 48px */
       }
       
       .logo {
@@ -117,7 +162,7 @@
     @media (min-width: 1440px) {
       .header {
         padding: 80px 0 40px 0;
-        margin-bottom: 64px;
+        margin-bottom: 32px; /* Reduced from 64px */
       }
       
       .logo {
@@ -875,7 +920,7 @@
     @media (max-width: 800px) {
       .wildwest-title {
         font-size: 5.2em; /* Increased from 4.2em for better mobile visibility */
-        margin-top: 3.5em; /* Increased from 2.8em to provide more space from back button */
+        margin-top: 0.8em; /* Further reduced from 1.5em for better spacing */
         margin-bottom: 0.2em;
       }
       .top-right-link {
@@ -908,7 +953,7 @@
     @media (max-width: 420px) {
       .wildwest-title {
         font-size: 4.0em; /* Increased from 3.2em for better mobile visibility */
-        margin-top: 3.8em; /* Increased from 2.8em to provide more space from back button */
+        margin-top: 1.0em; /* Further reduced from 1.8em for better spacing */
         margin-bottom: 0.25em;
       }
       .top-right-link {
@@ -1007,7 +1052,7 @@
       .wildwest-title {
         font-size: 3.0em; /* Increased from 2.2em for better visibility on very small screens */
         margin-bottom: 0.1em;
-        margin-top: 4.2em; /* Increased significantly to provide ample space from back button */
+        margin-top: 1.2em; /* Further reduced from 2.0em for better spacing */
       }
       .connect-btn {
         margin: 10px auto 0 auto;
@@ -1236,17 +1281,26 @@
       window.TOKEN_FURNACE_HANDLES_WALLET_BUTTON = true;
     </script>
     
+    <!-- Load multi-wallet management -->
+    <script src="../js/multi-wallet-manager.js"></script>
     <!-- Load wallet functionality -->
     <script src="../js/wallet.js"></script>
     <script>
-      // Enhanced ember particle animation for realism
-      // Check if mobile device - disable embers for performance
+      // Performance optimized ember system for wallet browsers
       function isMobileDevice() {
         return window.innerWidth <= 800 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       }
-      
+
+      function isWalletBrowser() {
+        return /MetaMask|Trust|Coinbase|Rainbow|WalletConnect|Phantom/i.test(navigator.userAgent) || 
+               window.ethereum || window.solana;
+      }
+
+      let emberInterval = null;
+      let activeEmbers = [];
+      const MAX_EMBERS = isMobileDevice() ? 0 : (isWalletBrowser() ? 3 : 6); // No embers on mobile, fewer in wallet browsers
+
       function randomColor() {
-        // Warm palette: yellow, orange, red
         const colors = [
           'rgba(255, 174, 0, 0.85)', // yellow
           'rgba(255, 69, 0, 0.85)',  // orange-red
@@ -1256,74 +1310,107 @@
         ];
         return colors[Math.floor(Math.random() * colors.length)];
       }
+
       function createEmber() {
-        // Don't create embers on mobile devices
-        if (isMobileDevice()) {
+        // Skip if mobile or too many embers active
+        if (isMobileDevice() || activeEmbers.length >= MAX_EMBERS) {
           return;
         }
-        
+
         const ember = document.createElement('div');
-        ember.className = 'ember';
-        const size = Math.random() * 18 + 8;
-        const blur = Math.random() * 4 + 1;
+        const size = Math.random() * 14 + 6;
         const left = Math.random() * 100;
-        const duration = Math.random() * 2.5 + 3.5; // 3.5s to 6s
-        const sway = Math.random() * 40 + 10; // max horizontal sway px
+        const opacity = Math.random() * 0.4 + 0.3;
+        const duration = Math.random() * 2000 + 3000; // 3-5 seconds (reduced from 3.5-6s)
         const color = randomColor();
-        const opacity = Math.random() * 0.4 + 0.4;
-        ember.style.width = `${size}px`;
-        ember.style.height = `${size}px`;
-        ember.style.left = `${left}vw`;
-        ember.style.bottom = '-40px';
-        ember.style.opacity = 0;
-        ember.style.position = 'fixed';
-        ember.style.pointerEvents = 'none';
-        ember.style.zIndex = 9999;
-        ember.style.borderRadius = '50%';
-        ember.style.background = `radial-gradient(circle, ${color} 0%, #ff1a1a 60%, transparent 100%)`;
-        ember.style.filter = `blur(${blur}px) brightness(1.2)`;
-        // Animate
-        const start = Date.now();
-        const maxY = window.innerHeight + 80;
-        const swayFreq = Math.random() * 0.002 + 0.0015; // radians/ms
-        function animate() {
-          const now = Date.now();
-          const t = (now - start) / 1000;
-          const progress = t / duration;
-          if (progress > 1) {
-            ember.remove();
-            return;
-          }
-          // Fade in/out
-          if (progress < 0.15) {
-            ember.style.opacity = (progress / 0.15) * opacity;
-          } else if (progress > 0.85) {
-            ember.style.opacity = ((1 - progress) / 0.15) * opacity;
-          } else {
-            ember.style.opacity = opacity;
-          }
-          // Vertical position
-          const y = progress * maxY;
-          // Sway left/right
-          const x = left + Math.sin(t * 2 * Math.PI * swayFreq * 1000 + left) * sway;
-          ember.style.transform = `translate(${x - left}vw, -${y}px)`;
-          requestAnimationFrame(animate);
-        }
+        const blur = Math.random() * 2 + 1; // Reduced blur for performance
+        const sway = Math.random() * 25 + 10;
+        
+        // Use CSS animations instead of requestAnimationFrame for better performance
+        ember.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          position: fixed;
+          left: ${left}vw;
+          bottom: -40px;
+          opacity: 0;
+          pointer-events: none;
+          z-index: 9999;
+          border-radius: 50%;
+          background: radial-gradient(circle, ${color} 0%, #ff1a1a 60%, transparent 100%);
+          filter: blur(${blur}px) brightness(1.2);
+          transform: translateZ(0); /* Hardware acceleration */
+          transition: transform ${duration}ms linear, opacity ${duration}ms ease-in-out;
+        `;
+        
+        activeEmbers.push(ember);
         document.body.appendChild(ember);
-        requestAnimationFrame(animate);
+        
+        // Start animation with CSS transitions
+        requestAnimationFrame(() => {
+          const yDistance = window.innerHeight + 80;
+          const xOffset = Math.sin(Date.now() * 0.001) * sway;
+          ember.style.transform = `translate(${xOffset}px, -${yDistance}px) translateZ(0)`;
+          ember.style.opacity = opacity;
+        });
+        
+        // Clean up ember after animation completes
+        setTimeout(() => {
+          if (ember.parentNode) {
+            ember.remove();
+          }
+          const index = activeEmbers.indexOf(ember);
+          if (index > -1) {
+            activeEmbers.splice(index, 1);
+          }
+        }, duration + 100);
       }
       
-      // Only start ember generation if not on mobile
-      if (!isMobileDevice()) {
-        setInterval(createEmber, 250); // More embers for density
+      function startEmberSystem() {
+        if (emberInterval || isMobileDevice()) return;
+        
+        // Reduced frequency for wallet browsers
+        const frequency = isWalletBrowser() ? 600 : 350; // Less frequent in wallet browsers
+        emberInterval = setInterval(createEmber, frequency);
       }
+
+      function stopEmberSystem() {
+        if (emberInterval) {
+          clearInterval(emberInterval);
+          emberInterval = null;
+        }
+        // Clean up all active embers
+        activeEmbers.forEach(ember => {
+          if (ember.parentNode) {
+            ember.remove();
+          }
+        });
+        activeEmbers = [];
+      }
+
+      // Only start if not on mobile
+      if (!isMobileDevice()) {
+        startEmberSystem();
+      }
+
+      // Pause animations when page becomes hidden to save battery/performance
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopEmberSystem();
+        } else if (!isMobileDevice()) {
+          startEmberSystem();
+        }
+      });
+
+      // Clean up on page unload
+      window.addEventListener('beforeunload', stopEmberSystem);
     </script>
     <!-- --- Wallet Connect Logic --- -->
     <script>
-// --- CONFIG: QuickNode Endpoints ---
-const SOLANA_RPC = 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ef60836be4b1b1fea3b948cf28c518322a18147';
+// --- CONFIG: QuickNode Endpoints (Using centralized RPC config) ---
+const SOLANA_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com';
 // Get RPC endpoint from centralized config
-const BASE_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getBaseEndpoint() : 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/aa86b92100862c55985ff1d322a9ff07d9ab236f';
+const BASE_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getBaseEndpoint() : 'https://mainnet.base.org';
 
 // --- GLOBAL STATE ---
 let currentChain = null; // 'base' or 'solana'
@@ -1403,6 +1490,36 @@ async function safeLoad(fn) {
 
 // Wait for wallet.js to initialize
 document.addEventListener('DOMContentLoaded', function() {
+  // Performance optimization for wallet browsers
+  function optimizeForWalletBrowser() {
+    const isWalletBrowser = /MetaMask|Trust|Coinbase|Rainbow|WalletConnect|Phantom/i.test(navigator.userAgent) || 
+                           window.ethereum || window.solana;
+    
+    if (isWalletBrowser) {
+      console.log('🔧 Wallet browser detected - applying performance optimizations');
+      
+      // Reduce CSS animation frequency
+      const style = document.createElement('style');
+      style.textContent = `
+        body::before, body::after {
+          animation-duration: 12s !important;
+          filter: blur(0.5px) brightness(1.02) !important;
+        }
+        .header {
+          box-shadow: 0 0 24px 6px #ff1a1a55, 0 0 12px #ffae0088 !important;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Limit ember count further if wallet browser
+      if (window.MAX_EMBERS) {
+        window.MAX_EMBERS = Math.min(window.MAX_EMBERS, 2);
+      }
+    }
+  }
+  
+  optimizeForWalletBrowser();
+  
   // IMMEDIATELY setup our chain selection before wallet.js can interfere
   setupChainSelectionButton();
   
@@ -1926,8 +2043,17 @@ document.getElementById('burnForm').addEventListener('submit', async function(e)
 });
 
 // --- BALANCE DISPLAY ---
-document.getElementById('tokenAddress').addEventListener('input', updateBalance);
-document.getElementById('tokenAddress').addEventListener('change', updateBalance);
+// Throttle updateBalance to prevent excessive calls that can cause lag
+let updateBalanceTimeout = null;
+function throttledUpdateBalance() {
+  if (updateBalanceTimeout) {
+    clearTimeout(updateBalanceTimeout);
+  }
+  updateBalanceTimeout = setTimeout(updateBalance, 300); // Wait 300ms before updating
+}
+
+document.getElementById('tokenAddress').addEventListener('input', throttledUpdateBalance);
+document.getElementById('tokenAddress').addEventListener('change', updateBalance); // Immediate update on change
 
 async function updateBalance() {
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
@@ -2160,9 +2286,6 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
         </div>
         <div style="margin-bottom: 0.5rem;">
           © 2025 Wild West Launchpad. All rights reserved.
-        </div>
-        <div style="font-size: 0.8rem; color: #c0c0c0;">
-          Decentralized token launch platform • Built for the future of Web3
         </div>
       </div>
     </footer>

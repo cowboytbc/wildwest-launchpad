@@ -36,9 +36,49 @@ jobs:
           fi
           
       - name: Build project
+        env:
+          SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+          BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           echo "Building Wild West Crypto Launchpad..."
-          # Add any build steps if needed
+          
+          # Create production config with injected secrets
+          cat > js/production-config.js << 'EOF'
+          // Production configuration injected at build time from GitHub Secrets
+          (function() {
+            'use strict';
+            
+            // Secure configuration from GitHub Secrets
+            window.PRODUCTION_CONFIG = {
+              token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}',
+              rpc: {
+                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
+                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
+              },
+              injectedAt: new Date().toISOString(),
+              source: 'github-actions'
+            };
+            
+            // Update ENV_CONFIG if it exists
+            if (window.ENV_CONFIG && typeof window.ENV_CONFIG.updateFromSecureAPI === 'function') {
+              const secureConfigs = {
+                github: { token: window.PRODUCTION_CONFIG.token },
+                rpc: window.PRODUCTION_CONFIG.rpc
+              };
+              window.ENV_CONFIG.updateFromSecureAPI(secureConfigs);
+              console.log('✅ ENV_CONFIG updated with GitHub Secrets');
+            }
+            
+            console.log('🔐 Production configuration loaded from GitHub Secrets');
+            console.log('📊 RPC Status:', {
+              solana: !!window.PRODUCTION_CONFIG.rpc.solana,
+              base: !!window.PRODUCTION_CONFIG.rpc.base
+            });
+          })();
+          EOF
+          
+          echo "✅ Production config generated with secrets"
           
       - name: Deploy to GitHub Pages
         uses: actions/configure-pages@v4

@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="icon" type="image/png" href="../images/locked.png">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Production Configuration (GitHub Secrets injection) -->
+  <script src="../js/production-config.js"></script>
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
@@ -18,6 +20,7 @@
     window.BASE_LOCKING_HANDLES_WALLET_BUTTON = true;
   </script>
   
+  <script src="../js/multi-wallet-manager.js"></script>
   <script src="../js/wallet.js"></script>
   <style>
     body {
@@ -650,32 +653,107 @@
     let provider, signer, userAddress;
 
     async function connectWallet() {
-      // Use centralized wallet.js connectWithChainSelection for mobile browser compatibility
-      const connected = await window.wildWestWallet.connectWithChainSelection();
-      if (connected && window.wildWestWallet.currentChain === 'base') {
-        provider = window.wildWestWallet.provider;
-        signer = window.wildWestWallet.signer;
-        userAddress = window.wildWestWallet.account;
-        document.getElementById('walletAddress').textContent = 'Connected: ' + userAddress;
-        loadUserLocks();
-        // Reload fee display to check for exemptions
-        loadLockCreationFee();
-      } else if (connected && window.wildWestWallet.currentChain !== 'base') {
-        alert('Please connect to Base network for token locking.');
+      console.log('🔵 Base locking: connectWallet function called');
+      
+      try {
+        // Check if wallet system is available
+        if (!window.wildWestWallet) {
+          console.error('❌ wildWestWallet not available');
+          alert('Wallet system not loaded. Please refresh the page.');
+          return;
+        }
+        
+        console.log('🔵 Calling connectToSpecificChain for base...');
+        
+        // For Base locking page, directly connect to Base network only
+        const connected = await window.wildWestWallet.connectToSpecificChain('base');
+        
+        console.log('🔵 connectToSpecificChain result:', connected);
+        console.log('🔵 Current chain after connection:', window.wildWestWallet.currentChain);
+        
+        if (connected && window.wildWestWallet.currentChain === 'base') {
+          provider = window.wildWestWallet.provider;
+          signer = window.wildWestWallet.signer;
+          userAddress = window.wildWestWallet.account;
+          document.getElementById('walletAddress').textContent = 'Connected: ' + userAddress;
+          loadUserLocks();
+          // Reload fee display to check for exemptions
+          loadLockCreationFee();
+          console.log('✅ Base wallet connected successfully');
+        } else if (connected && window.wildWestWallet.currentChain !== 'base') {
+          console.log('⚠️ Connected but wrong network. Current:', window.wildWestWallet.currentChain);
+          alert('Please connect to Base network for token locking.');
+        } else {
+          console.log('❌ Connection failed');
+          alert('Failed to connect wallet. Please try again.');
+        }
+      } catch (error) {
+        console.error('❌ Error in connectWallet:', error);
+        alert('Error connecting wallet: ' + error.message);
       }
     }
 
     // Wait for wallet.js to be available
     function waitForWalletSystem() {
+      console.log('🔍 Waiting for wallet system... wildWestWallet exists:', !!window.wildWestWallet);
+      
       if (window.wildWestWallet) {
-        document.getElementById('connectWalletBtn').onclick = connectWallet;
-        document.getElementById('connectWalletBtn').textContent = 'CONNECT WALLET';
+        console.log('✅ Wallet system loaded, setting up connect button');
+        const connectBtn = document.getElementById('connectWalletBtn');
+        
+        if (connectBtn) {
+          connectBtn.onclick = connectWallet;
+          connectBtn.textContent = 'CONNECT WALLET';
+          console.log('✅ Connect button configured');
+        } else {
+          console.error('❌ Connect button not found');
+        }
       } else {
+        console.log('⏳ Wallet system not ready, waiting...');
         setTimeout(waitForWalletSystem, 100);
       }
     }
     
     waitForWalletSystem();
+
+    // Debug function to test wallet system
+    window.debugWalletSystem = function() {
+      console.log('🔍 DEBUG: Wallet System Status');
+      console.log('• window.wildWestWallet exists:', !!window.wildWestWallet);
+      console.log('• BASE_LOCKING_HANDLES_WALLET_BUTTON:', window.BASE_LOCKING_HANDLES_WALLET_BUTTON);
+      
+      if (window.wildWestWallet) {
+        console.log('• isConnected:', window.wildWestWallet.isConnected);
+        console.log('• account:', window.wildWestWallet.account);
+        console.log('• currentChain:', window.wildWestWallet.currentChain);
+        console.log('• isConnecting:', window.wildWestWallet.isConnecting);
+      }
+      
+      const connectBtn = document.getElementById('connectWalletBtn');
+      console.log('• Connect button exists:', !!connectBtn);
+      console.log('• Connect button onclick:', connectBtn?.onclick);
+      console.log('• Connect button text:', connectBtn?.textContent);
+      
+      return {
+        walletSystem: !!window.wildWestWallet,
+        connectButton: !!connectBtn,
+        buttonHandler: !!connectBtn?.onclick
+      };
+    };
+
+    // Debug function to manually test connection
+    window.testConnection = async function() {
+      console.log('🧪 Testing wallet connection manually...');
+      try {
+        await connectWallet();
+      } catch (error) {
+        console.error('❌ Manual test failed:', error);
+      }
+    };
+
+    console.log('💡 Debug functions available:');
+    console.log('• debugWalletSystem() - Check wallet system status');
+    console.log('• testConnection() - Manually test wallet connection');
 
     // Load and display the lock creation fee
     async function loadLockCreationFee() {
@@ -991,15 +1069,14 @@
           erc20.balanceOf(userAddress)
         ]);
         let usdValue = '';
-        // Optionally fetch USD value from a public API (e.g. Coingecko, or your QuickNode endpoint if it supports price feeds)
-        // Example with Coingecko (if symbol is known):
+        // TODO: Implement price fetching using QuickNode or on-chain price oracles
+        // This reduces external API dependencies and improves site efficiency
+        // Example: Use Chainlink price feeds via QuickNode Base endpoint
         try {
-          const resp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${symbol.toLowerCase()}&vs_currencies=usd`);
-          const data = await resp.json();
-          if (data && data[symbol.toLowerCase()] && data[symbol.toLowerCase()].usd) {
-            const bal = parseFloat(ethers.utils.formatUnits(balance, decimals));
-            usdValue = ` ($${(bal * data[symbol.toLowerCase()].usd).toFixed(2)} USD)`;
-          }
+          // Disabled CoinGecko API for efficiency - implement QuickNode price feeds instead
+          // const resp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${symbol.toLowerCase()}&vs_currencies=usd`);
+          // Price fetching temporarily disabled for efficiency
+          usdValue = ''; // Remove USD pricing for now to eliminate external API calls
         } catch {}
         tokenInfoDiv.textContent = `Name: ${name} | Symbol: ${symbol} | Balance: ${ethers.utils.formatUnits(balance, decimals)}${symbol}${usdValue}`;
       } catch (err) {
@@ -1137,9 +1214,6 @@
       </div>
       <div style="margin-bottom: 0.5rem;">
         © 2025 Wild West Launchpad. All rights reserved.
-      </div>
-      <div style="font-size: 0.8rem; color: #c0c0c0;">
-        Decentralized token launch platform • Built for the future of Web3
       </div>
     </div>
   </footer>

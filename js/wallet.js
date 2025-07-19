@@ -15,36 +15,49 @@ class WildWestWallet {
   }
 
   async init() {
-    // Setup UI handlers only - no automatic connection
+    // Setup UI handlers only - NO automatic wallet detection/connection
     this.setupEventHandlers();
+    console.log('� Wallet system initialized - no auto-connection');
+    // Don't call checkConnection() on initialization - wait for user interaction
   }
 
   async checkConnection() {
     try {
-      // Only check connection status - do not automatically connect
-      // This method should only be called when user explicitly wants to reconnect
-      const availableWallets = this.detectEVMWallets();
-      if (availableWallets.length > 0) {
-        const primaryWallet = availableWallets[0];
-        const accounts = await primaryWallet.provider.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          this.account = accounts[0];
-          this.isConnected = true;
-          this.provider = new ethers.providers.Web3Provider(primaryWallet.provider);
-          this.signer = this.provider.getSigner();
+      // PASSIVE connection check - do NOT trigger wallet popups
+      // Only check if wallet was previously connected in this session
+      if (this.account && this.isConnected && this.provider) {
+        // Try to verify existing connection without triggering popup
+        try {
           const network = await this.provider.getNetwork();
           this.currentChain = network.chainId;
           this.updateWalletUI();
-          console.log(`Wallet already connected via ${primaryWallet.name}:`, this.account);
+          console.log('📋 Wallet connection verified (passive check):', this.account);
           return true;
+        } catch (error) {
+          // Previous connection is no longer valid
+          console.log('⚠️ Previous wallet connection expired');
+          this.resetWalletState();
         }
       }
+      
+      // Don't automatically request accounts - this triggers popups!
+      // Instead, just update UI to show disconnected state
+      this.updateWalletUI();
       return false;
     } catch (error) {
-      console.error('Error checking connection:', error);
+      console.error('Error in passive connection check:', error);
+      this.resetWalletState();
       this.updateWalletUI();
       return false;
     }
+  }
+
+  resetWalletState() {
+    this.account = null;
+    this.isConnected = false;
+    this.currentChain = null;
+    this.provider = null;
+    this.signer = null;
   }
 
   // Detect available Solana wallets (including mobile support)
@@ -133,6 +146,94 @@ class WildWestWallet {
     try {
       this.isConnecting = true;
       
+      // Use multi-wallet manager for graceful wallet selection
+      if (window.multiWalletManager) {
+        return await window.multiWalletManager.showWalletSelection('solana', async (selectedWallet) => {
+          console.log(`🟣 Connecting to selected Solana wallet: ${selectedWallet.name}`);
+          return await this.connectToSolanaProvider(selectedWallet.provider, selectedWallet.name);
+        });
+      }
+      
+      // Fallback to original detection if multi-wallet manager not available
+      const availableWallets = this.detectSolanaWallets();
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (availableWallets.length === 0) {
+        if (isMobile) {
+          this.showWalletInstallationGuide('solana');
+          return false;
+        } else {
+          throw new Error('No Solana wallet found. Please install Phantom, Solflare, or another Solana wallet.');
+        }
+      }
+      
+      // Use the first available wallet (priority order)
+      const selectedWallet = availableWallets[0];
+      console.log(`Using Solana wallet: ${selectedWallet.name}`);
+      return await this.connectToSolanaProvider(selectedWallet.provider, selectedWallet.name);
+      
+    } catch (error) {
+      console.error('Solana wallet connection failed:', error);
+      this.showErrorMessage(`Failed to connect Solana wallet: ${error.message}`);
+      return false;
+    } finally {
+      this.isConnecting = false;
+    }
+  }
+
+  // Helper method to connect to a specific Solana provider
+  async connectToSolanaProvider(wallet, walletName) {
+    // Ensure wallet has connect method
+    if (!wallet.connect || typeof wallet.connect !== 'function') {
+      throw new Error('Wallet does not support connection');
+    }
+    
+    const response = await wallet.connect();
+    console.log('Solana wallet response:', response);
+    
+    let publicKey = null;
+    
+    // Handle different response formats
+    if (response && typeof response === 'object' && response.publicKey) {
+      // Standard format: response contains publicKey
+      publicKey = response.publicKey;
+    } else if (response === true || response === undefined) {
+      // Some wallets return true or undefined on successful connection
+      // Public key should be available directly on the wallet
+      if (wallet.publicKey) {
+        publicKey = wallet.publicKey;
+      } else {
+        throw new Error('Wallet connected but public key not accessible');
+      }
+    } else {
+      throw new Error('Unexpected wallet response format');
+    }
+    
+    if (!publicKey) {
+      throw new Error('No public key found after wallet connection');
+    }
+    
+    // Ensure publicKey has toString method
+    if (!publicKey.toString || typeof publicKey.toString !== 'function') {
+      throw new Error('Invalid public key format - missing toString method');
+    }
+    
+    this.account = publicKey.toString();
+    this.isConnected = true;
+    this.currentChain = 'solana';
+    this.provider = wallet;
+    
+    this.updateWalletUI();
+    this.showStatus(`Solana wallet connected via ${walletName}`, 'success');
+    localStorage.setItem('wildwest_wallet_connected', 'solana');
+    return true;
+  }
+
+  // Direct Solana wallet connection without isConnecting check - used by connectToSpecificChain
+  async connectSolanaWalletDirect() {
+    console.log('🟣 connectSolanaWalletDirect called - bypassing isConnecting check');
+    
+    try {
       // Detect available Solana wallets
       const availableWallets = this.detectSolanaWallets();
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -150,7 +251,7 @@ class WildWestWallet {
       // Use the first available wallet (priority order)
       const selectedWallet = availableWallets[0];
       const wallet = selectedWallet.provider;
-      console.log(`Using Solana wallet: ${selectedWallet.name}`);
+      console.log(`🟣 Using Solana wallet: ${selectedWallet.name}`);
 
       // Ensure wallet has connect method
       if (!wallet.connect || typeof wallet.connect !== 'function') {
@@ -158,7 +259,7 @@ class WildWestWallet {
       }
       
       const response = await wallet.connect();
-      console.log('Solana wallet response:', response);
+      console.log('🟣 Solana wallet response:', response);
       
       let publicKey = null;
       
@@ -166,24 +267,15 @@ class WildWestWallet {
       if (response && typeof response === 'object' && response.publicKey) {
         // Standard format: response contains publicKey
         publicKey = response.publicKey;
-      } else if (response === true || response === undefined) {
-        // Some wallets return true or undefined on successful connection
-        // Public key should be available directly on the wallet
-        if (wallet.publicKey) {
-          publicKey = wallet.publicKey;
-        } else {
-          throw new Error('Wallet connected but public key not accessible');
-        }
+      } else if (wallet.publicKey) {
+        // Alternative format: publicKey is directly on wallet
+        publicKey = wallet.publicKey;
       } else {
-        throw new Error('Unexpected wallet response format');
+        throw new Error('No public key returned from wallet connection');
       }
-      
-      if (!publicKey) {
-        throw new Error('No public key found after wallet connection');
-      }
-      
+
       // Ensure publicKey has toString method
-      if (!publicKey.toString || typeof publicKey.toString !== 'function') {
+      if (!publicKey || typeof publicKey.toString !== 'function') {
         throw new Error('Invalid public key format - missing toString method');
       }
       
@@ -195,16 +287,11 @@ class WildWestWallet {
       this.updateWalletUI();
       this.showStatus(`Solana wallet connected via ${selectedWallet.name}`, 'success');
       localStorage.setItem('wildwest_wallet_connected', 'solana');
-      this.isConnecting = false;
       return true;
     } catch (error) {
-      console.error('Solana wallet connection error:', error);
+      console.error('🟣 Direct Solana wallet connection error:', error);
       this.showStatus('Failed to connect Solana wallet: ' + error.message, 'error');
-      this.isConnecting = false;
       return false;
-    } finally {
-      // Ensure flag is always reset
-      this.isConnecting = false;
     }
   }
 
@@ -219,8 +306,80 @@ class WildWestWallet {
 
     try {
       this.isConnecting = true;
-      console.log('🔵 Set isConnecting to true, starting Base wallet connection...');
+      console.log('🔵 Set isConnecting to true, starting Base wallet connection with multi-wallet support...');
       
+      // Use multi-wallet manager for graceful wallet selection
+      if (window.multiWalletManager) {
+        return await window.multiWalletManager.showWalletSelection('ethereum', async (selectedWallet) => {
+          console.log(`🔵 Connecting to selected Base wallet: ${selectedWallet.name}`);
+          return await this.connectToBaseProvider(selectedWallet.provider, selectedWallet.name);
+        });
+      }
+      
+      // Fallback to original detection if multi-wallet manager not available
+      const availableWallets = this.detectEVMWallets();
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (availableWallets.length === 0) {
+        if (isMobile) {
+          this.showWalletInstallationGuide('base');
+          return false;
+        } else {
+          throw new Error('No EVM wallet detected. Please install MetaMask, Coinbase Wallet, or another Web3 wallet.');
+        }
+      }
+      
+      // Use the first available wallet (priority order: MetaMask, Coinbase, others)
+      const selectedWallet = availableWallets[0];
+      console.log(`Using EVM wallet: ${selectedWallet.name}`);
+      return await this.connectToBaseProvider(selectedWallet.provider, selectedWallet.name);
+      
+    } catch (error) {
+      console.error('🔵 Base wallet connection failed:', error);
+      this.showErrorMessage(`Failed to connect wallet: ${error.message}`);
+      return false;
+    } finally {
+      this.isConnecting = false;
+    }
+  }
+
+  // Helper method to connect to a specific Base provider
+  async connectToBaseProvider(provider, walletName) {
+    // Always request user approval for connection
+    console.log('🔵 Requesting wallet connection (eth_requestAccounts)...');
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+    console.log('🔵 Wallet connection response:', accounts);
+    
+    if (accounts && accounts.length > 0) {
+      console.log('🔵 Setting up wallet connection...');
+      this.account = accounts[0];
+      this.isConnected = true;
+      this.provider = new ethers.providers.Web3Provider(provider);
+      this.signer = this.provider.getSigner();
+      
+      // Switch to Base network
+      console.log('🔵 About to switch to Base network...');
+      await this.switchToBase(provider);
+      console.log('🔵 Network switch completed, getting network info...');
+      
+      const network = await this.provider.getNetwork();
+      this.currentChain = network.chainId;
+      console.log('🔵 Connected to network:', network.chainId, network.name);
+      
+      this.updateWalletUI();
+      this.showStatus(`Base wallet connected via ${walletName}`, 'success');
+      localStorage.setItem('wildwest_wallet_connected', 'base');
+      return true;
+    } else {
+      throw new Error('No accounts returned from wallet connection');
+    }
+  }
+
+  // Direct Base wallet connection without isConnecting check - used by connectToSpecificChain
+  async connectBaseWalletDirect() {
+    console.log('🔵 connectBaseWalletDirect called - bypassing isConnecting check');
+    
+    try {
       // Detect available EVM wallets
       const availableWallets = this.detectEVMWallets();
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -237,7 +396,7 @@ class WildWestWallet {
       
       // Use the first available wallet (priority order: MetaMask, Coinbase, others)
       const selectedWallet = availableWallets[0];
-      console.log(`Using EVM wallet: ${selectedWallet.name}`);
+      console.log(`🔵 Using EVM wallet: ${selectedWallet.name}`);
       
       // Always request user approval for connection
       console.log('🔵 Requesting wallet connection (eth_requestAccounts)...');
@@ -257,25 +416,20 @@ class WildWestWallet {
         console.log('🔵 Network switch completed, getting network info...');
         
         const network = await this.provider.getNetwork();
-        this.currentChain = network.chainId;
-        console.log('🔵 Connected to network:', network.chainId, network.name);
+        this.currentChain = network.chainId === 8453 ? 'base' : network.chainId; // Map Base chainId to 'base'
+        console.log('🔵 Connected to network:', network.chainId, network.name, 'currentChain set to:', this.currentChain);
         
         this.updateWalletUI();
         this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
         localStorage.setItem('wildwest_wallet_connected', 'base');
-        this.isConnecting = false;
         return true;
       } else {
         throw new Error('No accounts returned from wallet connection');
       }
     } catch (error) {
-      console.error('Base wallet connection error:', error);
+      console.error('🔵 Direct Base wallet connection error:', error);
       this.showStatus('Failed to connect Base wallet: ' + error.message, 'error');
-      this.isConnecting = false;
       return false;
-    } finally {
-      // Ensure flag is always reset
-      this.isConnecting = false;
     }
   }
 
@@ -643,6 +797,47 @@ class WildWestWallet {
     return new Promise((resolve) => {
       this.showChainSelectionModal(resolve);
     });
+  }
+
+  async connectToSpecificChain(chainName) {
+    console.log('🔍 connectToSpecificChain called with chain:', chainName);
+    console.log('🔍 Current isConnecting flag:', this.isConnecting);
+    
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      console.log('Connection already in progress, please wait...');
+      return false;
+    }
+
+    try {
+      this.isConnecting = true;
+      console.log('🔍 Set isConnecting to true in connectToSpecificChain');
+      
+      let result = false;
+      
+      // Handle chain-specific connections directly without showing modal
+      if (chainName === 'solana') {
+        console.log('🟣 Connecting directly to Solana...');
+        result = await this.connectSolanaWalletDirect(); // Use direct version that doesn't check isConnecting
+      } else if (chainName === 'base') {
+        console.log('🔵 Connecting directly to Base...');
+        result = await this.connectBaseWalletDirect(); // Use a direct version that doesn't check isConnecting
+      } else {
+        // If we get here, unknown chain specified
+        console.log('❌ Unknown chain specified:', chainName);
+        result = false;
+      }
+      
+      console.log('🔍 Chain connection result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error connecting to specific chain:', error);
+      this.showStatus('Failed to connect wallet: ' + error.message, 'error');
+      return false;
+    } finally {
+      this.isConnecting = false;
+      console.log('🔍 Reset isConnecting to false in connectToSpecificChain');
+    }
   }
 
   showChainSelectionModal(callback) {

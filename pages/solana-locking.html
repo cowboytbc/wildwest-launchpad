@@ -10,6 +10,8 @@
   <link rel="icon" type="image/png" href="../images/locked.png">
   <!-- Ethers.js for EVM wallet support -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Production Configuration (GitHub Secrets injection) -->
+  <script src="../js/production-config.js"></script>
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
@@ -19,6 +21,8 @@
     window.SOLANA_LOCKING_HANDLES_WALLET_BUTTON = true;
   </script>
   
+  <!-- Multi-wallet management -->
+  <script src="../js/multi-wallet-manager.js"></script>
   <!-- Custom wallet integration -->
   <script src="../js/wallet.js"></script>
   <!-- Solana Wallet Adapter UI and Core -->
@@ -724,7 +728,7 @@
         console.log('✅ Using centralized RPC config:', window.RPC_CONFIG.getSolanaEndpoint());
       } else {
         // Fallback to hardcoded endpoint if config not loaded
-        connection = new solanaWeb3.Connection('https://withered-divine-spring.solana-mainnet.quiknode.pro/0ef60836be4b1b1fea3b948cf28c518322a18147');
+        connection = new solanaWeb3.Connection(window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com');
         console.log('⚠️ Using fallback RPC endpoint');
       }
     }
@@ -830,26 +834,55 @@
 
     // Solana wallet connect logic using centralized wallet.js
     async function connectWallet() {
+      console.log('🟣 Solana locking: connectWallet function called');
+      
       const statusDiv = document.getElementById('status');
       statusDiv.textContent = '';
       
-      // Use centralized wallet.js connectWithChainSelection for mobile browser compatibility
-      const connected = await window.wildWestWallet.connectWithChainSelection();
-      if (connected && window.wildWestWallet.currentChain === 'solana') {
-        wallet = window.wildWestWallet.provider;
-        publicKey = window.wildWestWallet.account;
-        document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKey;
-        loadUserLocks();
-        // Reload fee display to check for exemptions
-        loadLockCreationFee();
-      } else if (connected && window.wildWestWallet.currentChain !== 'solana') {
-        alert('Please connect to Solana network for token locking.');
+      try {
+        // Check if wallet system is available
+        if (!window.wildWestWallet) {
+          console.error('❌ wildWestWallet not available');
+          alert('Wallet system not loaded. Please refresh the page.');
+          return;
+        }
+        
+        console.log('🟣 Calling connectToSpecificChain for solana...');
+        
+        // For Solana locking page, directly connect to Solana network only
+        const connected = await window.wildWestWallet.connectToSpecificChain('solana');
+        
+        console.log('🟣 connectToSpecificChain result:', connected);
+        console.log('🟣 Current chain after connection:', window.wildWestWallet.currentChain);
+        
+        if (connected && window.wildWestWallet.currentChain === 'solana') {
+          wallet = window.wildWestWallet.provider;
+          publicKey = window.wildWestWallet.account;
+          document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKey;
+          loadUserLocks();
+          // Reload fee display to check for exemptions
+          loadLockCreationFee();
+          console.log('✅ Solana wallet connected successfully');
+        } else if (connected && window.wildWestWallet.currentChain !== 'solana') {
+          console.log('⚠️ Connected but wrong network. Current:', window.wildWestWallet.currentChain);
+          alert('Please connect to Solana network for token locking.');
+        } else {
+          console.log('❌ Connection failed');
+          alert('Failed to connect wallet. Please try again.');
+        }
+      } catch (error) {
+        console.error('❌ Error in connectWallet:', error);
+        alert('Error connecting wallet: ' + error.message);
       }
     }
     
     // Wait for wallet.js to be available
     function waitForWalletSystem() {
+      console.log('🔍 Waiting for wallet system... wildWestWallet exists:', !!window.wildWestWallet);
+      
       if (window.wildWestWallet) {
+        console.log('✅ Wallet system loaded, setting up Solana connect button');
+        
         // Check if there's already a connection but it's not Solana
         if (window.wildWestWallet.currentChain && window.wildWestWallet.currentChain !== 'solana') {
           // Disconnect the non-Solana connection
@@ -870,15 +903,61 @@
           document.getElementById('connectWalletBtn').textContent = 'CONNECT SOLANA WALLET';
         }
         
-        document.getElementById('connectWalletBtn').onclick = function() {
-          connectWallet();
-        };
+        const connectBtn = document.getElementById('connectWalletBtn');
+        if (connectBtn) {
+          connectBtn.onclick = function() {
+            connectWallet();
+          };
+          console.log('✅ Solana connect button configured');
+        } else {
+          console.error('❌ Connect button not found');
+        }
       } else {
+        console.log('⏳ Wallet system not ready, waiting...');
         setTimeout(waitForWalletSystem, 100);
       }
     }
     
     waitForWalletSystem();
+
+    // Debug function to test wallet system
+    window.debugSolanaWalletSystem = function() {
+      console.log('🔍 DEBUG: Solana Wallet System Status');
+      console.log('• window.wildWestWallet exists:', !!window.wildWestWallet);
+      console.log('• SOLANA_LOCKING_HANDLES_WALLET_BUTTON:', window.SOLANA_LOCKING_HANDLES_WALLET_BUTTON);
+      
+      if (window.wildWestWallet) {
+        console.log('• isConnected:', window.wildWestWallet.isConnected);
+        console.log('• account:', window.wildWestWallet.account);
+        console.log('• currentChain:', window.wildWestWallet.currentChain);
+        console.log('• isConnecting:', window.wildWestWallet.isConnecting);
+      }
+      
+      const connectBtn = document.getElementById('connectWalletBtn');
+      console.log('• Connect button exists:', !!connectBtn);
+      console.log('• Connect button onclick:', connectBtn?.onclick);
+      console.log('• Connect button text:', connectBtn?.textContent);
+      
+      return {
+        walletSystem: !!window.wildWestWallet,
+        connectButton: !!connectBtn,
+        buttonHandler: !!connectBtn?.onclick
+      };
+    };
+
+    // Debug function to manually test connection
+    window.testSolanaConnection = async function() {
+      console.log('🧪 Testing Solana wallet connection manually...');
+      try {
+        await connectWallet();
+      } catch (error) {
+        console.error('❌ Manual Solana test failed:', error);
+      }
+    };
+
+    console.log('💡 Solana Debug functions available:');
+    console.log('• debugSolanaWalletSystem() - Check wallet system status');
+    console.log('• testSolanaConnection() - Manually test wallet connection');
 
     // Load and display the lock creation fee
     async function loadLockCreationFee() {
@@ -2196,9 +2275,6 @@
       </div>
       <div style="margin-bottom: 0.5rem;">
         © 2025 Wild West Launchpad. All rights reserved.
-      </div>
-      <div style="font-size: 0.8rem; color: #c0c0c0;">
-        Decentralized token launch platform • Built for the future of Web3
       </div>
     </div>
   </footer>
