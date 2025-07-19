@@ -833,15 +833,17 @@
       const statusDiv = document.getElementById('status');
       statusDiv.textContent = '';
       
-      // Use centralized wallet.js with 'solana' parameter
-      const connected = await window.wildWestWallet.connectWallet('solana');
-      if (connected) {
+      // Use centralized wallet.js connectWithChainSelection for mobile browser compatibility
+      const connected = await window.wildWestWallet.connectWithChainSelection();
+      if (connected && window.wildWestWallet.currentChain === 'solana') {
         wallet = window.wildWestWallet.provider;
         publicKey = window.wildWestWallet.account;
         document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKey;
         loadUserLocks();
         // Reload fee display to check for exemptions
         loadLockCreationFee();
+      } else if (connected && window.wildWestWallet.currentChain !== 'solana') {
+        alert('Please connect to Solana network for token locking.');
       }
     }
     
@@ -2175,6 +2177,31 @@
       </div>
     </div>
   </div>
+
+  <!-- Copyright Footer -->
+  <footer style="
+    background: linear-gradient(135deg, rgba(255, 26, 26, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+    border-top: 1px solid rgba(255, 174, 0, 0.3);
+    padding: 2rem 1rem;
+    text-align: center;
+    margin-top: 4rem;
+    color: #fffbe7;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 0.9rem;
+    text-shadow: 0 0 4px #000, 0 0 2px #ffae00;
+  ">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <div style="margin-bottom: 1rem;">
+        <span style="color: #ffae00; font-weight: 600; font-size: 1.1rem; text-shadow: 0 0 8px #ffae00;">WILDWEST LAUNCHPAD</span>
+      </div>
+      <div style="margin-bottom: 0.5rem;">
+        © 2025 Wild West Launchpad. All rights reserved.
+      </div>
+      <div style="font-size: 0.8rem; color: #c0c0c0;">
+        Decentralized token launch platform • Built for the future of Web3
+      </div>
+    </div>
+  </footer>
 
 </body>
 </html>

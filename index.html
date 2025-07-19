@@ -1949,31 +1949,12 @@ document.addEventListener('DOMContentLoaded', function() {
           account: window.wildWestWallet.account
         });
         
-        // If already connected, show disconnect prompt
+        // If already connected, show wallet details/disconnect options
         if (window.wildWestWallet.isConnected) {
-          const shouldDisconnect = confirm(`🔗 Wallet Already Connected!\n\nConnected to: ${window.wildWestWallet.account || 'Unknown'}\n\nWould you like to disconnect and connect a different wallet?`);
-          
-          if (shouldDisconnect) {
-            console.log('🔌 User chose to disconnect wallet');
-            await window.wildWestWallet.disconnectWallet();
-            // After disconnecting, show chain selection modal for new connection
-            try {
-              console.log('🔗 Attempting to connect new wallet...');
-              const connected = await window.wildWestWallet.connectWithChainSelection();
-              if (connected) {
-                console.log('✅ New wallet connected successfully!');
-              } else {
-                console.log('❌ New wallet connection failed or cancelled');
-              }
-            } catch (error) {
-              console.error('❌ New wallet connection failed:', error);
-            }
-          } else {
-            console.log('🔗 User chose to keep current wallet connection');
-            // Show dropdown menu instead
-            walletDropdownMenu.style.display = 
-              walletDropdownMenu.style.display === 'none' ? 'flex' : 'none';
-          }
+          console.log('🔗 Wallet already connected, showing disconnect options');
+          // Show dropdown menu for disconnect option
+          walletDropdownMenu.style.display = 
+            walletDropdownMenu.style.display === 'none' || !walletDropdownMenu.style.display ? 'flex' : 'none';
         } else {
           // Show chain selection modal - this will call connectWithChainSelection
           try {
@@ -2872,5 +2853,29 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('  inspectBottomBanner() - Inspect bottom banner data');
   </script>
+
+  <!-- Copyright Footer -->
+  <footer style="
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(0, 234, 255, 0.2);
+    padding: 2rem 1rem;
+    text-align: center;
+    margin-top: 4rem;
+    color: #c0c0c0;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 0.9rem;
+  ">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <div style="margin-bottom: 1rem;">
+        <span style="color: #00eaff; font-weight: 600; font-size: 1.1rem;">WILDWEST LAUNCHPAD</span>
+      </div>
+      <div style="margin-bottom: 0.5rem;">
+        © 2025 Wild West Launchpad. All rights reserved.
+      </div>
+      <div style="font-size: 0.8rem; color: #888;">
+        Decentralized token launch platform • Built for the future of Web3
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
