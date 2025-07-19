@@ -124,7 +124,15 @@ class WildWestWallet {
   }
 
   async connectSolanaWallet() {
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      console.log('Solana wallet connection already in progress...');
+      return false;
+    }
+
     try {
+      this.isConnecting = true;
+      
       // Detect available Solana wallets
       const availableWallets = this.detectSolanaWallets();
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -187,16 +195,32 @@ class WildWestWallet {
       this.updateWalletUI();
       this.showStatus(`Solana wallet connected via ${selectedWallet.name}`, 'success');
       localStorage.setItem('wildwest_wallet_connected', 'solana');
+      this.isConnecting = false;
       return true;
     } catch (error) {
       console.error('Solana wallet connection error:', error);
       this.showStatus('Failed to connect Solana wallet: ' + error.message, 'error');
+      this.isConnecting = false;
       return false;
+    } finally {
+      // Ensure flag is always reset
+      this.isConnecting = false;
     }
   }
 
   async connectBaseWallet() {
+    console.log('🔵 connectBaseWallet called, isConnecting flag:', this.isConnecting);
+    
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      console.log('Base wallet connection already in progress...');
+      return false;
+    }
+
     try {
+      this.isConnecting = true;
+      console.log('🔵 Set isConnecting to true, starting Base wallet connection...');
+      
       // Detect available EVM wallets
       const availableWallets = this.detectEVMWallets();
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -216,29 +240,42 @@ class WildWestWallet {
       console.log(`Using EVM wallet: ${selectedWallet.name}`);
       
       // Always request user approval for connection
+      console.log('🔵 Requesting wallet connection (eth_requestAccounts)...');
       const accounts = await selectedWallet.provider.request({ method: 'eth_requestAccounts' });
+      console.log('🔵 Wallet connection response:', accounts);
       
       if (accounts && accounts.length > 0) {
+        console.log('🔵 Setting up wallet connection...');
         this.account = accounts[0];
         this.isConnected = true;
         this.provider = new ethers.providers.Web3Provider(selectedWallet.provider);
         this.signer = this.provider.getSigner();
         
         // Switch to Base network
+        console.log('🔵 About to switch to Base network...');
         await this.switchToBase(selectedWallet.provider);
+        console.log('🔵 Network switch completed, getting network info...');
         
         const network = await this.provider.getNetwork();
         this.currentChain = network.chainId;
+        console.log('🔵 Connected to network:', network.chainId, network.name);
         
         this.updateWalletUI();
         this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
         localStorage.setItem('wildwest_wallet_connected', 'base');
+        this.isConnecting = false;
         return true;
+      } else {
+        throw new Error('No accounts returned from wallet connection');
       }
     } catch (error) {
       console.error('Base wallet connection error:', error);
       this.showStatus('Failed to connect Base wallet: ' + error.message, 'error');
+      this.isConnecting = false;
       return false;
+    } finally {
+      // Ensure flag is always reset
+      this.isConnecting = false;
     }
   }
 
@@ -559,25 +596,37 @@ class WildWestWallet {
   }
 
   async switchToBase(provider = window.ethereum) {
+    console.log('🔵 Attempting to switch to Base network...');
     try {
+      console.log('🔵 Requesting wallet_switchEthereumChain to Base (0x2105)...');
       await provider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: '0x2105' }], // Base mainnet
       });
+      console.log('✅ Successfully switched to Base network');
     } catch (switchError) {
+      console.log('🔵 Switch failed, error code:', switchError.code, 'message:', switchError.message);
       if (switchError.code === 4902) {
+        console.log('🔵 Base network not found, attempting to add it...');
         // Add Base network
-        await provider.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0x2105',
-            chainName: 'Base',
-            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-            rpcUrls: [window.RPC_CONFIG ? window.RPC_CONFIG.getBaseEndpoint() : 'https://mainnet.base.org'],
-            blockExplorerUrls: ['https://basescan.org']
-          }]
-        });
+        try {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x2105',
+              chainName: 'Base',
+              nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+              rpcUrls: [window.RPC_CONFIG ? window.RPC_CONFIG.getBaseEndpoint() : 'https://mainnet.base.org'],
+              blockExplorerUrls: ['https://basescan.org']
+            }]
+          });
+          console.log('✅ Successfully added and switched to Base network');
+        } catch (addError) {
+          console.error('❌ Failed to add Base network:', addError);
+          throw addError;
+        }
       } else {
+        console.error('❌ Failed to switch to Base network:', switchError);
         throw switchError;
       }
     }
@@ -585,6 +634,11 @@ class WildWestWallet {
 
   async connectWithChainSelection() {
     console.log('🔍 connectWithChainSelection called - showing chain selection modal');
+    console.log('🔍 isConnecting flag before modal:', this.isConnecting);
+    
+    // Reset the connecting flag before showing modal to ensure clean state
+    this.isConnecting = false;
+    
     // For index page - show chain selection modal
     return new Promise((resolve) => {
       this.showChainSelectionModal(resolve);
@@ -809,28 +863,10 @@ class WildWestWallet {
     try {
       this.isConnecting = true;
       
-      // If no chain specified, check if we're in a specific wallet browser
+      // If no chain specified, show chain selection instead of auto-detecting
       if (!chain) {
-        // Check if we're in Coinbase Wallet browser - default to Base
-        if (window.ethereum?.isCoinbaseWallet || window.ethereum?.selectedProvider?.isCoinbaseWallet) {
-          console.log('🔵 Coinbase Wallet detected, defaulting to Base');
-          return await this.connectBaseWallet();
-        }
-        
-        // Check if we're in another EVM wallet - default to Base
-        if (window.ethereum && !window.solana) {
-          console.log('🔵 EVM wallet detected, defaulting to Base');
-          return await this.connectBaseWallet();
-        }
-        
-        // Check if we're in Solana wallet - default to Solana
-        if (window.solana && !window.ethereum) {
-          console.log('🟣 Solana wallet detected, defaulting to Solana');
-          return await this.connectSolanaWallet();
-        }
-        
-        // If both or neither detected, show chain selection
-        console.log('✅ Multiple or no wallets detected, showing chain selection modal');
+        console.log('✅ No chain specified, showing chain selection modal');
+        this.isConnecting = false; // Reset flag before showing modal
         return await this.connectWithChainSelection();
       }
       
@@ -994,6 +1030,10 @@ class WildWestWallet {
       console.log('Solana locking page is handling wallet button, skipping wallet.js button setup');
       return;
     }
+    if (window.BANNER_ADMIN_HANDLES_WALLET_BUTTON) {
+      console.log('Banner admin page is handling wallet button, skipping wallet.js button setup');
+      return;
+    }
     
     const connectBtn = document.getElementById('connectWalletBtn');
     
@@ -1132,6 +1172,13 @@ document.addEventListener('DOMContentLoaded', () => {
   wildWestWallet = new WildWestWallet();
   // Make it globally available
   window.wildWestWallet = wildWestWallet;
+  
+  // Clear any pending connection states that might interfere
+  if (wildWestWallet) {
+    wildWestWallet.isConnecting = false;
+    console.log('🔄 Cleared any pending connection states');
+  }
+  
   console.log('wildWestWallet initialized and made globally available');
 });
 
@@ -1143,6 +1190,13 @@ if (document.readyState === 'loading') {
   console.log('DOM already loaded - initializing wallet system immediately');
   wildWestWallet = new WildWestWallet();
   window.wildWestWallet = wildWestWallet;
+  
+  // Clear any pending connection states that might interfere
+  if (wildWestWallet) {
+    wildWestWallet.isConnecting = false;
+    console.log('🔄 Cleared any pending connection states');
+  }
+  
   console.log('wildWestWallet initialized and made globally available');
 }
 

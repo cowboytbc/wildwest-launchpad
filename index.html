@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- Environment Configuration (must load first) -->
   <script src="js/env-config.js"></script>
+  <!-- Console Filter - Universal console control -->
+  <script src="js/console-filter.js"></script>
   <!-- Secure Configuration -->
   <script src="js/token-config.js"></script>
   <script src="js/secure-config.js"></script>
@@ -53,13 +55,14 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
       color: transparent;
-      filter: drop-shadow(0 0 24px #00eaff);
+      filter: drop-shadow(0 0 12px #00eaff);
       animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate;
       text-shadow:
-        0 0 32px #00eaff,
-        0 0 16px #00fff7,
-        0 0 8px #fff,
-        0 0 2px #00eaff;
+        0 0 16px #00eaff,
+        0 0 8px #00fff7,
+        0 0 4px #fff,
+        0 0 1px #000,
+        1px 1px 2px rgba(0, 0, 0, 0.8);
     }
     .wildwest-subtitle {
       display: block;
@@ -71,8 +74,12 @@
       color: #ffffff;
       margin-top: -0.3em;
       margin-bottom: 0.5em;
-      text-shadow: 0 0 8px #00eaff, 0 0 4px #00fff7, 0 0 2px #fff;
-      filter: drop-shadow(0 0 6px #00eaff);
+      text-shadow: 
+        0 0 4px #00eaff, 
+        0 0 2px #00fff7, 
+        0 0 1px #fff,
+        1px 1px 2px rgba(0, 0, 0, 0.9);
+      filter: drop-shadow(0 0 3px #00eaff);
       background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -108,14 +115,14 @@
       }
     }
     @keyframes wildwestBlueGlow {
-      0% { background-position: 0% 50%; filter: drop-shadow(0 0 32px #00eaff) drop-shadow(0 0 8px #00fff7); }
-      50% { background-position: 100% 50%; filter: drop-shadow(0 0 48px #00fff7) drop-shadow(0 0 16px #00eaff); }
-      100% { background-position: 0% 50%; filter: drop-shadow(0 0 32px #00eaff) drop-shadow(0 0 8px #00fff7); }
+      0% { background-position: 0% 50%; filter: drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 4px #00fff7); }
+      50% { background-position: 100% 50%; filter: drop-shadow(0 0 24px #00fff7) drop-shadow(0 0 8px #00eaff); }
+      100% { background-position: 0% 50%; filter: drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 4px #00fff7); }
     }
     @keyframes flickerBlue {
-      0% { text-shadow: 0 0 32px #00eaff, 0 0 16px #00fff7, 0 0 2px #000; filter: brightness(1.1); }
-      50% { text-shadow: 0 0 48px #00fff7, 0 0 32px #00eaff, 0 0 8px #fff; filter: brightness(1.3); }
-      100% { text-shadow: 0 0 32px #00eaff, 0 0 16px #00fff7, 0 0 2px #000; filter: brightness(1.1); }
+      0% { text-shadow: 0 0 16px #00eaff, 0 0 8px #00fff7, 0 0 1px #000, 1px 1px 2px rgba(0, 0, 0, 0.8); filter: brightness(1.05); }
+      50% { text-shadow: 0 0 24px #00fff7, 0 0 16px #00eaff, 0 0 4px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); filter: brightness(1.15); }
+      100% { text-shadow: 0 0 16px #00eaff, 0 0 8px #00fff7, 0 0 1px #000, 1px 1px 2px rgba(0, 0, 0, 0.8); filter: brightness(1.05); }
     }
     .arcade-emoji-link {
       position: absolute;
@@ -528,8 +535,12 @@
       text-align: center;
       color: #ffffff;
       margin-bottom: 1.5rem;
-      text-shadow: 0 0 10px #00eaff, 0 0 5px #00fff7;
-      filter: drop-shadow(0 0 8px #00eaff);
+      text-shadow: 
+        0 0 5px #00eaff, 
+        0 0 2px #00fff7,
+        0 0 1px #fff,
+        1px 1px 2px rgba(0, 0, 0, 0.9);
+      filter: drop-shadow(0 0 4px #00eaff);
       background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -636,22 +647,30 @@
         padding: 0;
       }
       
-      .project-slot {
-        width: 100%;
-        min-width: auto;
-        max-width: 100%;
-        margin: 0;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+      .project-slot,
+      .all-projects-grid .project-slot,
+      .project-grid .project-slot,
+      .trending-section .project-slot {
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 1rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
       }
       
       .trending-title {
         font-size: 1.3rem;
         margin-bottom: 2rem;
         text-align: center;
+        text-shadow: 
+          0 0 3px #00eaff, 
+          0 0 1px #00fff7,
+          1px 1px 2px rgba(0, 0, 0, 0.9);
+        filter: drop-shadow(0 0 2px #00eaff);
       }
       
       .trending-category {
@@ -681,13 +700,24 @@
         gap: 0.8rem;
       }
       
-      .project-slot {
-        padding: 0.8rem;
+      .project-slot,
+      .all-projects-grid .project-slot,
+      .project-grid .project-slot,
+      .trending-section .project-slot {
+        padding: 0.8rem !important;
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
       }
       
       .trending-title {
         font-size: 1.1rem;
         margin-bottom: 1.5rem;
+        text-shadow: 
+          0 0 2px #00eaff, 
+          0 0 1px #00fff7,
+          1px 1px 1px rgba(0, 0, 0, 0.9);
+        filter: drop-shadow(0 0 1px #00eaff);
       }
       
       .trending-category {
@@ -883,6 +913,17 @@
       .all-projects-grid {
         padding: 0 0.125rem;
         gap: 0.8rem;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        max-width: 350px !important;
+        margin: 0 auto !important;
+      }
+      
+      .all-projects-grid .project-slot {
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
+        margin: 0 !important;
       }
       
       .project-grid {
@@ -1029,6 +1070,11 @@
         text-align: center;
         margin-bottom: 1.5rem;
         font-size: 1.2rem;
+        text-shadow: 
+          0 0 3px #00eaff, 
+          0 0 1px #00fff7,
+          1px 1px 2px rgba(0, 0, 0, 0.9);
+        filter: drop-shadow(0 0 2px #00eaff);
       }
       
       /* Fix navigation menu */
@@ -1855,15 +1901,36 @@ document.addEventListener('DOMContentLoaded', function() {
           account: window.wildWestWallet.account
         });
         
-        // If already connected, show dropdown menu
+        // If already connected, show disconnect prompt
         if (window.wildWestWallet.isConnected) {
-          walletDropdownMenu.style.display = 
-            walletDropdownMenu.style.display === 'none' ? 'flex' : 'none';
+          const shouldDisconnect = confirm(`🔗 Wallet Already Connected!\n\nConnected to: ${window.wildWestWallet.account || 'Unknown'}\n\nWould you like to disconnect and connect a different wallet?`);
+          
+          if (shouldDisconnect) {
+            console.log('🔌 User chose to disconnect wallet');
+            await window.wildWestWallet.disconnectWallet();
+            // After disconnecting, show chain selection modal for new connection
+            try {
+              console.log('🔗 Attempting to connect new wallet...');
+              const connected = await window.wildWestWallet.connectWithChainSelection();
+              if (connected) {
+                console.log('✅ New wallet connected successfully!');
+              } else {
+                console.log('❌ New wallet connection failed or cancelled');
+              }
+            } catch (error) {
+              console.error('❌ New wallet connection failed:', error);
+            }
+          } else {
+            console.log('🔗 User chose to keep current wallet connection');
+            // Show dropdown menu instead
+            walletDropdownMenu.style.display = 
+              walletDropdownMenu.style.display === 'none' ? 'flex' : 'none';
+          }
         } else {
           // Show chain selection modal - this will call connectWithChainSelection
           try {
             console.log('🔗 Attempting to connect wallet...');
-            const connected = await window.wildWestWallet.connectWallet();
+            const connected = await window.wildWestWallet.connectWithChainSelection();
             if (connected) {
               console.log('✅ Wallet connected successfully!');
             } else {
