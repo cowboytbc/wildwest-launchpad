@@ -700,16 +700,16 @@
         gap: 0.8rem;
       }
       
-      /* Keep consistent card sizing on mobile - DO NOT override width */
+      /* Keep consistent card sizing on mobile - Adjust for better mobile fit */
       .project-slot,
       .all-projects-grid .project-slot,
       .project-grid .project-slot,
       .trending-section .project-slot {
         padding: 1.2rem !important;
-        /* Maintain consistent 300px width on mobile */
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
+        /* Slightly smaller width for better mobile fit */
+        width: 280px !important;
+        min-width: 280px !important;
+        max-width: 280px !important;
       }
       
       .trending-title {
@@ -737,6 +737,13 @@
       padding: 3rem 1rem;
       background: rgba(0, 0, 0, 0.2);
       border-top: 1px solid rgba(0, 234, 255, 0.1);
+    }
+    
+    /* Mobile responsive padding for explore section */
+    @media (max-width: 480px) {
+      .explore-section {
+        padding: 2rem 0.5rem 4rem 0.5rem; /* Extra bottom padding */
+      }
     }
     
     .explore-container {
@@ -824,13 +831,39 @@
     /* Add extra spacing on mobile between cards and load more button */
     @media (max-width: 768px) {
       .all-projects-grid {
-        margin-bottom: 4rem;
+        margin-bottom: 8rem !important; /* Increased significantly for mobile spacing */
+        gap: 1.5rem !important; /* Reduced gap between cards */
+      }
+      
+      /* Force smaller cards on medium mobile screens too */
+      .all-projects-grid .project-slot {
+        width: 280px !important;
+        min-width: 280px !important;
+        max-width: 280px !important;
+        padding: 1.2rem !important;
       }
     }
     
     @media (max-width: 480px) {
       .all-projects-grid {
-        margin-bottom: 3rem;
+        margin-bottom: 8rem !important; /* Increased even more to ensure spacing */
+        gap: 1rem !important; /* Further reduced gap between cards */
+        padding: 0 1rem !important; /* Add side padding */
+      }
+      
+      /* Make explore cards fit better on small mobile screens - MORE SPECIFIC */
+      .explore-section .all-projects-grid .project-slot,
+      .all-projects-grid .project-slot {
+        width: 280px !important;
+        min-width: 280px !important;
+        max-width: 280px !important;
+        padding: 1rem !important;
+        box-sizing: border-box !important;
+      }
+      
+      /* Ensure pagination container has extra spacing too */
+      .pagination-container {
+        margin-top: 3rem !important;
       }
     }
     
@@ -993,10 +1026,10 @@
       .all-projects-grid .project-slot,
       .project-grid .project-slot,
       .trending-section .project-slot {
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
-        padding: 1.5rem !important;
+        width: 280px !important; /* Changed from 300px to 280px for better mobile fit */
+        min-width: 280px !important;
+        max-width: 280px !important;
+        padding: 1.2rem !important; /* Reduced padding for mobile */
         display: block !important;
         margin: 0 !important;
       }
