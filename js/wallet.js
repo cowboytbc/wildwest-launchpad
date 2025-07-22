@@ -152,6 +152,169 @@ class WildWestWallet {
     return wallets;
   }
 
+  // Detect if we're inside a wallet's mobile browser
+  detectWalletBrowser() {
+    const userAgent = navigator.userAgent;
+    
+    // Check for wallet browser signatures
+    if (/MetaMask/i.test(userAgent)) {
+      return { name: 'MetaMask', type: 'evm' };
+    }
+    if (/Phantom/i.test(userAgent)) {
+      return { name: 'Phantom', type: 'multi' };
+    }
+    if (/Coinbase/i.test(userAgent)) {
+      return { name: 'Coinbase Wallet', type: 'evm' };
+    }
+    if (/Trust/i.test(userAgent)) {
+      return { name: 'Trust Wallet', type: 'evm' };
+    }
+    if (/Rainbow/i.test(userAgent)) {
+      return { name: 'Rainbow Wallet', type: 'evm' };
+    }
+    
+    return null;
+  }
+
+  // Show wallet selection modal for desktop users
+  async showWalletSelectionModal(wallets, networkType) {
+    return new Promise((resolve) => {
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'wallet-modal-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+      `;
+      
+      // Create modal content
+      const modal = document.createElement('div');
+      modal.className = 'wallet-selection-modal';
+      modal.style.cssText = `
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 400px;
+        width: 90%;
+        color: white;
+        animation: slideIn 0.3s ease;
+        border: 1px solid #333;
+      `;
+      
+      // Modal header
+      const header = document.createElement('h3');
+      header.textContent = `Select ${networkType.toUpperCase()} Wallet`;
+      header.style.cssText = `
+        margin: 0 0 20px 0;
+        text-align: center;
+        color: #fff;
+        font-size: 20px;
+      `;
+      modal.appendChild(header);
+      
+      // Wallet buttons container
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      `;
+      
+      // Create button for each wallet
+      wallets.forEach(wallet => {
+        const button = document.createElement('button');
+        button.textContent = `${wallet.icon} ${wallet.name}`;
+        button.style.cssText = `
+          padding: 16px;
+          background: #2a2a2a;
+          border: 1px solid #444;
+          border-radius: 8px;
+          color: white;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        `;
+        
+        button.addEventListener('mouseenter', () => {
+          button.style.background = '#3a3a3a';
+          button.style.borderColor = '#555';
+        });
+        
+        button.addEventListener('mouseleave', () => {
+          button.style.background = '#2a2a2a';
+          button.style.borderColor = '#444';
+        });
+        
+        button.addEventListener('click', () => {
+          document.body.removeChild(overlay);
+          resolve(wallet);
+        });
+        
+        buttonsContainer.appendChild(button);
+      });
+      
+      // Cancel button
+      const cancelButton = document.createElement('button');
+      cancelButton.textContent = 'Cancel';
+      cancelButton.style.cssText = `
+        padding: 12px;
+        background: transparent;
+        border: 1px solid #666;
+        border-radius: 8px;
+        color: #999;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 8px;
+      `;
+      
+      cancelButton.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        resolve(null);
+      });
+      
+      buttonsContainer.appendChild(cancelButton);
+      modal.appendChild(buttonsContainer);
+      overlay.appendChild(modal);
+      
+      // Add CSS animations
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideIn {
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Add to page
+      document.body.appendChild(overlay);
+      
+      // Close on overlay click
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          document.body.removeChild(overlay);
+          resolve(null);
+        }
+      });
+    });
+  }
+
   async connectSolanaWallet() {
     // Prevent multiple simultaneous connection attempts
     if (this.isConnecting) {
@@ -264,8 +427,33 @@ class WildWestWallet {
         }
       }
       
-      // Use the first available wallet (priority order)
-      const selectedWallet = availableWallets[0];
+      let selectedWallet;
+      
+      // Mobile: Auto-detect wallet browser and connect directly
+      if (isMobile) {
+        // Check if we're inside a wallet's browser
+        const walletBrowser = this.detectWalletBrowser();
+        if (walletBrowser) {
+          console.log(`🟣 Mobile: Auto-connecting to ${walletBrowser.name} wallet browser`);
+          selectedWallet = availableWallets.find(w => w.name === walletBrowser.name) || availableWallets[0];
+        } else {
+          // Mobile but not in wallet browser - use first available
+          selectedWallet = availableWallets[0];
+        }
+      }
+      // Desktop: Show selection modal if multiple wallets available
+      else if (availableWallets.length > 1) {
+        console.log('🟣 Desktop: Multiple Solana wallets found, showing selection modal');
+        selectedWallet = await this.showWalletSelectionModal(availableWallets, 'solana');
+        if (!selectedWallet) {
+          console.log('🟣 User cancelled wallet selection');
+          return false;
+        }
+      } else {
+        // Desktop with only one wallet - use it directly
+        selectedWallet = availableWallets[0];
+      }
+
       const wallet = selectedWallet.provider;
       console.log(`🟣 Using Solana wallet: ${selectedWallet.name}`);
 
@@ -410,8 +598,33 @@ class WildWestWallet {
         }
       }
       
-      // Use the first available wallet (priority order: MetaMask, Coinbase, others)
-      const selectedWallet = availableWallets[0];
+      let selectedWallet;
+      
+      // Mobile: Auto-detect wallet browser and connect directly
+      if (isMobile) {
+        // Check if we're inside a wallet's browser
+        const walletBrowser = this.detectWalletBrowser();
+        if (walletBrowser) {
+          console.log(`🔵 Mobile: Auto-connecting to ${walletBrowser.name} wallet browser`);
+          selectedWallet = availableWallets.find(w => w.name === walletBrowser.name) || availableWallets[0];
+        } else {
+          // Mobile but not in wallet browser - use first available
+          selectedWallet = availableWallets[0];
+        }
+      }
+      // Desktop: Show selection modal if multiple wallets available
+      else if (availableWallets.length > 1) {
+        console.log('🔵 Desktop: Multiple EVM wallets found, showing selection modal');
+        selectedWallet = await this.showWalletSelectionModal(availableWallets, 'base');
+        if (!selectedWallet) {
+          console.log('🔵 User cancelled wallet selection');
+          return false;
+        }
+      } else {
+        // Desktop with only one wallet - use it directly
+        selectedWallet = availableWallets[0];
+      }
+      
       console.log(`🔵 Using EVM wallet: ${selectedWallet.name}`);
       
       // Always request user approval for connection
