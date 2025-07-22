@@ -65,6 +65,12 @@ class WildWestWallet {
     const wallets = [];
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // DEBUG: Log Solana providers
+    console.log('🔍 DEBUG: window.solana exists:', !!window.solana);
+    console.log('🔍 DEBUG: window.solana.isPhantom:', window.solana?.isPhantom);
+    console.log('🔍 DEBUG: window.phantom exists:', !!window.phantom);
+    console.log('🔍 DEBUG: window.phantom.solana:', !!window.phantom?.solana);
+    
     // Priority 1: Phantom (excellent mobile support)
     if (window.solana?.isPhantom) {
       wallets.push({
@@ -75,9 +81,19 @@ class WildWestWallet {
         deeplink: 'phantom://browse/' + encodeURIComponent(window.location.href)
       });
     }
+    // Also check window.phantom.solana for Phantom
+    else if (window.phantom?.solana?.isPhantom) {
+      wallets.push({
+        name: 'Phantom',
+        provider: window.phantom.solana,
+        icon: '👻',
+        mobile: true,
+        deeplink: 'phantom://browse/' + encodeURIComponent(window.location.href)
+      });
+    }
     
     // Priority 2: Solflare (mobile support)
-    else if (window.solflare) {
+    if (window.solflare && !wallets.find(w => w.name === 'Solflare')) {
       wallets.push({
         name: 'Solflare',
         provider: window.solflare,
@@ -88,7 +104,7 @@ class WildWestWallet {
     }
     
     // Priority 3: Glow (mobile wallet)
-    else if (window.glow) {
+    if (window.glow && !wallets.find(w => w.name === 'Glow')) {
       wallets.push({
         name: 'Glow',
         provider: window.glow,
@@ -98,7 +114,7 @@ class WildWestWallet {
     }
     
     // Priority 4: Slope (mobile support)
-    else if (window.solana?.isSlope || window.slope) {
+    if ((window.solana?.isSlope || window.slope) && !wallets.find(w => w.name === 'Slope')) {
       wallets.push({
         name: 'Slope',
         provider: window.slope || window.solana,
@@ -108,7 +124,7 @@ class WildWestWallet {
     }
     
     // Priority 5: Backpack (mobile support)
-    else if (window.backpack) {
+    if (window.backpack && !wallets.find(w => w.name === 'Backpack')) {
       wallets.push({
         name: 'Backpack',
         provider: window.backpack,
@@ -118,7 +134,7 @@ class WildWestWallet {
     }
     
     // Priority 6: Generic Solana wallet
-    else if (window.solana) {
+    if (window.solana && !wallets.find(w => w.provider === window.solana)) {
       wallets.push({
         name: 'Solana Wallet',
         provider: window.solana,
