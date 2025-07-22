@@ -417,7 +417,7 @@ class WildWestWallet {
         
         const network = await this.provider.getNetwork();
         this.currentChain = network.chainId === 8453 ? 'base' : network.chainId; // Map Base chainId to 'base'
-        console.log('🔵 Connected to network:', network.chainId, network.name, 'currentChain set to:', this.currentChain);
+        console.log('🔵 Connected to network:', network.chainId, this.getChainName(network.chainId), 'currentChain set to:', this.currentChain);
         
         this.updateWalletUI();
         this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
