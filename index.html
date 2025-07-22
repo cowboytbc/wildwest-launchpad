@@ -96,29 +96,35 @@
       background-clip: text;
     }
     
-    /* Mobile title and subtitle improvements */
+    /* Mobile title and subtitle improvements - Crisp and eye-catching */
     @media (max-width: 768px) {
       body .wildwest-title {
         font-size: 5.0em !important;
         letter-spacing: 0.1em !important;
-        animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate !important;
-        background: linear-gradient(90deg, #00eaff, #00fff7, #fff, #00eaff 100%) !important;
-        background-size: 300% 300% !important;
+        animation: mobileWildwestGlow 3s linear infinite, mobileTextPulse 2s ease-in-out infinite alternate !important;
+        background: linear-gradient(45deg, #00eaff, #00fff7, #ffffff, #00eaff, #fff) !important;
+        background-size: 400% 400% !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
         color: transparent !important;
-        filter: drop-shadow(0 0 12px #00eaff) !important;
-        transform: translateZ(0) !important; /* Force hardware acceleration */
-        will-change: background-position, filter !important; /* Optimize for animation */
-        backface-visibility: hidden !important; /* Improve mobile performance */
+        filter: none !important; /* Remove blur filters for crisp text */
+        text-shadow: 
+          0 0 8px #00eaff,
+          0 0 4px #00fff7,
+          0 0 2px #ffffff,
+          2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+        transform: translateZ(0) !important;
+        will-change: background-position, transform !important;
+        backface-visibility: hidden !important;
       }
       
       body .wildwest-subtitle {
         font-size: 1.1em !important;
         letter-spacing: 0.1em !important;
-        text-shadow: 0 0 6px #00eaff, 0 0 3px #00fff7, 0 0 1px #fff !important;
-        filter: drop-shadow(0 0 4px #00eaff) !important;
+        animation: mobileSubtitleShine 2.5s ease-in-out infinite alternate !important;
+        text-shadow: 0 0 6px #00eaff, 0 0 3px #00fff7, 0 0 1px #fff, 1px 1px 3px rgba(0, 0, 0, 0.9) !important;
+        filter: none !important;
       }
     }
     
@@ -126,61 +132,100 @@
       body .wildwest-title {
         font-size: 4.0em !important;
         letter-spacing: 0.08em !important;
-        animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate !important;
-        background: linear-gradient(90deg, #00eaff, #00fff7, #fff, #00eaff 100%) !important;
-        background-size: 300% 300% !important;
+        animation: mobileWildwestGlow 3s linear infinite, mobileTextPulse 2s ease-in-out infinite alternate !important;
+        background: linear-gradient(45deg, #00eaff, #00fff7, #ffffff, #00eaff, #fff) !important;
+        background-size: 400% 400% !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
         color: transparent !important;
-        filter: drop-shadow(0 0 12px #00eaff) !important;
-        transform: translateZ(0) !important; /* Force hardware acceleration */
-        will-change: background-position, filter !important; /* Optimize for animation */
-        backface-visibility: hidden !important; /* Improve mobile performance */
+        filter: none !important; /* Remove blur filters for crisp text */
+        text-shadow: 
+          0 0 6px #00eaff,
+          0 0 3px #00fff7,
+          0 0 1px #ffffff,
+          2px 2px 3px rgba(0, 0, 0, 0.8) !important;
+        transform: translateZ(0) !important;
+        will-change: background-position, transform !important;
+        backface-visibility: hidden !important;
       }
       
       body .wildwest-subtitle {
         font-size: 1em !important;
         letter-spacing: 0.08em !important;
-        text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7 !important;
-        filter: drop-shadow(0 0 3px #00eaff) !important;
+        animation: mobileSubtitleShine 2.5s ease-in-out infinite alternate !important;
+        text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7, 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+        filter: none !important;
       }
     }
     
-    /* Mobile-optimized keyframes with hardware acceleration */
-    @keyframes wildwestBlueGlow {
+    /* Mobile-optimized keyframes - Crisp and eye-catching */
+    @keyframes mobileWildwestGlow {
       0% { 
-        background-position: 0% 50%; 
-        filter: drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 4px #00fff7);
-        transform: translateZ(0); /* Force GPU acceleration */
+        background-position: 0% 0%; 
+        text-shadow: 
+          0 0 8px #00eaff,
+          0 0 4px #00fff7,
+          0 0 2px #ffffff,
+          2px 2px 4px rgba(0, 0, 0, 0.8);
+        transform: translateZ(0) scale(1);
       }
-      50% { 
-        background-position: 100% 50%; 
-        filter: drop-shadow(0 0 20px #00fff7) drop-shadow(0 0 6px #00eaff);
-        transform: translateZ(0); /* Force GPU acceleration */
+      33% { 
+        background-position: 50% 50%; 
+        text-shadow: 
+          0 0 10px #00fff7,
+          0 0 5px #00eaff,
+          0 0 3px #ffffff,
+          2px 2px 4px rgba(0, 0, 0, 0.8);
+        transform: translateZ(0) scale(1.02);
+      }
+      66% { 
+        background-position: 100% 100%; 
+        text-shadow: 
+          0 0 12px #ffffff,
+          0 0 6px #00eaff,
+          0 0 4px #00fff7,
+          2px 2px 4px rgba(0, 0, 0, 0.8);
+        transform: translateZ(0) scale(1.01);
       }
       100% { 
-        background-position: 0% 50%; 
-        filter: drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 4px #00fff7);
-        transform: translateZ(0); /* Force GPU acceleration */
+        background-position: 0% 0%; 
+        text-shadow: 
+          0 0 8px #00eaff,
+          0 0 4px #00fff7,
+          0 0 2px #ffffff,
+          2px 2px 4px rgba(0, 0, 0, 0.8);
+        transform: translateZ(0) scale(1);
       }
     }
     
-    @keyframes flickerBlue {
+    @keyframes mobileTextPulse {
       0% { 
-        text-shadow: 0 0 16px #00eaff, 0 0 8px #00fff7, 0 0 2px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); 
-        filter: brightness(1.0);
-        transform: translateZ(0); /* Force GPU acceleration */
-      }
-      50% { 
-        text-shadow: 0 0 20px #00fff7, 0 0 12px #00eaff, 0 0 4px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); 
-        filter: brightness(1.05);
-        transform: translateZ(0); /* Force GPU acceleration */
+        transform: translateZ(0) scale(1);
+        text-shadow: 
+          0 0 8px #00eaff,
+          0 0 4px #00fff7,
+          0 0 2px #ffffff,
+          2px 2px 4px rgba(0, 0, 0, 0.8);
       }
       100% { 
-        text-shadow: 0 0 16px #00eaff, 0 0 8px #00fff7, 0 0 2px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); 
-        filter: brightness(1.0);
-        transform: translateZ(0); /* Force GPU acceleration */
+        transform: translateZ(0) scale(1.03);
+        text-shadow: 
+          0 0 12px #00fff7,
+          0 0 6px #00eaff,
+          0 0 4px #ffffff,
+          2px 2px 4px rgba(0, 0, 0, 0.8);
+      }
+    }
+    
+    @keyframes mobileSubtitleShine {
+      0% { 
+        text-shadow: 0 0 6px #00eaff, 0 0 3px #00fff7, 0 0 1px #fff, 1px 1px 3px rgba(0, 0, 0, 0.9);
+        opacity: 0.9;
+      }
+      100% { 
+        text-shadow: 0 0 10px #00fff7, 0 0 5px #00eaff, 0 0 3px #fff, 1px 1px 3px rgba(0, 0, 0, 0.9);
+        opacity: 1;
       }
     }
     
@@ -188,6 +233,13 @@
     @media (prefers-reduced-motion: reduce) {
       .wildwest-title {
         animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate !important;
+      }
+      
+      /* On mobile, use the crisp mobile animations even with reduced motion */
+      @media (max-width: 768px) {
+        body .wildwest-title {
+          animation: mobileWildwestGlow 3s linear infinite, mobileTextPulse 2s ease-in-out infinite alternate !important;
+        }
       }
     }
     .arcade-emoji-link {
