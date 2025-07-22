@@ -2,20 +2,16 @@
 // Update these with your preferred RPC endpoints
 
 const RPC_CONFIG = {
-  // Solana RPC endpoints - prioritizing QuickNode from GitHub Secrets
+  // Solana RPC endpoints - QuickNode only from GitHub Secrets
   SOLANA: {
-    PRIMARY: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://rpc.helius.xyz/?api-key=demo",
-    QUICKNODE: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://rpc.helius.xyz/?api-key=demo", 
-    BACKUP: "https://rpc.helius.xyz/?api-key=demo",
-    FALLBACK: "https://rpc.ankr.com/solana",
-    HELIUS: "https://rpc.helius.xyz/?api-key=demo"
+    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana,
+    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana
   },
   
-  // Base/Ethereum RPC endpoints - prioritizing QuickNode from GitHub Secrets
+  // Base/Ethereum RPC endpoints - QuickNode only from GitHub Secrets  
   BASE: {
-    PRIMARY: (window.PRODUCTION_CONFIG?.rpc?.base) || (window.ENV_CONFIG?.rpc?.base) || "https://mainnet.base.org",
-    QUICKNODE: (window.PRODUCTION_CONFIG?.rpc?.base) || (window.ENV_CONFIG?.rpc?.base) || "https://mainnet.base.org",
-    MAINNET: "https://mainnet.base.org", // Default Base RPC
+    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.base || window.ENV_CONFIG?.rpc?.base,
+    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.base || window.ENV_CONFIG?.rpc?.base
   },
   
   // Connection settings
@@ -45,41 +41,6 @@ const RPC_CONFIG = {
     console.log('🔍 Debug: PRODUCTION_CONFIG.rpc.solana:', window.PRODUCTION_CONFIG?.rpc?.solana);
     console.log('🔍 Debug: ENV_CONFIG.rpc.solana:', window.ENV_CONFIG?.rpc?.solana);
     return endpoint;
-  },
-  
-  // Get working Solana endpoint with fallback
-  getSolanaEndpointWithFallback: async function() {
-    const endpoints = [
-      this.SOLANA.PRIMARY,
-      this.SOLANA.HELIUS,
-      this.SOLANA.FALLBACK,
-      this.SOLANA.BACKUP
-    ];
-    
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`🔄 Testing Solana endpoint: ${endpoint}`);
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'getHealth'
-          })
-        });
-        
-        if (response.ok) {
-          console.log(`✅ Solana endpoint working: ${endpoint}`);
-          return endpoint;
-        }
-      } catch (error) {
-        console.log(`❌ Solana endpoint failed: ${endpoint}`);
-        continue;
-      }
-    }
-    
-    throw new Error('All Solana endpoints failed');
   },
   
   getBaseEndpoint: function() {
