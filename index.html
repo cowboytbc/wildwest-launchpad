@@ -98,9 +98,9 @@
     
     /* Mobile title and subtitle improvements */
     @media (max-width: 768px) {
-      .wildwest-title {
-        font-size: 5.0em;
-        letter-spacing: 0.1em;
+      body .wildwest-title {
+        font-size: 5.0em !important;
+        letter-spacing: 0.1em !important;
         animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate !important;
         background: linear-gradient(90deg, #00eaff, #00fff7, #fff, #00eaff 100%) !important;
         background-size: 300% 300% !important;
@@ -109,20 +109,23 @@
         background-clip: text !important;
         color: transparent !important;
         filter: drop-shadow(0 0 12px #00eaff) !important;
+        transform: translateZ(0) !important; /* Force hardware acceleration */
+        will-change: background-position, filter !important; /* Optimize for animation */
+        backface-visibility: hidden !important; /* Improve mobile performance */
       }
       
-      .wildwest-subtitle {
-        font-size: 1.1em;
-        letter-spacing: 0.1em;
-        text-shadow: 0 0 6px #00eaff, 0 0 3px #00fff7, 0 0 1px #fff;
-        filter: drop-shadow(0 0 4px #00eaff);
+      body .wildwest-subtitle {
+        font-size: 1.1em !important;
+        letter-spacing: 0.1em !important;
+        text-shadow: 0 0 6px #00eaff, 0 0 3px #00fff7, 0 0 1px #fff !important;
+        filter: drop-shadow(0 0 4px #00eaff) !important;
       }
     }
     
     @media (max-width: 480px) {
-      .wildwest-title {
-        font-size: 4.0em;
-        letter-spacing: 0.08em;
+      body .wildwest-title {
+        font-size: 4.0em !important;
+        letter-spacing: 0.08em !important;
         animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate !important;
         background: linear-gradient(90deg, #00eaff, #00fff7, #fff, #00eaff 100%) !important;
         background-size: 300% 300% !important;
@@ -131,41 +134,60 @@
         background-clip: text !important;
         color: transparent !important;
         filter: drop-shadow(0 0 12px #00eaff) !important;
+        transform: translateZ(0) !important; /* Force hardware acceleration */
+        will-change: background-position, filter !important; /* Optimize for animation */
+        backface-visibility: hidden !important; /* Improve mobile performance */
       }
       
-      .wildwest-subtitle {
-        font-size: 1em;
-        letter-spacing: 0.08em;
-        text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7;
-        filter: drop-shadow(0 0 3px #00eaff);
+      body .wildwest-subtitle {
+        font-size: 1em !important;
+        letter-spacing: 0.08em !important;
+        text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7 !important;
+        filter: drop-shadow(0 0 3px #00eaff) !important;
       }
     }
+    
+    /* Mobile-optimized keyframes with hardware acceleration */
     @keyframes wildwestBlueGlow {
       0% { 
         background-position: 0% 50%; 
         filter: drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 4px #00fff7);
+        transform: translateZ(0); /* Force GPU acceleration */
       }
       50% { 
         background-position: 100% 50%; 
         filter: drop-shadow(0 0 20px #00fff7) drop-shadow(0 0 6px #00eaff);
+        transform: translateZ(0); /* Force GPU acceleration */
       }
       100% { 
         background-position: 0% 50%; 
         filter: drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 4px #00fff7);
+        transform: translateZ(0); /* Force GPU acceleration */
       }
     }
+    
     @keyframes flickerBlue {
       0% { 
         text-shadow: 0 0 16px #00eaff, 0 0 8px #00fff7, 0 0 2px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); 
         filter: brightness(1.0);
+        transform: translateZ(0); /* Force GPU acceleration */
       }
       50% { 
         text-shadow: 0 0 20px #00fff7, 0 0 12px #00eaff, 0 0 4px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); 
         filter: brightness(1.05);
+        transform: translateZ(0); /* Force GPU acceleration */
       }
       100% { 
         text-shadow: 0 0 16px #00eaff, 0 0 8px #00fff7, 0 0 2px #fff, 1px 1px 2px rgba(0, 0, 0, 0.8); 
         filter: brightness(1.0);
+        transform: translateZ(0); /* Force GPU acceleration */
+      }
+    }
+    
+    /* Disable reduce-motion for title animation - always show the effect */
+    @media (prefers-reduced-motion: reduce) {
+      .wildwest-title {
+        animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate !important;
       }
     }
     .arcade-emoji-link {
