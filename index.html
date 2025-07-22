@@ -59,20 +59,23 @@
       margin-top: 0.1em;
       text-align: center;
       display: block;
-      background: linear-gradient(90deg, #00eaff, #00fff7, #fff, #00eaff 100%);
-      background-size: 300% 300%;
+      background: linear-gradient(45deg, #00eaff, #00fff7, #ffffff, #00eaff, #fff);
+      background-size: 400% 400%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       color: transparent;
-      filter: drop-shadow(0 0 12px #00eaff);
-      animation: wildwestBlueGlow 4s linear infinite, flickerBlue 2.2s infinite alternate;
+      filter: none; /* Remove blur filters for crisp text */
+      animation: mobileWildwestGlow 3s linear infinite, mobileTextPulse 2s ease-in-out infinite alternate;
       text-shadow:
-        0 0 16px #00eaff,
-        0 0 8px #00fff7,
-        0 0 4px #fff,
+        0 0 12px #00eaff,
+        0 0 6px #00fff7,
+        0 0 3px #ffffff,
         0 0 1px #000,
-        1px 1px 2px rgba(0, 0, 0, 0.8);
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+      transform: translateZ(0);
+      will-change: background-position, transform;
+      backface-visibility: hidden;
     }
     .wildwest-subtitle {
       display: block;
@@ -84,12 +87,13 @@
       color: #ffffff;
       margin-top: -0.3em;
       margin-bottom: 0.5em;
+      animation: mobileSubtitleShine 2.5s ease-in-out infinite alternate;
       text-shadow: 
-        0 0 4px #00eaff, 
-        0 0 2px #00fff7, 
-        0 0 1px #fff,
-        1px 1px 2px rgba(0, 0, 0, 0.9);
-      filter: drop-shadow(0 0 3px #00eaff);
+        0 0 8px #00eaff, 
+        0 0 4px #00fff7, 
+        0 0 2px #fff,
+        1px 1px 3px rgba(0, 0, 0, 0.9);
+      filter: none; /* Remove blur filters for crisp text */
       background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
