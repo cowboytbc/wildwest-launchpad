@@ -23,4 +23,9 @@
   
   console.log('⚠️ Using fallback production config (development mode)');
   console.log('📍 QuickNode endpoints will be loaded from GitHub Secrets in production');
+  console.log('🔍 Debug: Current PRODUCTION_CONFIG:', window.PRODUCTION_CONFIG);
+  console.log('🔍 Debug: RPC endpoints available:', {
+    solana: !!window.PRODUCTION_CONFIG.rpc.solana,
+    base: !!window.PRODUCTION_CONFIG.rpc.base
+  });
 })();

@@ -4,9 +4,9 @@
 const RPC_CONFIG = {
   // Solana RPC endpoints - prioritizing QuickNode from GitHub Secrets
   SOLANA: {
-    PRIMARY: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://api.mainnet-beta.solana.com",
-    QUICKNODE: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://api.mainnet-beta.solana.com", 
-    BACKUP: "https://api.mainnet-beta.solana.com",
+    PRIMARY: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://rpc.helius.xyz/?api-key=demo",
+    QUICKNODE: (window.PRODUCTION_CONFIG?.rpc?.solana) || (window.ENV_CONFIG?.rpc?.solana) || "https://rpc.helius.xyz/?api-key=demo", 
+    BACKUP: "https://rpc.helius.xyz/?api-key=demo",
     FALLBACK: "https://rpc.ankr.com/solana",
     HELIUS: "https://rpc.helius.xyz/?api-key=demo"
   },
@@ -40,7 +40,11 @@ const RPC_CONFIG = {
 
   // Helper functions to get endpoints
   getSolanaEndpoint: function() {
-    return this.SOLANA.PRIMARY;
+    const endpoint = this.SOLANA.PRIMARY;
+    console.log('🔍 Debug: getSolanaEndpoint() returning:', endpoint);
+    console.log('🔍 Debug: PRODUCTION_CONFIG.rpc.solana:', window.PRODUCTION_CONFIG?.rpc?.solana);
+    console.log('🔍 Debug: ENV_CONFIG.rpc.solana:', window.ENV_CONFIG?.rpc?.solana);
+    return endpoint;
   },
   
   // Get working Solana endpoint with fallback

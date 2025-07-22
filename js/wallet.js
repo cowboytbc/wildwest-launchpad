@@ -1022,12 +1022,72 @@ class WildWestWallet {
         const chain = btn.dataset.chain;
         document.body.removeChild(modal);
         
-        if (chain === 'base') {
-          const connected = await this.connectBaseWallet();
-          callback(connected);
-        } else if (chain === 'solana') {
-          const connected = await this.connectSolanaWallet();
-          callback(connected);
+        try {
+          // Set isConnecting to prevent other connections
+          this.isConnecting = true;
+          
+          if (chain === 'base') {
+            // Handle Base wallet connection with multi-wallet support directly
+            if (window.multiWalletManager) {
+              try {
+                const connected = await window.multiWalletManager.showWalletSelection('ethereum', async (selectedWallet) => {
+                  console.log(`🔵 Connecting to selected Base wallet: ${selectedWallet.name}`);
+                  try {
+                    return await this.connectToBaseProvider(selectedWallet.provider, selectedWallet.name);
+                  } catch (error) {
+                    console.error('🔵 Error in connectToBaseProvider:', error);
+                    this.showStatus('Failed to connect Base wallet: ' + error.message, 'error');
+                    return false;
+                  }
+                });
+                callback(connected);
+              } catch (error) {
+                console.error('🔵 Multi-wallet manager error for Base:', error);
+                // Fallback to direct connection if multi-wallet manager fails
+                console.log('🔵 Falling back to direct Base connection...');
+                const connected = await this.connectBaseWalletDirect();
+                callback(connected);
+              }
+            } else {
+              // Fallback to direct connection
+              console.log('🔵 Multi-wallet manager not available, using direct connection...');
+              const connected = await this.connectBaseWalletDirect();
+              callback(connected);
+            }
+          } else if (chain === 'solana') {
+            // Handle Solana wallet connection with multi-wallet support directly  
+            if (window.multiWalletManager) {
+              try {
+                const connected = await window.multiWalletManager.showWalletSelection('solana', async (selectedWallet) => {
+                  console.log(`🟣 Connecting to selected Solana wallet: ${selectedWallet.name}`);
+                  try {
+                    return await this.connectToSolanaProvider(selectedWallet.provider, selectedWallet.name);
+                  } catch (error) {
+                    console.error('🟣 Error in connectToSolanaProvider:', error);
+                    this.showStatus('Failed to connect Solana wallet: ' + error.message, 'error');
+                    return false;
+                  }
+                });
+                callback(connected);
+              } catch (error) {
+                console.error('🟣 Multi-wallet manager error for Solana:', error);
+                // Fallback to direct connection if multi-wallet manager fails
+                console.log('🟣 Falling back to direct Solana connection...');
+                const connected = await this.connectSolanaWalletDirect();
+                callback(connected);
+              }
+            } else {
+              // Fallback to direct connection
+              console.log('🟣 Multi-wallet manager not available, using direct connection...');
+              const connected = await this.connectSolanaWalletDirect();
+              callback(connected);
+            }
+          }
+        } catch (error) {
+          console.error('Chain connection error:', error);
+          callback(false);
+        } finally {
+          this.isConnecting = false;
         }
       });
     });
