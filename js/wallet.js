@@ -402,10 +402,14 @@ class WildWestWallet {
       console.log('🔵 Requesting wallet connection (eth_requestAccounts)...');
       const accounts = await selectedWallet.provider.request({ method: 'eth_requestAccounts' });
       console.log('🔵 Wallet connection response:', accounts);
+      console.log('🔍 DEBUG: All accounts returned by wallet:', accounts);
+      console.log('🔍 DEBUG: Selected account (accounts[0]):', accounts[0]);
+      console.log('🔍 DEBUG: Using wallet provider:', selectedWallet.name, selectedWallet.provider);
       
       if (accounts && accounts.length > 0) {
         console.log('🔵 Setting up wallet connection...');
         this.account = accounts[0];
+        console.log('🔍 DEBUG: this.account set to:', this.account);
         this.isConnected = true;
         this.provider = new ethers.providers.Web3Provider(selectedWallet.provider);
         this.signer = this.provider.getSigner();
@@ -437,11 +441,17 @@ class WildWestWallet {
   detectEVMWallets() {
     const wallets = [];
     
+    // DEBUG: Log all ethereum providers
+    console.log('🔍 DEBUG: window.ethereum exists:', !!window.ethereum);
+    console.log('🔍 DEBUG: window.ethereum.isMetaMask:', window.ethereum?.isMetaMask);
+    console.log('🔍 DEBUG: window.ethereum.isPhantom:', window.ethereum?.isPhantom);
+    console.log('🔍 DEBUG: window.ethereum.providers:', window.ethereum?.providers);
+    
     // Check if we're on mobile
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // Priority 1: MetaMask (works on mobile via in-app browser)
-    if (window.ethereum?.isMetaMask) {
+    if (window.ethereum?.isMetaMask && !window.ethereum?.isPhantom) {
       wallets.push({
         name: 'MetaMask',
         provider: window.ethereum,
@@ -494,7 +504,17 @@ class WildWestWallet {
       });
     }
     
-    // Priority 6: Any other EVM wallet
+    // Priority 6: Phantom (if available for EVM)
+    else if (window.ethereum?.isPhantom) {
+      wallets.push({
+        name: 'Phantom',
+        provider: window.ethereum,
+        icon: '👻',
+        mobile: true
+      });
+    }
+    
+    // Priority 7: Any other EVM wallet
     else if (window.ethereum) {
       wallets.push({
         name: 'Web3 Wallet',
@@ -506,8 +526,15 @@ class WildWestWallet {
     
     // Check for multiple providers (some wallets inject multiple providers)
     if (window.ethereum?.providers) {
-      window.ethereum.providers.forEach(provider => {
-        if (provider.isMetaMask && !wallets.find(w => w.name === 'MetaMask')) {
+      console.log('🔍 DEBUG: Multiple providers detected:', window.ethereum.providers.length);
+      window.ethereum.providers.forEach((provider, index) => {
+        console.log(`🔍 DEBUG: Provider ${index}:`, {
+          isMetaMask: provider.isMetaMask,
+          isPhantom: provider.isPhantom,
+          isCoinbaseWallet: provider.isCoinbaseWallet
+        });
+        
+        if (provider.isMetaMask && !provider.isPhantom && !wallets.find(w => w.name === 'MetaMask')) {
           wallets.unshift({
             name: 'MetaMask',
             provider: provider,
@@ -522,6 +549,13 @@ class WildWestWallet {
             icon: '🔵',
             mobile: true,
             deeplink: 'cbwallet://dapp?url=' + encodeURIComponent(window.location.href)
+          });
+        } else if (provider.isPhantom && !wallets.find(w => w.name === 'Phantom')) {
+          wallets.push({
+            name: 'Phantom',
+            provider: provider,
+            icon: '👻',
+            mobile: true
           });
         }
       });
