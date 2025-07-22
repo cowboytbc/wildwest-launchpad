@@ -847,6 +847,17 @@
           return;
         }
         
+        // DEBUG: Check wallet detection
+        console.log('🔍 DEBUG: Testing wallet detection...');
+        const solanaWallets = window.wildWestWallet.detectSolanaWallets();
+        console.log('🔍 DEBUG: Detected Solana wallets:', solanaWallets);
+        
+        if (solanaWallets.length === 0) {
+          console.error('❌ No Solana wallets detected');
+          alert('No Solana wallet found. Please install Phantom, Solflare, or another Solana wallet.');
+          return;
+        }
+        
         console.log('🟣 Calling connectToSpecificChain for solana...');
         
         // For Solana locking page, directly connect to Solana network only
