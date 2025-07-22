@@ -35,6 +35,8 @@
   <script src="js/multi-wallet-manager.js"></script>
   <!-- Wallet Integration -->
   <script src="js/wallet.js"></script>
+  <!-- Unified wallet connection system (fixes all connection issues) -->
+  <script src="js/unified-wallet-connection.js"></script>
   <!-- GitHub Actions Uploader (core functionality) -->
   <script src="js/github-actions-uploader.js"></script>
   <!-- GitHub Image Uploader (admin panel wrapper) -->
@@ -59,23 +61,20 @@
       margin-top: 0.1em;
       text-align: center;
       display: block;
-      background: linear-gradient(45deg, #00eaff, #00fff7, #ffffff, #00eaff, #fff);
-      background-size: 400% 400%;
+      background: linear-gradient(90deg, #00eaff 0%, #00fff7 25%, #ffffff 50%, #00fff7 75%, #00eaff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       color: transparent;
-      filter: none; /* Remove blur filters for crisp text */
-      animation: mobileWildwestGlow 3s linear infinite, mobileTextPulse 2s ease-in-out infinite alternate;
+      filter: none; /* No blur for crisp text */
+      animation: none; /* Static - no animation */
       text-shadow:
-        0 0 12px #00eaff,
-        0 0 6px #00fff7,
-        0 0 3px #ffffff,
-        0 0 1px #000,
+        0 0 10px #00eaff,
+        0 0 5px #00fff7,
+        0 0 2px #ffffff,
+        0 0 1px #00eaff,
         2px 2px 4px rgba(0, 0, 0, 0.8);
       transform: translateZ(0);
-      will-change: background-position, transform;
-      backface-visibility: hidden;
     }
     .wildwest-subtitle {
       display: block;
@@ -87,13 +86,13 @@
       color: #ffffff;
       margin-top: -0.3em;
       margin-bottom: 0.5em;
-      animation: mobileSubtitleShine 2.5s ease-in-out infinite alternate;
+      animation: none; /* Static - no animation */
       text-shadow: 
-        0 0 8px #00eaff, 
-        0 0 4px #00fff7, 
-        0 0 2px #fff,
+        0 0 6px #00eaff, 
+        0 0 3px #00fff7, 
+        0 0 1px #fff,
         1px 1px 3px rgba(0, 0, 0, 0.9);
-      filter: none; /* Remove blur filters for crisp text */
+      filter: none; /* No blur for crisp text */
       background: linear-gradient(90deg, #ffffff 0%, #00eaff 50%, #ffffff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;

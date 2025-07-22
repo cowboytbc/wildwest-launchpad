@@ -4,14 +4,14 @@
 const RPC_CONFIG = {
   // Solana RPC endpoints - QuickNode only from GitHub Secrets
   SOLANA: {
-    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana,
-    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana
+    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com",
+    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com"
   },
   
   // Base/Ethereum RPC endpoints - QuickNode only from GitHub Secrets  
   BASE: {
-    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.base || window.ENV_CONFIG?.rpc?.base,
-    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.base || window.ENV_CONFIG?.rpc?.base
+    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.base || window.ENV_CONFIG?.rpc?.base || "https://mainnet.base.org",
+    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.base || window.ENV_CONFIG?.rpc?.base || "https://mainnet.base.org"
   },
   
   // Connection settings
