@@ -1625,12 +1625,37 @@ document.addEventListener('DOMContentLoaded', function() {
           // Update our local state when EVM wallet changes
           if (this.isConnected && this.account) {
             console.log('Updating token furnace for Base connection'); // Debug
+            currentChain = 'base';
             currentAddress = this.account;
             currentProvider = this.provider;
             currentEvmProvider = this.provider;
-            currentChain = 'base';
+            
+            // Double-check with direct signer address to ensure accuracy
+            if (window.ethereum && window.ethers) {
+              try {
+                const provider = new window.ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                signer.getAddress().then(signerAddress => {
+                  console.log('🔍 Direct signer address:', signerAddress);
+                  if (signerAddress.toLowerCase() !== currentAddress.toLowerCase()) {
+                    console.log('⚠️ Address mismatch detected, updating currentAddress to match signer');
+                    currentAddress = signerAddress;
+                    updateTokenFurnaceUI();
+                  }
+                  updateBalance();
+                }).catch(e => {
+                  console.log('Could not verify signer address:', e);
+                  updateBalance();
+                });
+              } catch (e) {
+                console.log('Could not create signer:', e);
+                updateBalance();
+              }
+            } else {
+              updateBalance();
+            }
+            
             updateTokenFurnaceUI();
-            updateBalance();
           } else if (currentChain === 'base') {
             console.log('Clearing Base connection from token furnace'); // Debug
             // Only clear if we were using Base
@@ -1802,10 +1827,11 @@ function showChainSelectionModal() {
                 }
               }
               
-              // Use setTimeout to ensure DOM is ready
+              // Use setTimeout to ensure DOM is ready and state is synced
               setTimeout(() => {
                 updateTokenFurnaceUI();
-                updateBalance();
+                // Add small delay before balance fetch to ensure address is synced
+                setTimeout(updateBalance, 200);
               }, 100);
               
               showBurnSuccess('Base wallet connected successfully!', false);
