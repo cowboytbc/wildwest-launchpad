@@ -2278,8 +2278,20 @@ async function updateBalance() {
       
       try {
         console.log('💰 Fetching balance for:', currentAddress);
-        bal = await erc20.balanceOf(currentAddress);
+        console.log('🔐 Also checking wildWestWallet account:', window.wildWestWallet?.account);
+        
+        // Use wildWestWallet account if it's different from currentAddress
+        const addressToCheck = window.wildWestWallet?.account || currentAddress;
+        console.log('💰 Final address to check balance for:', addressToCheck);
+        
+        bal = await erc20.balanceOf(addressToCheck);
         console.log('✅ Balance:', bal.toString());
+        
+        // Update currentAddress to match what we actually checked
+        if (addressToCheck !== currentAddress) {
+          console.log('🔄 Updating currentAddress to match checked address');
+          currentAddress = addressToCheck;
+        }
       } catch (e) {
         console.error('❌ Balance fetch failed:', e.message);
         throw new Error('Failed to get token balance: ' + e.message);
@@ -2354,8 +2366,13 @@ async function burnEvmToken(tokenAddress, amount) {
       const signerAddress = await signer.getAddress();
       console.log('🔐 Signer address:', signerAddress);
       console.log('🔐 Current address:', currentAddress);
+      console.log('🔐 WildWest wallet account:', window.wildWestWallet?.account);
       
-      if (signerAddress.toLowerCase() !== currentAddress.toLowerCase()) {
+      // Use the wildWestWallet account if available, as it's more reliable
+      if (window.wildWestWallet?.account && window.wildWestWallet.account.toLowerCase() !== signerAddress.toLowerCase()) {
+        console.log('🔄 Using wildWestWallet account instead of signer address');
+        currentAddress = window.wildWestWallet.account;
+      } else if (signerAddress.toLowerCase() !== currentAddress.toLowerCase()) {
         console.log('⚠️ Wallet address mismatch detected. Auto-correcting...');
         console.log('  Expected:', currentAddress);
         console.log('  Actual:', signerAddress);
