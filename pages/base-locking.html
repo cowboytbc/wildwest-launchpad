@@ -881,20 +881,36 @@
         console.log('🏭 Creating factory contract...');
         const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
         
-        console.log('📞 Calling getUserLocks for:', userAddress);
-        const lockAddresses = await factory.getUserLocks(userAddress);
+        // Get locks where user is creator
+        console.log('📞 Calling getUserLocks for creator locks:', userAddress);
+        const creatorLockAddresses = await factory.getUserLocks(userAddress);
+        console.log('📦 Found creator lock addresses:', creatorLockAddresses);
         
-        console.log('📦 Found lock addresses:', lockAddresses);
-        console.log('📊 Total locks found:', lockAddresses.length);
+        // Get locks where user is beneficiary by scanning events
+        console.log('� Scanning for beneficiary locks...');
+        let beneficiaryLockAddresses = [];
+        try {
+          const filter = factory.filters.LockCreated(null, null, userAddress); // beneficiary filter
+          const events = await factory.queryFilter(filter, 0, 'latest');
+          beneficiaryLockAddresses = events.map(event => event.args.lock);
+          console.log('�📦 Found beneficiary lock addresses:', beneficiaryLockAddresses);
+        } catch (eventErr) {
+          console.log('⚠️ Could not scan beneficiary events:', eventErr.message);
+        }
         
-        if (lockAddresses.length === 0) {
+        // Combine and deduplicate lock addresses
+        const allLockAddresses = [...new Set([...creatorLockAddresses, ...beneficiaryLockAddresses])];
+        console.log('📊 Total unique locks found:', allLockAddresses.length);
+        console.log('📋 All lock addresses:', allLockAddresses);
+        
+        if (allLockAddresses.length === 0) {
           const li = document.createElement('li');
-          li.textContent = 'No locks found.';
+          li.textContent = 'No locks found. Create a lock or check if any locks have you as beneficiary.';
           userLocksList.appendChild(li);
           return;
         }
-        for (const lockAddr of lockAddresses) {
-          console.log(`🔍 Processing lock ${lockAddresses.indexOf(lockAddr) + 1}/${lockAddresses.length}: ${lockAddr}`);
+        for (const lockAddr of allLockAddresses) {
+          console.log(`🔍 Processing lock ${allLockAddresses.indexOf(lockAddr) + 1}/${allLockAddresses.length}: ${lockAddr}`);
           
           try {
             const lock = new ethers.Contract(lockAddr, LOCK_ABI, provider);
@@ -906,7 +922,7 @@
               lock.beneficiary()
             ]);
             
-            console.log(`📝 Lock details: ${name}, Amount: ${amount.toString()}, Released: ${released}`);
+            console.log(`📝 Lock details: ${name}, Amount: ${amount.toString()}, Released: ${released}, Beneficiary: ${beneficiary}`);
             
             if (released) {
               console.log(`⏭️ Skipping released lock: ${name}`);
@@ -915,8 +931,7 @@
           const now = Math.floor(Date.now() / 1000);
           
           // Determine user's relationship to this lock
-          // getUserLocks returns locks where user is creator, but let's verify
-          const isCreator = true; // Always true since getUserLocks returns user's created locks
+          const isCreator = creatorLockAddresses.includes(lockAddr);
           const isBeneficiary = beneficiary.toLowerCase() === userAddress.toLowerCase();
           
           let userRole;
@@ -1060,14 +1075,34 @@
           if (!released && now >= releaseTime && beneficiary.toLowerCase() === userAddress.toLowerCase()) {
             const claimBtn = document.createElement('button');
             claimBtn.textContent = 'CLAIM';
+            claimBtn.style.background = '#2ecc71';
+            claimBtn.style.color = 'white';
+            claimBtn.style.fontWeight = 'bold';
             claimBtn.onclick = async () => {
+              if (!signer) {
+                alert('Please connect your wallet first!');
+                return;
+              }
+              
               try {
-                const tx = await lock.release();
+                claimBtn.textContent = 'CLAIMING...';
+                claimBtn.disabled = true;
+                
+                console.log('🎯 Claiming lock:', lockAddr);
+                const lockWithSigner = new ethers.Contract(lockAddr, LOCK_ABI, signer);
+                const tx = await lockWithSigner.release();
+                
+                console.log('⏳ Transaction sent:', tx.hash);
                 await tx.wait();
-                alert('Tokens claimed!');
-                loadUserLocks();
+                
+                console.log('✅ Claim successful!');
+                alert('Tokens claimed successfully!');
+                loadUserLocks(); // Reload to update status
               } catch (err) {
+                console.error('❌ Claim failed:', err);
                 alert('Claim failed: ' + (err.message || err));
+                claimBtn.textContent = 'CLAIM';
+                claimBtn.disabled = false;
               }
             };
             actionsDiv.appendChild(claimBtn);
