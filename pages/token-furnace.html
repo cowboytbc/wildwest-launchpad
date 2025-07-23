@@ -1540,6 +1540,506 @@ async function safeLoad(fn) {
   }
 }
 
+// --- TOKEN TYPE DETECTION ---
+function detectTokenType(address) {
+  if (!address || typeof address !== 'string') {
+    return 'invalid';
+  }
+  
+  const trimmedAddress = address.trim();
+  
+  // Base (EVM) token detection: 0x followed by 40 hex characters
+  if (trimmedAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    return 'base';
+  }
+  
+  // Solana token detection: Base58 string, typically 32-44 characters
+  // Solana addresses use Base58 (no 0, O, I, l characters)
+  if (trimmedAddress.length >= 32 && trimmedAddress.length <= 44) {
+    // Check if it's a valid Base58 string (no 0, O, I, l)
+    if (trimmedAddress.match(/^[1-9A-HJ-NP-Za-km-z]+$/)) {
+      return 'solana';
+    }
+  }
+  
+  return 'invalid';
+}
+
+// --- WALLET SELECTION HANDLERS ---
+async function handleEvmTokenBurn(tokenAddress, amount) {
+  console.log('🔵 Handling EVM token burn...');
+  
+  // Detect all available EVM wallets
+  const availableEvmWallets = detectAvailableEvmWallets();
+  console.log('🔍 Available EVM wallets:', availableEvmWallets);
+  
+  if (availableEvmWallets.length === 0) {
+    showBurnSuccess('No EVM wallets detected. Please install MetaMask, Coinbase Wallet, or another EVM wallet.', true);
+    return;
+  }
+  
+  // If only one wallet available, use it directly
+  if (availableEvmWallets.length === 1) {
+    const wallet = availableEvmWallets[0];
+    console.log('🎯 Using single available EVM wallet:', wallet.name);
+    await connectAndBurnEvm(wallet, tokenAddress, amount);
+    return;
+  }
+  
+  // Multiple wallets available - show selection modal
+  showEvmWalletSelectionModal(availableEvmWallets, tokenAddress, amount);
+}
+
+async function handleSolanaTokenBurn(tokenAddress, amount) {
+  console.log('🟣 Handling Solana token burn...');
+  
+  // Detect all available Solana wallets
+  const availableSolanaWallets = detectAvailableSolanaWallets();
+  console.log('🔍 Available Solana wallets:', availableSolanaWallets);
+  
+  if (availableSolanaWallets.length === 0) {
+    showBurnSuccess('No Solana wallets detected. Please install Phantom, Solflare, or another Solana wallet.', true);
+    return;
+  }
+  
+  // If only one wallet available, use it directly
+  if (availableSolanaWallets.length === 1) {
+    const wallet = availableSolanaWallets[0];
+    console.log('🎯 Using single available Solana wallet:', wallet.name);
+    await connectAndBurnSolana(wallet, tokenAddress, amount);
+    return;
+  }
+  
+  // Multiple wallets available - show selection modal
+  showSolanaWalletSelectionModal(availableSolanaWallets, tokenAddress, amount);
+}
+
+// --- WALLET DETECTION FUNCTIONS ---
+function detectAvailableEvmWallets() {
+  const wallets = [];
+  
+  if (window.ethereum) {
+    // Check for multiple providers
+    if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+      window.ethereum.providers.forEach((provider, index) => {
+        if (provider.isMetaMask && !provider.isPhantom) {
+          wallets.push({
+            name: 'MetaMask',
+            icon: '🦊',
+            provider: provider,
+            type: 'metamask'
+          });
+        } else if (provider.isCoinbaseWallet) {
+          wallets.push({
+            name: 'Coinbase Wallet',
+            icon: '🔵',
+            provider: provider,
+            type: 'coinbase'
+          });
+        } else if (provider.isRainbow) {
+          wallets.push({
+            name: 'Rainbow',
+            icon: '🌈',
+            provider: provider,
+            type: 'rainbow'
+          });
+        } else if (provider.isTrust) {
+          wallets.push({
+            name: 'Trust Wallet',
+            icon: '🛡️',
+            provider: provider,
+            type: 'trust'
+          });
+        } else if (provider.isPhantom && !provider.isMetaMask) {
+          wallets.push({
+            name: 'Phantom (EVM)',
+            icon: '👻',
+            provider: provider,
+            type: 'phantom-evm'
+          });
+        }
+      });
+    } else {
+      // Single provider
+      if (window.ethereum.isMetaMask && !window.ethereum.isPhantom) {
+        wallets.push({
+          name: 'MetaMask',
+          icon: '🦊',
+          provider: window.ethereum,
+          type: 'metamask'
+        });
+      } else if (window.ethereum.isCoinbaseWallet) {
+        wallets.push({
+          name: 'Coinbase Wallet',
+          icon: '🔵',
+          provider: window.ethereum,
+          type: 'coinbase'
+        });
+      } else if (window.ethereum.isPhantom) {
+        wallets.push({
+          name: 'Phantom (EVM)',
+          icon: '👻',
+          provider: window.ethereum,
+          type: 'phantom-evm'
+        });
+      } else {
+        wallets.push({
+          name: 'Unknown EVM Wallet',
+          icon: '💼',
+          provider: window.ethereum,
+          type: 'unknown'
+        });
+      }
+    }
+  }
+  
+  return wallets;
+}
+
+function detectAvailableSolanaWallets() {
+  const wallets = [];
+  
+  // Phantom Solana
+  if (window.phantom && window.phantom.solana) {
+    wallets.push({
+      name: 'Phantom',
+      icon: '👻',
+      provider: window.phantom.solana,
+      type: 'phantom'
+    });
+  } else if (window.solana && window.solana.isPhantom) {
+    wallets.push({
+      name: 'Phantom',
+      icon: '👻',
+      provider: window.solana,
+      type: 'phantom'
+    });
+  }
+  
+  // Solflare
+  if (window.solflare && window.solflare.isSolflare) {
+    wallets.push({
+      name: 'Solflare',
+      icon: '☀️',
+      provider: window.solflare,
+      type: 'solflare'
+    });
+  }
+  
+  // Backpack
+  if (window.backpack && window.backpack.isSolana) {
+    wallets.push({
+      name: 'Backpack',
+      icon: '🎒',
+      provider: window.backpack,
+      type: 'backpack'
+    });
+  }
+  
+  // Coin98
+  if (window.coin98 && window.coin98.sol) {
+    wallets.push({
+      name: 'Coin98',
+      icon: '🪙',
+      provider: window.coin98.sol,
+      type: 'coin98'
+    });
+  }
+  
+  return wallets;
+}
+
+// --- WALLET SELECTION MODALS ---
+function showEvmWalletSelectionModal(wallets, tokenAddress, amount) {
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  const walletsHtml = wallets.map(wallet => `
+    <button class="wallet-select-btn" data-wallet-type="${wallet.type}" style="
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border: 2px solid #00eaff;
+      border-radius: 12px;
+      background: rgba(0, 234, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1.1rem;
+    ">
+      <span style="font-size: 1.5rem;">${wallet.icon}</span>
+      <div style="flex: 1; text-align: left;">
+        <div style="font-weight: bold;">${wallet.name}</div>
+        <div style="font-size: 0.9rem; color: #ccc;">EVM Compatible</div>
+      </div>
+      <span style="color: #00eaff;">→</span>
+    </button>
+  `).join('');
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #00eaff;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+      max-width: 500px;
+      width: 90vw;
+      overflow: hidden;
+    ">
+      <div style="
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0, 234, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <div>
+          <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">🔵 Select EVM Wallet</h3>
+          <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">Choose your wallet for Base network</p>
+        </div>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #00eaff;
+          font-size: 1.5rem;
+          cursor: pointer;
+        ">×</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        ${walletsHtml}
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle wallet selection
+  modal.querySelectorAll('.wallet-select-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const walletType = btn.dataset.walletType;
+      const selectedWallet = wallets.find(w => w.type === walletType);
+      document.body.removeChild(modal);
+      
+      if (selectedWallet) {
+        await connectAndBurnEvm(selectedWallet, tokenAddress, amount);
+      }
+    });
+    
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = 'rgba(0, 234, 255, 0.2)';
+      btn.style.transform = 'translateY(-2px)';
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = 'rgba(0, 234, 255, 0.1)';
+      btn.style.transform = 'translateY(0)';
+    });
+  });
+  
+  // Handle close
+  modal.querySelector('.close-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+}
+
+function showSolanaWalletSelectionModal(wallets, tokenAddress, amount) {
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  const walletsHtml = wallets.map(wallet => `
+    <button class="wallet-select-btn" data-wallet-type="${wallet.type}" style="
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border: 2px solid #9945ff;
+      border-radius: 12px;
+      background: rgba(153, 69, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1.1rem;
+    ">
+      <span style="font-size: 1.5rem;">${wallet.icon}</span>
+      <div style="flex: 1; text-align: left;">
+        <div style="font-weight: bold;">${wallet.name}</div>
+        <div style="font-size: 0.9rem; color: #ccc;">Solana Network</div>
+      </div>
+      <span style="color: #9945ff;">→</span>
+    </button>
+  `).join('');
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #9945ff;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(153, 69, 255, 0.3);
+      max-width: 500px;
+      width: 90vw;
+      overflow: hidden;
+    ">
+      <div style="
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(153, 69, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <div>
+          <h3 style="margin: 0; color: #9945ff; font-size: 1.25rem;">🟣 Select Solana Wallet</h3>
+          <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">Choose your wallet for Solana network</p>
+        </div>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #9945ff;
+          font-size: 1.5rem;
+          cursor: pointer;
+        ">×</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        ${walletsHtml}
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle wallet selection
+  modal.querySelectorAll('.wallet-select-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const walletType = btn.dataset.walletType;
+      const selectedWallet = wallets.find(w => w.type === walletType);
+      document.body.removeChild(modal);
+      
+      if (selectedWallet) {
+        await connectAndBurnSolana(selectedWallet, tokenAddress, amount);
+      }
+    });
+    
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = 'rgba(153, 69, 255, 0.2)';
+      btn.style.transform = 'translateY(-2px)';
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = 'rgba(153, 69, 255, 0.1)';
+      btn.style.transform = 'translateY(0)';
+    });
+  });
+  
+  // Handle close
+  modal.querySelector('.close-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+}
+
+// --- WALLET CONNECTION AND BURN FUNCTIONS ---
+async function connectAndBurnEvm(wallet, tokenAddress, amount) {
+  console.log('🔵 Connecting to EVM wallet:', wallet.name);
+  
+  try {
+    // Set the selected provider
+    currentEvmProvider = wallet.provider;
+    currentProvider = wallet.provider;
+    currentChain = 'base';
+    
+    // Request connection
+    const accounts = await wallet.provider.request({ method: 'eth_requestAccounts' });
+    if (accounts && accounts.length > 0) {
+      currentAddress = accounts[0];
+      console.log('✅ Connected to', wallet.name, 'with address:', currentAddress);
+      
+      updateTokenFurnaceUI();
+      showBurnSuccess(`Connected to ${wallet.name}!`, false);
+      
+      // Proceed with burning
+      await burnEvmToken(tokenAddress, amount);
+    } else {
+      showBurnSuccess('Failed to get account from ' + wallet.name, true);
+    }
+  } catch (error) {
+    console.error('❌ Failed to connect to', wallet.name, ':', error);
+    showBurnSuccess('Failed to connect to ' + wallet.name + ': ' + error.message, true);
+  }
+}
+
+async function connectAndBurnSolana(wallet, tokenAddress, amount) {
+  console.log('🟣 Connecting to Solana wallet:', wallet.name);
+  
+  try {
+    // Set the selected provider
+    currentSolanaProvider = wallet.provider;
+    currentProvider = wallet.provider;
+    currentChain = 'solana';
+    
+    // Request connection
+    const resp = await wallet.provider.connect();
+    let pubkey = resp && resp.publicKey ? resp.publicKey : (wallet.provider.publicKey ? wallet.provider.publicKey : null);
+    if (pubkey && pubkey.toString) pubkey = pubkey.toString();
+    
+    if (pubkey) {
+      currentAddress = pubkey;
+      console.log('✅ Connected to', wallet.name, 'with address:', currentAddress);
+      
+      updateTokenFurnaceUI();
+      showBurnSuccess(`Connected to ${wallet.name}!`, false);
+      
+      // Proceed with burning
+      await burnSolanaToken(tokenAddress, amount);
+    } else {
+      showBurnSuccess('Failed to get public key from ' + wallet.name, true);
+    }
+  } catch (error) {
+    console.error('❌ Failed to connect to', wallet.name, ':', error);
+    showBurnSuccess('Failed to connect to ' + wallet.name + ': ' + error.message, true);
+  }
+}
+
 // --- WALLET INTEGRATION WITH BOTH BASE AND SOLANA ---
 // Use existing global variables, no need to redeclare
 
@@ -2248,21 +2748,27 @@ document.getElementById('burnForm').addEventListener('submit', async function(e)
   e.preventDefault();
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
   const amount = document.getElementById('tokenAmount').value.trim();
-  if (!currentChain || !currentAddress) {
-    showBurnSuccess('Please connect your wallet first.', true);
-    return;
-  }
+  
   if (!tokenAddress || !amount || isNaN(amount) || Number(amount) <= 0) {
     showBurnSuccess('Enter a valid token address and amount.', true);
     return;
   }
   
-  if (currentChain === 'base') {
-    await burnEvmToken(tokenAddress, amount);
-  } else if (currentChain === 'solana') {
-    await burnSolanaToken(tokenAddress, amount);
+  // Automatically detect token type
+  const tokenType = detectTokenType(tokenAddress);
+  console.log('🔍 Detected token type:', tokenType, 'for address:', tokenAddress);
+  
+  if (tokenType === 'base') {
+    // Base (EVM) token detected - show EVM wallet selection
+    await handleEvmTokenBurn(tokenAddress, amount);
+    
+  } else if (tokenType === 'solana') {
+    // Solana token detected - show Solana wallet selection
+    await handleSolanaTokenBurn(tokenAddress, amount);
+    
   } else {
-    showBurnSuccess('Unknown chain selected.', true);
+    showBurnSuccess('Invalid token address. Please enter a valid Base (0x...) or Solana token address.', true);
+    return;
   }
 });
 
@@ -2281,19 +2787,39 @@ document.getElementById('tokenAddress').addEventListener('change', updateBalance
 
 async function updateBalance() {
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
-  console.log('🔍 updateBalance called with:', { tokenAddress, currentChain, currentAddress });
+  console.log('🔍 updateBalance called with:', { tokenAddress });
   
-  if (!currentChain || !currentAddress || !tokenAddress) {
+  if (!tokenAddress) {
     document.getElementById('tokenBalance').textContent = '';
-    console.log('❌ Missing required values for balance fetch');
+    console.log('❌ No token address provided');
     return;
   }
   
-  console.log('🔍 Fetching token balance for address:', tokenAddress);
-  if (currentChain === 'base') {
+  // Auto-detect token type
+  const tokenType = detectTokenType(tokenAddress);
+  console.log('🔍 Detected token type for balance fetch:', tokenType);
+  
+  if (tokenType === 'base') {
+    // Base (EVM) token - fetch EVM balance
     if (!await safeLoad(loadEthers)) return;
+    
+    // Check if we have EVM wallet connection
+    let addressToUse = null;
+    if (window.wildWestWallet?.account) {
+      addressToUse = window.wildWestWallet.account;
+    } else if (currentChain === 'base' && currentAddress) {
+      addressToUse = currentAddress;
+    } else if (window.ethereum?.selectedAddress) {
+      addressToUse = window.ethereum.selectedAddress;
+    }
+    
+    if (!addressToUse) {
+      document.getElementById('tokenBalance').textContent = 'Connect EVM wallet to see balance';
+      return;
+    }
+    
     try {
-      console.log('🔍 Fetching Base token balance for:', { tokenAddress, wallet: currentAddress });
+      console.log('🔍 Fetching Base token balance for:', { tokenAddress, wallet: addressToUse });
       
       let provider;
       if (window.ethereum) {
@@ -2345,19 +2871,9 @@ async function updateBalance() {
       }
       
       try {
-        console.log('💰 Fetching balance for:', currentAddress);
-        console.log('🔐 Also checking wildWestWallet account:', window.wildWestWallet?.account);
-        
-        // Always use wildWestWallet account if available, as it's the authoritative source
-        const addressToCheck = window.wildWestWallet?.account || currentAddress;
-        console.log('💰 Final address to check balance for:', addressToCheck);
-        
-        bal = await erc20.balanceOf(addressToCheck);
+        console.log('💰 Fetching balance for:', addressToUse);
+        bal = await erc20.balanceOf(addressToUse);
         console.log('✅ Balance:', bal.toString());
-        
-        // Always update currentAddress to match the address that has the tokens
-        currentAddress = addressToCheck;
-        console.log('🔄 Updated currentAddress to:', currentAddress);
       } catch (e) {
         console.error('❌ Balance fetch failed:', e.message);
         throw new Error('Failed to get token balance: ' + e.message);
@@ -2390,27 +2906,54 @@ async function updateBalance() {
       
       document.getElementById('tokenBalance').textContent = errorMsg;
     }
-  } else if (currentChain === 'solana') {
+    
+  } else if (tokenType === 'solana') {
+    // Solana token - fetch Solana balance
     if (!await safeLoad(loadSolanaWeb3)) return;
     if (!await safeLoad(loadBN)) return;
+    
+    // Check if we have Solana wallet connection
+    let addressToUse = null;
+    if (currentChain === 'solana' && currentAddress) {
+      addressToUse = currentAddress;
+    } else if (window.solana?.publicKey) {
+      addressToUse = window.solana.publicKey.toString();
+    } else if (window.phantom?.solana?.publicKey) {
+      addressToUse = window.phantom.solana.publicKey.toString();
+    }
+    
+    if (!addressToUse) {
+      document.getElementById('tokenBalance').textContent = 'Connect Solana wallet to see balance';
+      return;
+    }
+    
     try {
+      console.log('🔍 Fetching Solana token balance for:', { tokenAddress, wallet: addressToUse });
+      
       const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
       const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
-      const ownerPubkey = new window.solanaWeb3.PublicKey(currentAddress);
+      const ownerPubkey = new window.solanaWeb3.PublicKey(addressToUse);
       const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
+      
       if (tokenAccounts.value.length === 0) {
         document.getElementById('tokenBalance').textContent = '0';
         return;
       }
+      
       const accountInfo = await connection.getParsedAccountInfo(tokenAccounts.value[0].pubkey);
       const bal = accountInfo.value.data.parsed.info.tokenAmount.uiAmountString;
       const dec = accountInfo.value.data.parsed.info.tokenAmount.decimals;
+      
       currentTokenDecimals = dec;
+      console.log('💰 Solana token balance fetched:', bal);
       document.getElementById('tokenBalance').textContent = bal;
     } catch (e) {
+      console.error('❌ Error fetching Solana token balance:', e);
       document.getElementById('tokenBalance').textContent = 'Unable to fetch balance.';
     }
+    
   } else {
+    // Invalid token type
     document.getElementById('tokenBalance').textContent = '';
   }
 }
@@ -3332,24 +3875,52 @@ window.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      if (address.match(/^0x[a-fA-F0-9]{40}$/)) {
-        validationElement.textContent = '✅ Valid address format';
-        validationElement.style.color = '#00ff00';
+      // Auto-detect token type and show appropriate validation
+      const detectedType = detectTokenType(address);
+      
+      if (detectedType === 'base') {
+        // Valid Base (EVM) token address
+        validationElement.textContent = '🔵 Base Network Token Detected';
+        validationElement.style.color = '#00eaff';
         validationElement.style.display = 'block';
-        this.style.borderColor = '#00ff00';
+        this.style.borderColor = '#00eaff';
+      } else if (detectedType === 'solana') {
+        // Valid Solana token address
+        validationElement.textContent = '🟣 Solana Network Token Detected';
+        validationElement.style.color = '#9945ff';
+        validationElement.style.display = 'block';
+        this.style.borderColor = '#9945ff';
       } else {
-        if (address.length < 42) {
-          validationElement.textContent = `❌ Too short (${address.length}/42 characters)`;
-        } else if (address.length > 42) {
-          validationElement.textContent = `❌ Too long (${address.length}/42 characters)`;
-        } else if (!address.startsWith('0x')) {
-          validationElement.textContent = '❌ Must start with 0x';
+        // Invalid address - show specific error
+        if (address.length === 0) {
+          validationElement.style.display = 'none';
+          this.style.borderColor = '';
+        } else if (address.match(/^0x/) && address.length < 42) {
+          validationElement.textContent = `❌ Base address too short (${address.length}/42 characters)`;
+          validationElement.style.color = '#ff0000';
+          validationElement.style.display = 'block';
+          this.style.borderColor = '#ff0000';
+        } else if (address.match(/^0x/) && address.length > 42) {
+          validationElement.textContent = `❌ Base address too long (${address.length}/42 characters)`;
+          validationElement.style.color = '#ff0000';
+          validationElement.style.display = 'block';
+          this.style.borderColor = '#ff0000';
+        } else if (address.match(/^0x/) && !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+          validationElement.textContent = '❌ Invalid Base address (use 0-9, a-f, A-F only)';
+          validationElement.style.color = '#ff0000';
+          validationElement.style.display = 'block';
+          this.style.borderColor = '#ff0000';
+        } else if (address.length < 32 || address.length > 44) {
+          validationElement.textContent = '❌ Invalid address length (Base: 42 chars, Solana: 32-44 chars)';
+          validationElement.style.color = '#ff0000';
+          validationElement.style.display = 'block';
+          this.style.borderColor = '#ff0000';
         } else {
-          validationElement.textContent = '❌ Invalid characters (use 0-9, a-f, A-F only)';
+          validationElement.textContent = '❌ Invalid address format';
+          validationElement.style.color = '#ff0000';
+          validationElement.style.display = 'block';
+          this.style.borderColor = '#ff0000';
         }
-        validationElement.style.color = '#ff0000';
-        validationElement.style.display = 'block';
-        this.style.borderColor = '#ff0000';
       }
     });
   }
@@ -3359,13 +3930,35 @@ window.addEventListener('DOMContentLoaded', function() {
     <script>
 document.getElementById('burnAllBtn').addEventListener('click', async function() {
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
-  if (!currentChain || !currentAddress || !tokenAddress) {
-    showBurnSuccess('Connect wallet and enter a token address first.', true);
+  
+  if (!tokenAddress) {
+    showBurnSuccess('Enter a token address first.', true);
     return;
   }
-  // Fetch balance using same logic as updateBalance
-  if (currentChain === 'base') {
+  
+  // Auto-detect token type
+  const tokenType = detectTokenType(tokenAddress);
+  console.log('🔍 Burn All - Detected token type:', tokenType);
+  
+  if (tokenType === 'base') {
+    // Base (EVM) token
     if (!await safeLoad(loadEthers)) return;
+    
+    // Check if we have EVM wallet connection
+    let addressToUse = null;
+    if (window.wildWestWallet?.account) {
+      addressToUse = window.wildWestWallet.account;
+    } else if (currentChain === 'base' && currentAddress) {
+      addressToUse = currentAddress;
+    } else if (window.ethereum?.selectedAddress) {
+      addressToUse = window.ethereum.selectedAddress;
+    }
+    
+    if (!addressToUse) {
+      showBurnSuccess('Connect EVM wallet to burn Base tokens.', true);
+      return;
+    }
+    
     try {
       let provider;
       if (window.ethereum) {
@@ -3378,7 +3971,7 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
         'function decimals() view returns (uint8)'
       ], provider);
       const [bal, dec] = await Promise.all([
-        erc20.balanceOf(currentAddress),
+        erc20.balanceOf(addressToUse),
         erc20.decimals()
       ]);
       const display = window.ethers.utils.formatUnits(bal, dec);
@@ -3386,13 +3979,31 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     } catch (e) {
       showBurnSuccess('Unable to fetch balance for Burn All.', true);
     }
-  } else if (currentChain === 'solana') {
+    
+  } else if (tokenType === 'solana') {
+    // Solana token
     if (!await safeLoad(loadSolanaWeb3)) return;
     if (!await safeLoad(loadBN)) return;
+    
+    // Check if we have Solana wallet connection
+    let addressToUse = null;
+    if (currentChain === 'solana' && currentAddress) {
+      addressToUse = currentAddress;
+    } else if (window.solana?.publicKey) {
+      addressToUse = window.solana.publicKey.toString();
+    } else if (window.phantom?.solana?.publicKey) {
+      addressToUse = window.phantom.solana.publicKey.toString();
+    }
+    
+    if (!addressToUse) {
+      showBurnSuccess('Connect Solana wallet to burn Solana tokens.', true);
+      return;
+    }
+    
     try {
       const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
       const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
-      const ownerPubkey = new window.solanaWeb3.PublicKey(currentAddress);
+      const ownerPubkey = new window.solanaWeb3.PublicKey(addressToUse);
       const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
       if (tokenAccounts.value.length === 0) {
         document.getElementById('tokenAmount').value = '0';
@@ -3404,6 +4015,9 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     } catch (e) {
       showBurnSuccess('Unable to fetch balance for Burn All.', true);
     }
+    
+  } else {
+    showBurnSuccess('Invalid token address. Please enter a valid Base (0x...) or Solana token address.', true);
   }
 });
     </script>
