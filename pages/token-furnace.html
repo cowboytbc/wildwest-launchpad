@@ -2163,12 +2163,6 @@ document.getElementById('burnForm').addEventListener('submit', async function(e)
     return;
   }
   
-  // Validate token address format
-  if (!tokenAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-    showBurnSuccess('Invalid token address format. Must be 42 characters starting with 0x.', true);
-    console.error('❌ Invalid token address for burning:', tokenAddress, 'Length:', tokenAddress.length);
-    return;
-  }
   if (currentChain === 'base') {
     await burnEvmToken(tokenAddress, amount);
   } else if (currentChain === 'solana') {
