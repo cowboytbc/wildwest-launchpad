@@ -1467,6 +1467,17 @@ const SOLANA_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : '
 // Get RPC endpoint from centralized config
 const BASE_RPC = window.RPC_CONFIG ? window.RPC_CONFIG.getBaseEndpoint() : 'https://mainnet.base.org';
 
+console.log('🔧 RPC Configuration loaded:', {
+  SOLANA_RPC,
+  BASE_RPC,
+  hasRPCConfig: !!window.RPC_CONFIG,
+  hasProductionConfig: !!window.PRODUCTION_CONFIG,
+  productionRPC: {
+    solana: window.PRODUCTION_CONFIG?.rpc?.solana,
+    base: window.PRODUCTION_CONFIG?.rpc?.base
+  }
+});
+
 // --- GLOBAL STATE ---
 let currentChain = null; // 'base' or 'solana'
 let currentAddress = null;
@@ -3029,26 +3040,54 @@ async function updateBalance() {
     }
     
     try {
-      console.log('🔍 Fetching Base token balance for:', { tokenAddress, wallet: addressToUse });
+      console.log('🔍 Fetching Base token balance for:', { 
+        tokenAddress, 
+        wallet: addressToUse,
+        currentChain,
+        BASE_RPC: BASE_RPC,
+        hasEthereum: !!window.ethereum,
+        hasRPCConfig: !!window.RPC_CONFIG
+      });
       
       let provider;
       if (window.ethereum) {
         provider = new window.ethers.providers.Web3Provider(window.ethereum);
+        console.log('📡 Using Web3Provider (connected wallet)');
       } else {
         provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+        console.log('📡 Using JsonRpcProvider:', BASE_RPC);
       }
       
       // First, check if this address is actually a contract
       try {
         const code = await provider.getCode(tokenAddress);
-        console.log('📋 Contract code check:', { address: tokenAddress, hasCode: code !== '0x', codeLength: code.length });
+        console.log('📋 Contract code check:', { 
+          address: tokenAddress, 
+          hasCode: code !== '0x', 
+          codeLength: code.length,
+          provider: provider.connection?.url || 'unknown',
+          rpcEndpoint: BASE_RPC
+        });
         
         if (code === '0x') {
-          document.getElementById('tokenBalance').textContent = 'This address is not a contract (EOA wallet address).';
-          return;
+          console.log('❌ No contract code found - could be RPC issue or wrong address');
+          
+          // Try with a different RPC endpoint as fallback
+          console.log('🔄 Trying backup RPC endpoint...');
+          const backupProvider = new window.ethers.providers.JsonRpcProvider('https://base.blockpi.network/v1/rpc/public');
+          const backupCode = await backupProvider.getCode(tokenAddress);
+          
+          if (backupCode === '0x') {
+            document.getElementById('tokenBalance').textContent = 'This address is not a contract (EOA wallet address).';
+            return;
+          } else {
+            console.log('✅ Contract found with backup RPC - switching provider');
+            provider = backupProvider;
+          }
         }
       } catch (e) {
         console.log('⚠️ Could not check contract code:', e);
+        console.log('🔄 Continuing anyway - might still be a valid token...');
       }
       
       const erc20 = new window.ethers.Contract(tokenAddress, [
@@ -3096,7 +3135,15 @@ async function updateBalance() {
       const display = window.ethers.utils.formatUnits(bal, dec) + (sym ? ' ' + sym : '');
       
       console.log('💰 Base token balance fetched:', { balance: display, decimals: dec, symbol: sym });
-      document.getElementById('tokenBalance').textContent = display;
+      
+      // Update the balance display with debug info
+      const balanceElement = document.getElementById('tokenBalance');
+      if (balanceElement) {
+        balanceElement.textContent = display;
+        console.log('✅ Balance display updated in DOM:', display);
+      } else {
+        console.error('❌ tokenBalance element not found in DOM');
+      }
       
       // Check for account mismatch
       checkAccountMismatch();
