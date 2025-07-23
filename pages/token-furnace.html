@@ -2075,116 +2075,74 @@ document.addEventListener('DOMContentLoaded', function() {
   
   optimizeForWalletBrowser();
   
-  // IMMEDIATELY setup our chain selection before wallet.js can interfere
-  setupChainSelectionButton();
+  // Simple wallet connection - no conflicts with main wallet system
+  setupTokenFurnaceWallet();
   
-  // DON'T wait for wallet system - set up our own button handling first
-  function setupChainSelectionButton() {
+  function setupTokenFurnaceWallet() {
     const connectBtn = document.getElementById('connectWalletBtn');
-    if (connectBtn) {
-      // Completely replace the button to remove any existing listeners
-      const newButton = connectBtn.cloneNode(true);
-      connectBtn.parentNode.replaceChild(newButton, connectBtn);
-      
-      // Add our event listener with immediate effect
-      newButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('Chain selection button clicked'); // Debug
-        
-        if (currentAddress && currentChain) {
-          console.log('Already connected, showing wallet details'); // Debug
-          // If already connected, show wallet details
-          showWalletDetails();
-        } else {
-          console.log('Not connected, showing chain selection modal'); // Debug
-          // Show chain selection modal FIRST
-          try {
-            showChainSelectionModal();
-            console.log('Chain selection modal called successfully'); // Debug
-          } catch (error) {
-            console.error('Error showing chain selection modal:', error); // Debug
-          }
-        }
-      });
-      
-      console.log('Chain selection button setup complete'); // Debug
+    if (!connectBtn) {
+      console.error('❌ Connect wallet button not found');
+      return;
     }
-  }
-  
-  // Wait for wildWestWallet to be available for UI updates only
-  function waitForWalletSystem() {
-    if (window.wildWestWallet) {
-      console.log('wildWestWallet found and available!'); // Debug
+    
+    console.log('🔧 Setting up token furnace wallet connection');
+    
+    // Remove any existing event listeners by cloning the button
+    const newButton = connectBtn.cloneNode(true);
+    connectBtn.parentNode.replaceChild(newButton, connectBtn);
+    
+    // Add our simple click handler
+    newButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       
-      // Hook into wallet UI updates but DON'T touch the button
-      const originalUpdateWalletUI = window.wildWestWallet.updateWalletUI;
-      if (originalUpdateWalletUI) {
-        window.wildWestWallet.updateWalletUI = function() {
-          console.log('wildWestWallet.updateWalletUI called, wallet state:', {
-            isConnected: this.isConnected,
-            account: this.account,
-            currentChain: this.currentChain
-          }); // Debug
-          
-          // Call the original to update wallet button text
-          originalUpdateWalletUI.call(this);
-          
-          // Update our local state when EVM wallet changes
-          if (this.isConnected && this.account) {
-            console.log('Updating token furnace for Base connection'); // Debug
-            currentChain = 'base';
-            currentAddress = this.account;
-            currentProvider = this.provider;
-            currentEvmProvider = this.provider;
-            
-            // Double-check with direct signer address to ensure accuracy
-            if (window.ethereum && window.ethers) {
-              try {
-                const provider = new window.ethers.providers.Web3Provider(window.ethereum);
-                const signer = provider.getSigner();
-                signer.getAddress().then(signerAddress => {
-                  console.log('🔍 Direct signer address:', signerAddress);
-                  if (signerAddress.toLowerCase() !== currentAddress.toLowerCase()) {
-                    console.log('⚠️ Address mismatch detected, updating currentAddress to match signer');
-                    currentAddress = signerAddress;
-                    updateTokenFurnaceUI();
-                  }
-                  updateBalance();
-                }).catch(e => {
-                  console.log('Could not verify signer address:', e);
-                  updateBalance();
-                });
-              } catch (e) {
-                console.log('Could not create signer:', e);
-                updateBalance();
-              }
-            } else {
-              updateBalance();
-            }
-            
-            updateTokenFurnaceUI();
-          } else if (currentChain === 'base') {
-            console.log('Clearing Base connection from token furnace'); // Debug
-            // Only clear if we were using Base
-            currentAddress = null;
-            currentProvider = null;
-            currentEvmProvider = null;
-            currentChain = null;
-            updateTokenFurnaceUI();
-          }
-        };
+      console.log('🔘 Wallet button clicked');
+      
+      if (currentAddress && currentChain) {
+        console.log('Already connected, showing wallet details');
+        showWalletDetails();
+      } else {
+        console.log('Not connected, showing chain selection');
+        showChainSelectionModal();
       }
-    } else {
-      // Retry after a short delay if wallet system isn't ready yet
-      console.log('wildWestWallet not available yet, retrying...'); // Debug
-      setTimeout(waitForWalletSystem, 100);
-    }
+    });
+    
+    console.log('✅ Token furnace wallet setup complete');
   }
   
-  // Start checking for wallet system
-  waitForWalletSystem();
+  // Check for existing connections on page load
+  checkExistingConnections();
+  
+  function checkExistingConnections() {
+    console.log('🔍 Checking for existing wallet connections');
+    
+    // Check for existing Base connection
+    if (window.ethereum) {
+      window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+        if (accounts && accounts.length > 0) {
+          console.log('🔗 Found existing Base connection:', accounts[0]);
+          currentAddress = accounts[0];
+          currentChain = 'base';
+          currentProvider = window.ethereum;
+          currentEvmProvider = window.ethereum;
+          updateTokenFurnaceUI();
+          updateBalance();
+        }
+      }).catch(e => {
+        console.log('No existing Base connection');
+      });
+    }
+    
+    // Check for existing Solana connection
+    if (window.solana && window.solana.isConnected) {
+      console.log('🔗 Found existing Solana connection:', window.solana.publicKey?.toString());
+      currentAddress = window.solana.publicKey?.toString();
+      currentChain = 'solana';
+      currentProvider = window.solana;
+      updateTokenFurnaceUI();
+      updateBalance();
+    }
+  }
 });
 
 function showChainSelectionModal() {
@@ -2500,81 +2458,47 @@ async function connectSolanaWallet() {
 }
 
 function updateTokenFurnaceUI() {
-  // Ensure DOM is ready before trying to update UI
-  if (document.readyState === 'loading') {
-    console.log('⏳ DOM not ready, deferring UI update...');
-    setTimeout(updateTokenFurnaceUI, 50);
-    return;
-  }
+  console.log('🔄 Updating token furnace UI:', { currentAddress, currentChain });
   
   const walletBtnText = document.getElementById('walletBtnText');
   const connectBtn = document.getElementById('connectWalletBtn');
   const chainIndicator = document.getElementById('chainIndicator');
   
-  // Add null checks to prevent errors
-  if (!walletBtnText) {
-    console.error('❌ walletBtnText element not found!');
-    // Try alternative methods to find the element
-    const connectBtn = document.getElementById('connectWalletBtn');
-    if (connectBtn) {
-      const spanInside = connectBtn.querySelector('span:last-child');
-      if (spanInside) {
-        console.log('🔍 Found wallet text span using alternative method');
-        // Use the found element
-        if (currentAddress && currentChain) {
-          const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
-          spanInside.textContent = shortAddress;
-          connectBtn.classList.remove('disconnected', 'evm', 'solana');
-          connectBtn.classList.add('connected', 'evm');
-        }
-        return;
-      }
-    }
-    // Last resort - create the element if it doesn't exist
-    console.log('🔧 Creating missing walletBtnText element...');
+  if (!walletBtnText || !connectBtn) {
+    console.error('❌ Required wallet UI elements not found');
     return;
   }
-  if (!connectBtn) {
-    console.error('❌ connectWalletBtn element not found!');
-    return;
-  }
-  
-  console.log('🔄 Updating token furnace UI:', { currentAddress, currentChain });
   
   if (currentAddress && currentChain) {
     const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
-    
-    // Just show the address, let wallet.js handle the chain indicator
     walletBtnText.textContent = shortAddress;
     
-    // Remove all state classes first
-    connectBtn.classList.remove('disconnected', 'evm', 'solana');
+    // Update button state
+    connectBtn.classList.remove('disconnected');
     connectBtn.classList.add('connected');
     
-    // Add appropriate chain class for the indicator color
-    if (currentChain === 'solana') {
-      connectBtn.classList.add('solana');
-      if (chainIndicator) {
-        chainIndicator.style.display = 'inline-block';
-      }
-    } else {
-      connectBtn.classList.add('evm');
-      if (chainIndicator) {
-        chainIndicator.style.display = 'inline-block';
+    // Update chain indicator
+    if (chainIndicator) {
+      if (currentChain === 'base') {
+        chainIndicator.textContent = 'BASE';
+        chainIndicator.style.background = '#0052ff';
+      } else if (currentChain === 'solana') {
+        chainIndicator.textContent = 'SOL';
+        chainIndicator.style.background = '#9945ff';
       }
     }
     
-    console.log('✅ Token furnace UI updated - wallet connected');
+    console.log('✅ UI updated for connected wallet:', shortAddress);
   } else {
     walletBtnText.textContent = 'CONNECT WALLET';
-    
-    // Remove all state classes and add disconnected
-    connectBtn.classList.remove('connected', 'evm', 'solana');
+    connectBtn.classList.remove('connected');
     connectBtn.classList.add('disconnected');
     
     if (chainIndicator) {
-      chainIndicator.style.display = 'none';
+      chainIndicator.textContent = '';
     }
+    
+    console.log('🔌 UI updated for disconnected state');
   }
 }
 
