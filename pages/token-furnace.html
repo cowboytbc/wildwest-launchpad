@@ -1306,6 +1306,15 @@
         <div class="burn-balance" title="Your token balance">
           <span id="tokenBalance"></span>
         </div>
+        <div id="accountMismatchWarning" style="display: none; background: #2a0a0a; border: 2px solid #ff6b6b; border-radius: 8px; padding: 12px; margin: 8px 0; text-align: center;">
+          <div style="color: #ff6b6b; font-weight: bold; margin-bottom: 8px;">⚠️ Account Mismatch Detected</div>
+          <div style="color: #ffae00; font-size: 0.9em; margin-bottom: 8px;">
+            Tokens are in a different MetaMask account than currently selected
+          </div>
+          <button type="button" id="checkAccountBtn" style="background: linear-gradient(90deg, #ff6b6b 0%, #ffae00 100%); color: #fff; border: 1px solid #ff6b6b; border-radius: 6px; padding: 6px 12px; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+            Check MetaMask Accounts
+          </button>
+        </div>
         <button type="submit" class="burn-btn fire-btn" id="burnBtn">
           Burn Token
         </button>
@@ -2362,6 +2371,9 @@ async function updateBalance() {
       
       console.log('💰 Base token balance fetched:', { balance: display, decimals: dec, symbol: sym });
       document.getElementById('tokenBalance').textContent = display;
+      
+      // Check for account mismatch
+      checkAccountMismatch();
     } catch (e) {
       console.error('❌ Error fetching Base token balance:', e);
       
@@ -2526,7 +2538,120 @@ async function burnEvmToken(tokenAddress, amount) {
               }
             } catch (accountError) {
               console.log('❌ Failed to request correct account:', accountError);
-              showBurnSuccess(`Cannot access account ${correctAddress}. Please ensure you're using MetaMask with the correct account and try again.`, true);
+              
+              // Final fallback: Show user instructions for manual account switching
+              console.log('🔄 Showing user manual account switching instructions...');
+              
+              const switchAccountModal = document.createElement('div');
+              switchAccountModal.className = 'wallet-modal-overlay';
+              switchAccountModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.2s ease-out;
+              `;
+              
+              switchAccountModal.innerHTML = `
+                <div style="
+                  background: linear-gradient(135deg, #1a1a2e, #16213e);
+                  border: 2px solid #ff6b6b;
+                  border-radius: 16px;
+                  box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+                  max-width: 500px;
+                  width: 90vw;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    padding: 1.5rem;
+                    border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  ">
+                    <h3 style="margin: 0; color: #ff6b6b; font-size: 1.25rem;">Account Switch Required</h3>
+                    <button class="close-modal" style="
+                      background: none;
+                      border: none;
+                      color: #ff6b6b;
+                      font-size: 1.5rem;
+                      cursor: pointer;
+                    ">×</button>
+                  </div>
+                  <div style="padding: 1.5rem; color: white;">
+                    <p style="margin: 0 0 1rem 0; font-size: 1.1rem; color: #ffae00;">
+                      🔄 <strong>Manual Account Switch Needed</strong>
+                    </p>
+                    <p style="margin: 0 0 1rem 0;">
+                      Your tokens are in account: <br>
+                      <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #ffae00; word-break: break-all;">${correctAddress}</code>
+                    </p>
+                    <p style="margin: 0 0 1rem 0;">
+                      But MetaMask is currently using: <br>
+                      <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #ff6b6b; word-break: break-all;">${await signer.getAddress()}</code>
+                    </p>
+                    <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                      <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #00eaff;">Follow these steps:</p>
+                      <ol style="margin: 0; padding-left: 1.2rem;">
+                        <li>Open MetaMask extension</li>
+                        <li>Click on the account dropdown at the top</li>
+                        <li>Select the account ending in <strong style="color: #ffae00;">...${correctAddress.slice(-4)}</strong></li>
+                        <li>Come back and try burning again</li>
+                      </ol>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                      <button class="retry-btn" style="
+                        flex: 1;
+                        padding: 0.75rem;
+                        border: 1px solid #00eaff;
+                        border-radius: 8px;
+                        background: transparent;
+                        color: #00eaff;
+                        cursor: pointer;
+                        font-weight: 500;
+                      ">Try Again</button>
+                      <button class="close-modal" style="
+                        flex: 1;
+                        padding: 0.75rem;
+                        border: 1px solid #666;
+                        border-radius: 8px;
+                        background: transparent;
+                        color: #ccc;
+                        cursor: pointer;
+                        font-weight: 500;
+                      ">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(switchAccountModal);
+              
+              // Handle modal interactions
+              switchAccountModal.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  document.body.removeChild(switchAccountModal);
+                });
+              });
+              
+              switchAccountModal.querySelector('.retry-btn').addEventListener('click', () => {
+                document.body.removeChild(switchAccountModal);
+                // Retry the burn operation
+                setTimeout(() => burnEvmToken(tokenAddress, amount), 500);
+              });
+              
+              switchAccountModal.addEventListener('click', (e) => {
+                if (e.target === switchAccountModal) {
+                  document.body.removeChild(switchAccountModal);
+                }
+              });
+              
               return;
             }
           }
@@ -2767,6 +2892,139 @@ function showBurnSuccess(msg, isError) {
 
 function showBurnError(msg) {
   showBurnSuccess(msg, true);
+}
+
+// --- ACCOUNT CHECK FUNCTIONALITY ---
+function checkAccountMismatch() {
+  if (currentChain === 'base' && currentAddress && window.wildWestWallet?.account) {
+    const walletAccount = window.wildWestWallet.account.toLowerCase();
+    const currentAccount = currentAddress.toLowerCase();
+    
+    const mismatchWarning = document.getElementById('accountMismatchWarning');
+    if (walletAccount !== currentAccount && mismatchWarning) {
+      mismatchWarning.style.display = 'block';
+      
+      // Add click handler for the check account button
+      const checkBtn = document.getElementById('checkAccountBtn');
+      if (checkBtn) {
+        checkBtn.onclick = () => showAccountCheckModal();
+      }
+    } else if (mismatchWarning) {
+      mismatchWarning.style.display = 'none';
+    }
+  }
+}
+
+function showAccountCheckModal() {
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #ffae00;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255, 174, 0, 0.3);
+      max-width: 600px;
+      width: 90vw;
+      overflow: hidden;
+    ">
+      <div style="
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 174, 0, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <h3 style="margin: 0; color: #ffae00; font-size: 1.25rem;">MetaMask Account Check</h3>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #ffae00;
+          font-size: 1.5rem;
+          cursor: pointer;
+        ">×</button>
+      </div>
+      <div style="padding: 1.5rem; color: white;">
+        <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+          <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #00eaff;">🔍 Account Status:</p>
+          <div style="margin: 0.5rem 0;">
+            <strong style="color: #ffae00;">Tokens found in:</strong><br>
+            <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #00ff00; word-break: break-all; font-size: 0.9em;">${window.wildWestWallet?.account || 'Unknown'}</code>
+          </div>
+          <div style="margin: 0.5rem 0;">
+            <strong style="color: #ff6b6b;">Currently selected:</strong><br>
+            <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #ff9999; word-break: break-all; font-size: 0.9em;">${currentAddress || 'Unknown'}</code>
+          </div>
+        </div>
+        
+        <div style="background: #1a2a1a; padding: 1rem; border-radius: 8px; border: 1px solid #ffae00; margin: 1rem 0;">
+          <p style="margin: 0 0 0.5rem 0; font-weight: bold; color: #ffae00;">📋 How to switch accounts in MetaMask:</p>
+          <ol style="margin: 0.5rem 0; padding-left: 1.2rem; line-height: 1.6;">
+            <li><strong>Open MetaMask extension</strong> (click the fox icon)</li>
+            <li><strong>Click the account circle/name</strong> at the top center</li>
+            <li><strong>Select the account</strong> ending in <strong style="color: #ffae00;">...${(window.wildWestWallet?.account || '').slice(-4)}</strong></li>
+            <li><strong>Refresh this page</strong> and reconnect</li>
+          </ol>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+          <button class="refresh-btn" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #00eaff;
+            border-radius: 8px;
+            background: transparent;
+            color: #00eaff;
+            cursor: pointer;
+            font-weight: 500;
+          ">Refresh Page</button>
+          <button class="close-modal" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #666;
+            border-radius: 8px;
+            background: transparent;
+            color: #ccc;
+            cursor: pointer;
+            font-weight: 500;
+          ">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle modal interactions
+  modal.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+  });
+  
+  modal.querySelector('.refresh-btn').addEventListener('click', () => {
+    window.location.reload();
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
 }
 
 // --- INIT: clear state on load ---
