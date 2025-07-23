@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔵 Base Token Lock Diagnostics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1a1a1a;
+      color: #00eaff;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .test-section {
+      background: #2a2a2a;
+      border: 1px solid #00eaff;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .test-section h3 {
+      color: #ffffff;
+      margin-top: 0;
+    }
+    .status {
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    button {
+      background: linear-gradient(45deg, #00eaff, #0066cc);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 5px;
+    }
+    button:hover {
+      background: linear-gradient(45deg, #0066cc, #004499);
+    }
+    .error { color: #ff4444; }
+    .success { color: #44ff44; }
+    .warning { color: #ffaa44; }
+  </style>
+</head>
+<body>
+  <h1>🔵 Base Token Lock Diagnostics</h1>
+  
+  <div class="test-section">
+    <h3>🔗 RPC Endpoint Test</h3>
+    <div class="status" id="rpcTest">Testing...</div>
+    <button onclick="testRPCEndpoint()">Test Base RPC</button>
+  </div>
+  
+  <div class="test-section">
+    <h3>🦊 Wallet Connection Test</h3>
+    <div class="status" id="walletTest">Ready</div>
+    <button onclick="testWalletConnection()">Connect Base Wallet</button>
+  </div>
+  
+  <div class="test-section">
+    <h3>📋 Contract Interaction Test</h3>
+    <div class="status" id="contractTest">Need wallet connection first</div>
+    <button onclick="testContract()">Test Factory Contract</button>
+  </div>
+  
+  <div class="test-section">
+    <h3>🔍 User Locks Test</h3>
+    <div class="status" id="locksTest">Need wallet connection first</div>
+    <button onclick="testUserLocks()">Load User Locks</button>
+  </div>
+
+  <!-- Load all necessary scripts -->
+  <script src="js/console-filter.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="js/production-config.js"></script>
+  <script src="js/rpc-config.js"></script>
+  <script src="js/lock-fee-config.js"></script>
+  <script src="js/multi-wallet-manager.js"></script>
+  <script src="js/wallet.js"></script>
+  <script src="js/unified-wallet-connection.js"></script>
+
+  <script>
+    // Base Lock Factory configuration
+    const FACTORY_ADDRESS = "0xaaDf8d2919C824BD5573e19F43D7a6aFe4867b56";
+    const FACTORY_ABI = [
+      {
+        "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
+        "name": "getUserLocks",
+        "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {"internalType": "address", "name": "token", "type": "address"},
+          {"internalType": "address", "name": "beneficiary", "type": "address"},
+          {"internalType": "uint256", "name": "unlockDays", "type": "uint256"},
+          {"internalType": "uint256", "name": "unlockHours", "type": "uint256"},
+          {"internalType": "uint256", "name": "unlockMinutes", "type": "uint256"},
+          {"internalType": "uint256", "name": "amount", "type": "uint256"},
+          {"internalType": "string", "name": "lockName", "type": "string"}
+        ],
+        "name": "createLock",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    let provider, signer, userAddress;
+
+    async function testRPCEndpoint() {
+      const results = [];
+      results.push('🔍 Testing Base RPC endpoint...');
+      document.getElementById('rpcTest').textContent = results.join('\n');
+
+      try {
+        // Check production config
+        if (window.PRODUCTION_CONFIG) {
+          results.push(`🔐 Production config source: ${window.PRODUCTION_CONFIG.source}`);
+          results.push(`🔗 Base RPC from config: ${window.PRODUCTION_CONFIG.rpc.base || 'NULL'}`);
+        } else {
+          results.push('❌ No PRODUCTION_CONFIG found');
+        }
+
+        // Check RPC config
+        if (window.RPC_CONFIG) {
+          const baseEndpoint = window.RPC_CONFIG.getBaseEndpoint();
+          results.push(`🔗 Base endpoint: ${baseEndpoint}`);
+          
+          // Test the endpoint
+          results.push('🧪 Testing endpoint connectivity...');
+          const testProvider = new ethers.providers.JsonRpcProvider(baseEndpoint);
+          const blockNumber = await testProvider.getBlockNumber();
+          results.push(`✅ RPC working! Latest block: ${blockNumber}`);
+          
+          const network = await testProvider.getNetwork();
+          results.push(`🌐 Network: ${network.name} (Chain ID: ${network.chainId})`);
+          
+          if (network.chainId !== 8453) {
+            results.push(`⚠️ WARNING: Expected Base mainnet (8453), got ${network.chainId}`);
+          }
+          
+        } else {
+          results.push('❌ No RPC_CONFIG found');
+        }
+
+      } catch (error) {
+        results.push(`❌ RPC test failed: ${error.message}`);
+      }
+
+      document.getElementById('rpcTest').textContent = results.join('\n');
+    }
+
+    async function testWalletConnection() {
+      const results = [];
+      results.push('🦊 Testing wallet connection to Base...');
+      document.getElementById('walletTest').textContent = results.join('\n');
+
+      try {
+        if (!window.wildWestWallet) {
+          throw new Error('wildWestWallet not available');
+        }
+
+        results.push('🔄 Connecting to Base network...');
+        document.getElementById('walletTest').textContent = results.join('\n');
+
+        const connected = await window.wildWestWallet.connectToSpecificChain('base');
+
+        if (connected) {
+          provider = window.wildWestWallet.provider;
+          signer = window.wildWestWallet.signer;
+          userAddress = window.wildWestWallet.account;
+          
+          results.push('✅ Wallet connected successfully!');
+          results.push(`📍 Address: ${userAddress}`);
+          results.push(`🔗 Chain: ${window.wildWestWallet.currentChain}`);
+          
+          // Test the provider
+          const network = await provider.getNetwork();
+          results.push(`🌐 Connected to: ${network.name} (${network.chainId})`);
+          
+          // Check balance
+          const balance = await provider.getBalance(userAddress);
+          results.push(`💰 ETH Balance: ${ethers.utils.formatEther(balance)} ETH`);
+          
+        } else {
+          results.push('❌ Wallet connection failed');
+        }
+
+      } catch (error) {
+        results.push(`❌ Connection error: ${error.message}`);
+      }
+
+      document.getElementById('walletTest').textContent = results.join('\n');
+    }
+
+    async function testContract() {
+      const results = [];
+      results.push('📋 Testing factory contract...');
+      document.getElementById('contractTest').textContent = results.join('\n');
+
+      try {
+        if (!provider || !userAddress) {
+          throw new Error('Wallet not connected. Connect wallet first.');
+        }
+
+        results.push(`🏭 Factory address: ${FACTORY_ADDRESS}`);
+        
+        // Test if contract exists
+        const code = await provider.getCode(FACTORY_ADDRESS);
+        if (code === '0x') {
+          throw new Error('Factory contract not deployed at this address!');
+        }
+        results.push('✅ Factory contract found on-chain');
+
+        // Create contract instance
+        const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
+        results.push('✅ Contract instance created');
+
+        // Test read function
+        results.push('🧪 Testing getUserLocks function...');
+        const lockAddresses = await factory.getUserLocks(userAddress);
+        results.push(`📦 Found ${lockAddresses.length} locks for user`);
+        
+        if (lockAddresses.length > 0) {
+          results.push('🔍 Lock addresses:');
+          lockAddresses.forEach((addr, i) => {
+            results.push(`  ${i + 1}. ${addr}`);
+          });
+        } else {
+          results.push('ℹ️ No locks found for this user');
+        }
+
+      } catch (error) {
+        results.push(`❌ Contract test failed: ${error.message}`);
+        results.push(`🔍 Error details: ${error.reason || 'No additional details'}`);
+      }
+
+      document.getElementById('contractTest').textContent = results.join('\n');
+    }
+
+    async function testUserLocks() {
+      const results = [];
+      results.push('🔍 Loading and parsing user locks...');
+      document.getElementById('locksTest').textContent = results.join('\n');
+
+      try {
+        if (!provider || !userAddress) {
+          throw new Error('Wallet not connected. Connect wallet first.');
+        }
+
+        const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
+        const lockAddresses = await factory.getUserLocks(userAddress);
+        
+        results.push(`📦 Found ${lockAddresses.length} lock contracts`);
+
+        if (lockAddresses.length === 0) {
+          results.push('ℹ️ No locks to display');
+          document.getElementById('locksTest').textContent = results.join('\n');
+          return;
+        }
+
+        // Lock contract ABI for reading lock details
+        const LOCK_ABI = [
+          {"constant":true,"inputs":[],"name":"lockName","outputs":[{"name":"","type":"string"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"amount","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"releaseTime","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"released","outputs":[{"name":"","type":"bool"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"beneficiary","outputs":[{"name":"","type":"address"}],"type":"function"},
+          {"constant":true,"inputs":[],"name":"token","outputs":[{"name":"","type":"address"}],"type":"function"}
+        ];
+
+        for (let i = 0; i < lockAddresses.length; i++) {
+          const lockAddr = lockAddresses[i];
+          results.push(`\n🔒 Lock ${i + 1}: ${lockAddr}`);
+          
+          try {
+            const lock = new ethers.Contract(lockAddr, LOCK_ABI, provider);
+            
+            // Get basic lock info
+            const [name, amount, releaseTime, released, beneficiary, tokenAddr] = await Promise.all([
+              lock.lockName(),
+              lock.amount(),
+              lock.releaseTime(),
+              lock.released(),
+              lock.beneficiary(),
+              lock.token()
+            ]);
+
+            results.push(`  📝 Name: ${name}`);
+            results.push(`  💰 Amount: ${amount.toString()}`);
+            results.push(`  👤 Beneficiary: ${beneficiary}`);
+            results.push(`  🪙 Token: ${tokenAddr}`);
+            results.push(`  📅 Release time: ${new Date(releaseTime * 1000).toLocaleString()}`);
+            results.push(`  ✅ Released: ${released ? 'YES' : 'NO'}`);
+
+            // Try to get token details
+            try {
+              const tokenContract = new ethers.Contract(tokenAddr, [
+                {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
+                {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"}
+              ], provider);
+
+              const [symbol, decimals] = await Promise.all([
+                tokenContract.symbol(),
+                tokenContract.decimals()
+              ]);
+
+              const formattedAmount = ethers.utils.formatUnits(amount, decimals);
+              results.push(`  📊 Formatted: ${formattedAmount} ${symbol}`);
+
+            } catch (tokenError) {
+              results.push(`  ⚠️ Could not read token details: ${tokenError.message}`);
+            }
+
+          } catch (lockError) {
+            results.push(`  ❌ Error reading lock: ${lockError.message}`);
+          }
+        }
+
+      } catch (error) {
+        results.push(`❌ User locks test failed: ${error.message}`);
+      }
+
+      document.getElementById('locksTest').textContent = results.join('\n');
+    }
+
+    // Auto-run RPC test on load
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(testRPCEndpoint, 1000);
+    });
+  </script>
+</body>
+</html>
