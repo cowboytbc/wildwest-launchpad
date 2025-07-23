@@ -1,0 +1,102 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Inject production secrets
+      env:
+        PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+        BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+        WTFDUDE: ${{ secrets.WTFDUDE }}
+      run: |
+        echo "Injecting production secrets..."
+        
+        # Inject GitHub token into secure-config.js
+        echo "Injecting GitHub token..."
+        sed -i 's/getServiceTokenDirect() {/getServiceTokenDirect() {\n    \/\/ Production token from GitHub Secrets\n    const PRODUCTION_TOKEN = "${{ secrets.PERSONAL_ACCESS_TOKEN }}";\n    if (PRODUCTION_TOKEN \&\& PRODUCTION_TOKEN.length > 10) {\n      console.log("Production GitHub token loaded");\n      return PRODUCTION_TOKEN;\n    }/g' js/secure-config.js
+        
+        # Create production config with QuickNode endpoints
+        echo "Creating production-config.js with QuickNode endpoints..."
+        echo "Solana endpoint available: $([ -n "$SOLANA_RPC_ENDPOINT" ] && echo "YES" || echo "NO")"
+        echo "Base endpoint available: $([ -n "$BASE_RPC_ENDPOINT" ] && echo "YES" || echo "NO")"
+        
+        # Backup original
+        cp js/production-config.js js/production-config.js.backup
+        
+        # Create new production config
+        cat > js/production-config.js << 'EOF'
+// Production configuration injected at build time from GitHub Secrets
+(function() {
+  'use strict';
+  console.log('Production config loading...');
+  window.PRODUCTION_CONFIG = {
+    token: 'WTFDUDE_PLACEHOLDER',
+    rpc: {
+      solana: 'SOLANA_RPC_PLACEHOLDER',
+      base: 'BASE_RPC_PLACEHOLDER'
+    },
+    injectedAt: new Date().toISOString(),
+    source: 'github-actions-deploy-new'
+  };
+  console.log('Production configuration loaded!');
+  console.log('RPC Status:', {
+    solana: !!window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED' : 'MISSING',
+    base: !!window.PRODUCTION_CONFIG.rpc.base ? 'LOADED' : 'MISSING'
+  });
+})();
+EOF
+        
+        # Replace placeholders with actual values
+        sed -i "s|WTFDUDE_PLACEHOLDER|${WTFDUDE}|g" js/production-config.js
+        sed -i "s|SOLANA_RPC_PLACEHOLDER|${SOLANA_RPC_ENDPOINT}|g" js/production-config.js
+        sed -i "s|BASE_RPC_PLACEHOLDER|${BASE_RPC_ENDPOINT}|g" js/production-config.js
+        
+        echo "Production secrets injected successfully!"
+        echo "Verifying production config:"
+        head -15 js/production-config.js
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
