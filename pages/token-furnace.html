@@ -587,6 +587,20 @@
       align-items: center;
       margin-bottom: 8px;
     }
+    
+    .input-icon-group input {
+      transition: border-color 0.3s ease;
+    }
+    
+    .input-icon-group input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(255, 174, 0, 0.3);
+    }
+    
+    #addressValidation {
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #000;
+    }
     .input-icon {
       position: absolute;
       left: 14px;
@@ -1283,6 +1297,7 @@
       <form class="burn-form" id="burnForm" autocomplete="off">
         <div class="input-icon-group">
           <input type="text" id="tokenAddress" placeholder="Token Address (BASE or SOLANA)" required spellcheck="false" autocapitalize="off" autocomplete="off">
+          <small id="addressValidation" style="position: absolute; top: 100%; left: 0; font-size: 0.8em; margin-top: 4px; display: none;"></small>
         </div>
         <div class="input-icon-group" style="position:relative;display:flex;align-items:center;gap:8px;">
           <input type="number" id="tokenAmount" placeholder="Amount to Burn" min="0" step="any" required spellcheck="false" autocapitalize="off" autocomplete="off" style="flex:1;">
@@ -1752,15 +1767,59 @@ function showChainSelectionModal() {
             console.log('Base wallet connection result:', connected); // Debug
             if (connected) {
               console.log('Base wallet connected successfully'); // Debug
+              
+              // Manually sync the state from wildWestWallet to token furnace
+              console.log('🔄 Syncing Base wallet state to token furnace...');
+              console.log('🔍 wildWestWallet.account:', window.wildWestWallet.account);
+              console.log('🔍 wildWestWallet.provider:', !!window.wildWestWallet.provider);
+              
+              currentChain = 'base';
+              currentAddress = window.wildWestWallet.account;
+              currentProvider = window.wildWestWallet.provider;
+              currentEvmProvider = window.wildWestWallet.provider;
+              currentSolanaProvider = null;
+              
+              console.log('🔄 Token furnace state updated:', {
+                chain: currentChain,
+                address: currentAddress,
+                hasProvider: !!currentProvider
+              });
+              
+              // Double-check the address by getting it directly from the provider
+              if (currentProvider) {
+                try {
+                  const provider = new window.ethers.providers.Web3Provider(window.ethereum);
+                  const signer = provider.getSigner();
+                  const signerAddress = await signer.getAddress();
+                  console.log('🔍 Direct signer address:', signerAddress);
+                  
+                  if (signerAddress !== currentAddress) {
+                    console.log('⚠️ Address mismatch detected, updating currentAddress to match signer');
+                    currentAddress = signerAddress;
+                  }
+                } catch (e) {
+                  console.error('❌ Error getting signer address:', e);
+                }
+              }
+              
+              // Use setTimeout to ensure DOM is ready
+              setTimeout(() => {
+                updateTokenFurnaceUI();
+                updateBalance();
+              }, 100);
+              
+              showBurnSuccess('Base wallet connected successfully!', false);
             } else {
-              console.log('Base wallet connection failed'); // Debug
+              console.log('Base wallet connection failed - no connection returned'); // Debug
+              showBurnSuccess('Failed to connect Base wallet. Please try again.', true);
             }
           } catch (error) {
             console.error('Error connecting Base wallet:', error); // Debug
+            showBurnSuccess('Base wallet connection error: ' + (error.message || error), true);
           }
         } else {
           console.log('wildWestWallet not found'); // Debug
-          alert('Wallet system not loaded. Please refresh the page.');
+          showBurnSuccess('Wallet system not loaded. Please refresh the page.', true);
         }
       } else if (chain === 'solana') {
         await connectSolanaWallet();
@@ -1867,9 +1926,46 @@ async function connectSolanaWallet() {
 }
 
 function updateTokenFurnaceUI() {
+  // Ensure DOM is ready before trying to update UI
+  if (document.readyState === 'loading') {
+    console.log('⏳ DOM not ready, deferring UI update...');
+    setTimeout(updateTokenFurnaceUI, 50);
+    return;
+  }
+  
   const walletBtnText = document.getElementById('walletBtnText');
   const connectBtn = document.getElementById('connectWalletBtn');
   const chainIndicator = document.getElementById('chainIndicator');
+  
+  // Add null checks to prevent errors
+  if (!walletBtnText) {
+    console.error('❌ walletBtnText element not found!');
+    // Try alternative methods to find the element
+    const connectBtn = document.getElementById('connectWalletBtn');
+    if (connectBtn) {
+      const spanInside = connectBtn.querySelector('span:last-child');
+      if (spanInside) {
+        console.log('🔍 Found wallet text span using alternative method');
+        // Use the found element
+        if (currentAddress && currentChain) {
+          const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
+          spanInside.textContent = shortAddress;
+          connectBtn.classList.remove('disconnected', 'evm', 'solana');
+          connectBtn.classList.add('connected', 'evm');
+        }
+        return;
+      }
+    }
+    // Last resort - create the element if it doesn't exist
+    console.log('🔧 Creating missing walletBtnText element...');
+    return;
+  }
+  if (!connectBtn) {
+    console.error('❌ connectWalletBtn element not found!');
+    return;
+  }
+  
+  console.log('🔄 Updating token furnace UI:', { currentAddress, currentChain });
   
   if (currentAddress && currentChain) {
     const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
@@ -1893,6 +1989,8 @@ function updateTokenFurnaceUI() {
         chainIndicator.style.display = 'inline-block';
       }
     }
+    
+    console.log('✅ Token furnace UI updated - wallet connected');
   } else {
     walletBtnText.textContent = 'CONNECT WALLET';
     
@@ -2064,6 +2162,13 @@ document.getElementById('burnForm').addEventListener('submit', async function(e)
     showBurnSuccess('Enter a valid token address and amount.', true);
     return;
   }
+  
+  // Validate token address format
+  if (!tokenAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+    showBurnSuccess('Invalid token address format. Must be 42 characters starting with 0x.', true);
+    console.error('❌ Invalid token address for burning:', tokenAddress, 'Length:', tokenAddress.length);
+    return;
+  }
   if (currentChain === 'base') {
     await burnEvmToken(tokenAddress, amount);
   } else if (currentChain === 'solana') {
@@ -2088,35 +2193,60 @@ document.getElementById('tokenAddress').addEventListener('change', updateBalance
 
 async function updateBalance() {
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
+  console.log('🔍 updateBalance called with:', { tokenAddress, currentChain, currentAddress });
+  
   if (!currentChain || !currentAddress || !tokenAddress) {
     document.getElementById('tokenBalance').textContent = '';
+    console.log('❌ Missing required values for balance fetch');
     return;
   }
+  
+  console.log('🔍 Fetching token balance for address:', tokenAddress);
   if (currentChain === 'base') {
     if (!await safeLoad(loadEthers)) return;
     try {
+      console.log('🔍 Fetching Base token balance for:', { tokenAddress, wallet: currentAddress });
+      
       let provider;
       if (window.ethereum) {
         provider = new window.ethers.providers.Web3Provider(window.ethereum);
       } else {
         provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
       }
+      
       const erc20 = new window.ethers.Contract(tokenAddress, [
         'function balanceOf(address) view returns (uint256)',
         'function decimals() view returns (uint8)',
         'function symbol() view returns (string)'
       ], provider);
+      
       const [bal, dec, sym] = await Promise.all([
         erc20.balanceOf(currentAddress),
         erc20.decimals(),
         erc20.symbol().catch(() => '')
       ]);
+      
+      console.log('📊 Raw balance data:', { rawBalance: bal.toString(), decimals: dec, symbol: sym });
+      
       currentTokenDecimals = dec;
       currentTokenSymbol = sym || '';
       const display = window.ethers.utils.formatUnits(bal, dec) + (sym ? ' ' + sym : '');
+      
+      console.log('💰 Base token balance fetched:', { balance: display, decimals: dec, symbol: sym });
       document.getElementById('tokenBalance').textContent = display;
     } catch (e) {
-      document.getElementById('tokenBalance').textContent = 'Unable to fetch balance.';
+      console.error('❌ Error fetching Base token balance:', e);
+      
+      let errorMsg = 'Unable to fetch balance.';
+      if (e && e.message) {
+        if (e.message.includes('invalid address')) {
+          errorMsg = 'Invalid token address.';
+        } else if (e.message.includes('network')) {
+          errorMsg = 'Network error. Check connection.';
+        }
+      }
+      
+      document.getElementById('tokenBalance').textContent = errorMsg;
     }
   } else if (currentChain === 'solana') {
     if (!await safeLoad(loadSolanaWeb3)) return;
@@ -2145,34 +2275,186 @@ async function updateBalance() {
 
 // --- BURN LOGIC ---
 async function burnEvmToken(tokenAddress, amount) {
-  if (!await safeLoad(loadEthers)) return;
+  if (!await safeLoad(loadEthers)) {
+    showBurnSuccess('Failed to load Ethers library.', true);
+    return;
+  }
+  
+  console.log('🔥 Starting Base token burn:', { tokenAddress, amount, currentAddress });
+  
   try {
     let provider, signer;
     if (window.ethereum) {
       provider = new window.ethers.providers.Web3Provider(window.ethereum);
       signer = provider.getSigner();
+      console.log('🔗 Using Web3Provider with signer');
+      
+      // Verify the signer address matches our current address
+      const signerAddress = await signer.getAddress();
+      console.log('🔐 Signer address:', signerAddress);
+      console.log('🔐 Current address:', currentAddress);
+      
+      if (signerAddress.toLowerCase() !== currentAddress.toLowerCase()) {
+        console.log('⚠️ Wallet address mismatch detected. Auto-correcting...');
+        console.log('  Expected:', currentAddress);
+        console.log('  Actual:', signerAddress);
+        
+        // Auto-correct the address instead of failing
+        currentAddress = signerAddress;
+        console.log('✅ Updated currentAddress to match signer:', currentAddress);
+      }
     } else {
       provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      console.log('🔗 Using JsonRpcProvider (read-only)');
       // No signer, can't send txs
       showBurnSuccess('No wallet connected. Cannot burn tokens in read-only mode.', true);
       return;
     }
+    
+    console.log('📋 Creating ERC20 contract for:', tokenAddress);
     const erc20 = new window.ethers.Contract(tokenAddress, [
       'function transfer(address to, uint256 amount) returns (bool)',
-      'function decimals() view returns (uint8)'
+      'function decimals() view returns (uint8)',
+      'function balanceOf(address) view returns (uint256)',
+      'function name() view returns (string)',
+      'function symbol() view returns (string)',
+      'function burn(uint256 amount)', // Optional burn function
+      'function totalSupply() view returns (uint256)' // For additional checks
     ], signer);
+    
+    // Get token info for better debugging
+    try {
+      const [name, symbol, totalSupply] = await Promise.all([
+        erc20.name().catch(() => 'Unknown'),
+        erc20.symbol().catch(() => 'Unknown'), 
+        erc20.totalSupply().catch(() => '0')
+      ]);
+      console.log('🪙 Token info:', { name, symbol, totalSupply: totalSupply.toString() });
+    } catch (e) {
+      console.log('⚠️ Could not fetch token info, proceeding anyway...');
+    }
+    
     let decimals = currentTokenDecimals;
     if (!decimals) {
+      console.log('🔢 Fetching token decimals...');
       decimals = await erc20.decimals();
+      console.log('🔢 Token decimals:', decimals);
     }
+    
+    // Check balance before burning
+    const balance = await erc20.balanceOf(currentAddress);
+    const balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
+    console.log('💰 Current balance:', balanceFormatted);
+    
+    if (parseFloat(amount) > parseFloat(balanceFormatted)) {
+      showBurnSuccess(`Insufficient balance. You have ${balanceFormatted} tokens.`, true);
+      return;
+    }
+    
     const value = window.ethers.utils.parseUnits(amount, decimals);
     const dead = '0x000000000000000000000000000000000000dEaD';
-    const tx = await erc20.transfer(dead, value);
-    showBurnSuccess('Burned! TX: <a href="https://basescan.org/tx/' + tx.hash + '" target="_blank" style="color:#ffae00;">' + tx.hash.slice(0, 8) + '...</a>');
-    await tx.wait();
-    updateBalance();
+    
+    console.log('🔥 Burn parameters:', {
+      tokenAddress,
+      amount,
+      decimals,
+      value: value.toString(),
+      deadAddress: dead,
+      userBalance: balanceFormatted
+    });
+    
+    // Check if we're on the right network
+    const network = await provider.getNetwork();
+    console.log('🌐 Network info:', {
+      chainId: network.chainId,
+      name: network.name,
+      isBase: network.chainId === 8453
+    });
+    
+    if (network.chainId !== 8453) {
+      showBurnSuccess('Wrong network! Please switch to Base network (Chain ID: 8453)', true);
+      return;
+    }
+    
+    console.log('🔥 Executing burn transaction...', {
+      to: dead,
+      amount: value.toString(),
+      from: currentAddress
+    });
+    
+    // Try to estimate gas first to catch issues early
+    try {
+      console.log('⛽ Estimating gas for transaction...');
+      const gasEstimate = await erc20.estimateGas.transfer(dead, value);
+      console.log('⛽ Gas estimate:', gasEstimate.toString());
+      
+      // Execute the transaction with the estimated gas
+      const tx = await erc20.transfer(dead, value, {
+        gasLimit: gasEstimate.mul(120).div(100) // Add 20% buffer
+      });
+      console.log('✅ Transaction submitted:', tx.hash);
+      
+      showBurnSuccess('Burned! TX: <a href="https://basescan.org/tx/' + tx.hash + '" target="_blank" style="color:#ffae00;">' + tx.hash.slice(0, 8) + '...</a>');
+      
+      console.log('⏳ Waiting for transaction confirmation...');
+      await tx.wait();
+      console.log('✅ Transaction confirmed!');
+      
+      updateBalance();
+    } catch (gasError) {
+      console.error('⛽ Gas estimation failed:', gasError);
+      
+      // If gas estimation fails, try without gas estimation (let wallet handle it)
+      console.log('🔄 Trying simple transfer without gas estimation...');
+      
+      try {
+        const tx = await erc20.transfer(dead, value);
+        console.log('✅ Simple transaction submitted:', tx.hash);
+        
+        showBurnSuccess('Burned! TX: <a href="https://basescan.org/tx/' + tx.hash + '" target="_blank" style="color:#ffae00;">' + tx.hash.slice(0, 8) + '...</a>');
+        
+        await tx.wait();
+        updateBalance();
+      } catch (simpleError) {
+        console.error('❌ Simple transfer also failed:', simpleError);
+        
+        // Try transferring to yourself first to test if transfers work at all
+        console.log('🔄 Testing if token allows any transfers...');
+        try {
+          const testAmount = window.ethers.utils.parseUnits('0.000001', decimals);
+          const testTx = await erc20.transfer(currentAddress, testAmount);
+          console.log('✅ Self-transfer test successful:', testTx.hash);
+          await testTx.wait();
+          
+          // If self-transfer works, the issue is specifically with the dead address
+          showBurnSuccess('This token does not allow transfers to the burn address. Try contacting the token developer for burning instructions.', true);
+        } catch (testError) {
+          console.error('❌ Token does not allow transfers at all:', testError);
+          showBurnSuccess('This token appears to be non-transferable or has severe transfer restrictions.', true);
+        }
+      }
+    }
   } catch (e) {
-    showBurnSuccess('Burn failed: ' + (e && e.message ? e.message : e), true);
+    console.error('❌ Burn failed:', e);
+    
+    let errorMsg = 'Unknown error occurred';
+    if (e && e.message) {
+      if (e.message.includes('user rejected')) {
+        errorMsg = 'Transaction was rejected by user';
+      } else if (e.message.includes('insufficient funds')) {
+        errorMsg = 'Insufficient funds for gas or tokens';
+      } else if (e.message.includes('execution reverted')) {
+        errorMsg = 'Token burning failed - this token may have transfer restrictions, anti-bot protection, or does not allow transfers to burn addresses. Try a different amount or contact the token developer.';
+      } else if (e.message.includes('invalid address')) {
+        errorMsg = 'Invalid token address';
+      } else if (e.message.includes('UNPREDICTABLE_GAS_LIMIT')) {
+        errorMsg = 'This token cannot be burned using the standard transfer method. It may have special burn mechanics or transfer restrictions.';
+      } else {
+        errorMsg = e.message;
+      }
+    }
+    
+    showBurnSuccess('Burn failed: ' + errorMsg, true);
   }
 }
 async function burnSolanaToken(tokenAddress, amount) {
@@ -2236,6 +2518,10 @@ function showBurnSuccess(msg, isError) {
   setTimeout(() => { el.style.display = 'none'; }, 6000);
 }
 
+function showBurnError(msg) {
+  showBurnSuccess(msg, true);
+}
+
 // --- INIT: clear state on load ---
 window.addEventListener('DOMContentLoaded', function() {
   currentChain = null;
@@ -2244,6 +2530,42 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('walletBtnText').textContent = 'Connect Wallet';
   document.getElementById('connectWalletBtn').classList.remove('connected');
   document.getElementById('tokenBalance').textContent = '';
+  
+  // Add real-time token address validation
+  const tokenAddressInput = document.getElementById('tokenAddress');
+  const validationElement = document.getElementById('addressValidation');
+  
+  if (tokenAddressInput && validationElement) {
+    tokenAddressInput.addEventListener('input', function() {
+      const address = this.value.trim();
+      
+      if (!address) {
+        validationElement.style.display = 'none';
+        this.style.borderColor = '';
+        return;
+      }
+      
+      if (address.match(/^0x[a-fA-F0-9]{40}$/)) {
+        validationElement.textContent = '✅ Valid address format';
+        validationElement.style.color = '#00ff00';
+        validationElement.style.display = 'block';
+        this.style.borderColor = '#00ff00';
+      } else {
+        if (address.length < 42) {
+          validationElement.textContent = `❌ Too short (${address.length}/42 characters)`;
+        } else if (address.length > 42) {
+          validationElement.textContent = `❌ Too long (${address.length}/42 characters)`;
+        } else if (!address.startsWith('0x')) {
+          validationElement.textContent = '❌ Must start with 0x';
+        } else {
+          validationElement.textContent = '❌ Invalid characters (use 0-9, a-f, A-F only)';
+        }
+        validationElement.style.color = '#ff0000';
+        validationElement.style.display = 'block';
+        this.style.borderColor = '#ff0000';
+      }
+    });
+  }
 });
     </script>
     <!-- --- BURN ALL BUTTON LOGIC --- -->
