@@ -2421,9 +2421,10 @@ async function burnEvmToken(tokenAddress, amount) {
     
     // Check balance before burning
     console.log('💰 Checking token balance...');
+    let balanceFormatted;
     try {
       const balance = await erc20.balanceOf(currentAddress);
-      const balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
+      balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
       console.log('💰 Current balance:', balanceFormatted, 'Raw:', balance.toString());
       
       if (parseFloat(amount) > parseFloat(balanceFormatted)) {
