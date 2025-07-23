@@ -11,6 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="../js/production-config.js"></script>
+  <!-- Emergency RPC override until GitHub Secrets deployment is fixed -->
+  <script src="../js/emergency-rpc-override.js"></script>
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
@@ -855,12 +857,33 @@
 
     // Display user's locks (requires factory with event logs or lock registry)
     async function loadUserLocks() {
+      console.log('🔍 loadUserLocks called');
+      console.log('📍 Provider available:', !!provider);
+      console.log('📍 User address:', userAddress);
+      
       const userLocksList = document.getElementById('userLocks');
       userLocksList.innerHTML = '';
-      if (!provider || !userAddress) return;
+      
+      if (!provider || !userAddress) {
+        console.log('❌ Cannot load locks: missing provider or userAddress');
+        const li = document.createElement('li');
+        li.textContent = 'Connect wallet to view your locks.';
+        li.style.color = '#888';
+        li.style.textAlign = 'center';
+        userLocksList.appendChild(li);
+        return;
+      }
+      
       try {
+        console.log('🏭 Creating factory contract...');
         const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
+        
+        console.log('📞 Calling getUserLocks for:', userAddress);
         const lockAddresses = await factory.getUserLocks(userAddress);
+        
+        console.log('📦 Found lock addresses:', lockAddresses);
+        console.log('📊 Total locks found:', lockAddresses.length);
+        
         if (lockAddresses.length === 0) {
           const li = document.createElement('li');
           li.textContent = 'No locks found.';
