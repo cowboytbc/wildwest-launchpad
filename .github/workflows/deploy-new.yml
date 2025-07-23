@@ -29,33 +29,62 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Inject GitHub token directly into secure-config.js
+    - name: Inject GitHub token and QuickNode RPC endpoints
       env:
         PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+        WTFDUDE: ${{ secrets.WTFDUDE }}
       run: |
-        echo "🔧 Injecting production token directly into secure-config.js..."
+        echo "🔧 Injecting production secrets..."
         
-        # Use sed to inject the production token at the beginning of getServiceTokenDirect method
-        sed -i 's/getServiceTokenDirect() {/getServiceTokenDirect() {\
-    \/\/ Method 0: Production token from GitHub Secrets (injected at build time)\
-    const PRODUCTION_TOKEN = "${{ secrets.PERSONAL_ACCESS_TOKEN }}";\
-    if (PRODUCTION_TOKEN \&\& PRODUCTION_TOKEN.length > 10) {\
-      console.log("✅ Production GitHub token loaded from build injection");\
-      return PRODUCTION_TOKEN;\
-    }/g' js/secure-config.js
+        # Inject GitHub token into secure-config.js
+        echo "📝 Injecting GitHub token into secure-config.js..."
+        sed -i 's/getServiceTokenDirect() {/getServiceTokenDirect() {\n    \/\/ Method 0: Production token from GitHub Secrets (injected at build time)\n    const PRODUCTION_TOKEN = "${{ secrets.PERSONAL_ACCESS_TOKEN }}";\n    if (PRODUCTION_TOKEN \&\& PRODUCTION_TOKEN.length > 10) {\n      console.log("✅ Production GitHub token loaded from build injection");\n      return PRODUCTION_TOKEN;\n    }/g' js/secure-config.js
         
-        # Add production build marker to constructor
-        sed -i 's/console\.log("🔍 SecureConfig Debug Info:");/console.log("🔍 SecureConfig Debug Info:");\
-        console.log("🚀 PRODUCTION BUILD - Token injected at build time");/g' js/secure-config.js
+        # Add production build marker
+        sed -i 's/console\.log("🔍 SecureConfig Debug Info:");/console.log("🔍 SecureConfig Debug Info:");\n        console.log("🚀 PRODUCTION BUILD - Token injected at build time");/g' js/secure-config.js
         
-        # Verify the injection worked
+        # Create production config with QuickNode endpoints
+        echo "� Creating production-config.js with QuickNode endpoints..."
+        echo "Solana endpoint preview: ${SOLANA_RPC_ENDPOINT:0:50}..."
+        echo "Base endpoint preview: ${BASE_RPC_ENDPOINT:0:50}..."
+        
+        cp js/production-config.js js/production-config.js.backup
+        
+        cat > js/production-config.js << 'EOF'
+        // Production configuration injected at build time from GitHub Secrets
+        (function() {
+          'use strict';
+          console.log('🔍 QuickNode production config loading...');
+          window.PRODUCTION_CONFIG = {
+            token: 'WTFDUDE_PLACEHOLDER',
+            rpc: {
+              solana: 'SOLANA_RPC_PLACEHOLDER',
+              base: 'BASE_RPC_PLACEHOLDER'
+            },
+            injectedAt: new Date().toISOString(),
+            source: 'github-actions-deploy-new'
+          };
+          console.log('🔐 QuickNode production configuration loaded!');
+          console.log('📊 RPC Status:', {
+            solana: !!window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED' : 'MISSING',
+            base: !!window.PRODUCTION_CONFIG.rpc.base ? 'LOADED' : 'MISSING',
+            solanaPreview: window.PRODUCTION_CONFIG.rpc.solana ? window.PRODUCTION_CONFIG.rpc.solana.substring(0, 50) + '...' : 'NONE'
+          });
+        })();
+        EOF
+        
+        # Replace placeholders with actual values
+        sed -i "s|WTFDUDE_PLACEHOLDER|${WTFDUDE}|g" js/production-config.js
+        sed -i "s|SOLANA_RPC_PLACEHOLDER|${SOLANA_RPC_ENDPOINT}|g" js/production-config.js
+        sed -i "s|BASE_RPC_PLACEHOLDER|${BASE_RPC_ENDPOINT}|g" js/production-config.js
+        
+        echo "✅ Production secrets injected successfully!"
         echo "🔍 Verifying token injection:"
         grep -A 3 "PRODUCTION_TOKEN" js/secure-config.js | head -5
-        echo ""
-        echo "🔍 Checking for production marker:"
-        grep "PRODUCTION BUILD" js/secure-config.js
+        echo "🔍 Verifying production config:"
+        head -10 js/production-config.js
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
