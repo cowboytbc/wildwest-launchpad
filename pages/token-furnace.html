@@ -1788,6 +1788,24 @@ function showChainSelectionModal() {
         if (window.wildWestWallet) {
           console.log('wildWestWallet found, attempting Base connection'); // Debug
           try {
+            // Ensure we're connecting to MetaMask specifically for Base
+            if (window.ethereum) {
+              console.log('🔍 Pre-connection wallet info:', {
+                isMetaMask: window.ethereum.isMetaMask,
+                isPhantom: window.ethereum.isPhantom,
+                providers: window.ethereum.providers?.length || 0
+              });
+              
+              // If multiple providers, ensure MetaMask is selected
+              if (window.ethereum.providers && window.ethereum.providers.length > 1) {
+                const metamaskProvider = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom);
+                if (metamaskProvider) {
+                  console.log('✅ Selecting dedicated MetaMask provider for Base connection');
+                  window.ethereum = metamaskProvider;
+                }
+              }
+            }
+            
             const connected = await window.wildWestWallet.connectBaseWallet();
             console.log('Base wallet connection result:', connected); // Debug
             if (connected) {
@@ -2160,7 +2178,10 @@ function showWalletDetails() {
 }
 
 function disconnectWallet() {
+  console.log('🔌 Disconnecting wallet...');
+  
   if (currentChain === 'base' && window.wildWestWallet) {
+    console.log('🔌 Disconnecting Base wallet via wildWestWallet');
     window.wildWestWallet.disconnectWallet();
   }
   
@@ -2171,8 +2192,25 @@ function disconnectWallet() {
   currentEvmProvider = null;
   currentSolanaProvider = null;
   
+  // Clear token state
+  currentTokenDecimals = 18;
+  currentTokenSymbol = '';
+  
+  // Clear UI
+  document.getElementById('tokenBalance').textContent = '';
+  const tokenAddressInput = document.getElementById('tokenAddress');
+  if (tokenAddressInput) {
+    tokenAddressInput.value = '';
+  }
+  const tokenAmountInput = document.getElementById('tokenAmount');
+  if (tokenAmountInput) {
+    tokenAmountInput.value = '';
+  }
+  
   updateTokenFurnaceUI();
   showBurnSuccess('Wallet disconnected', false);
+  
+  console.log('✅ Wallet disconnection complete');
 }
 
 // --- BURN FORM LOGIC ---
@@ -2356,7 +2394,28 @@ async function burnEvmToken(tokenAddress, amount) {
   try {
     let provider, signer;
     if (window.ethereum) {
-      provider = new window.ethers.providers.Web3Provider(window.ethereum);
+      // Debug wallet provider information
+      console.log('🔍 Wallet provider debug info:', {
+        isMetaMask: window.ethereum.isMetaMask,
+        isPhantom: window.ethereum.isPhantom,
+        providers: window.ethereum.providers?.length || 0,
+        selectedAddress: window.ethereum.selectedAddress
+      });
+      
+      // If multiple providers exist, try to select MetaMask specifically
+      let ethProvider = window.ethereum;
+      if (window.ethereum.providers && window.ethereum.providers.length > 1) {
+        console.log('🔍 Multiple wallet providers detected, looking for MetaMask...');
+        const metamaskProvider = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom);
+        if (metamaskProvider) {
+          console.log('✅ Found dedicated MetaMask provider');
+          ethProvider = metamaskProvider;
+        } else {
+          console.log('⚠️ Could not find dedicated MetaMask provider, using default');
+        }
+      }
+      
+      provider = new window.ethers.providers.Web3Provider(ethProvider);
       signer = provider.getSigner();
       console.log('🔗 Using Web3Provider with signer');
       
@@ -2374,26 +2433,41 @@ async function burnEvmToken(tokenAddress, amount) {
         console.log('  Token holder address:', correctAddress);
         console.log('  Current signer address:', signerAddress);
         
-        // Try to request the wallet to switch to the correct account
+        // Try to request the specific provider to switch accounts
         try {
           console.log('🔄 Requesting wallet to switch to account:', correctAddress);
-          await window.ethereum.request({
-            method: 'wallet_requestPermissions',
-            params: [{ eth_accounts: {} }]
-          });
           
-          // Get the updated signer after permission request
-          signer = provider.getSigner();
-          const newSignerAddress = await signer.getAddress();
-          console.log('🔐 New signer address after permission request:', newSignerAddress);
+          // First try to request accounts from the specific provider
+          const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
+          console.log('🔐 Available accounts from provider:', accounts);
           
-          if (newSignerAddress.toLowerCase() !== correctAddress.toLowerCase()) {
-            showBurnSuccess(`Wallet is connected to ${newSignerAddress} but tokens are in ${correctAddress}. Please switch to the correct account in your wallet.`, true);
+          // Check if the correct address is in the available accounts
+          const correctAddressLower = correctAddress.toLowerCase();
+          if (accounts.some(acc => acc.toLowerCase() === correctAddressLower)) {
+            console.log('✅ Correct address is available in wallet accounts');
+            
+            // Try to switch to the correct account
+            await ethProvider.request({
+              method: 'wallet_requestPermissions',
+              params: [{ eth_accounts: {} }]
+            });
+            
+            // Get updated signer
+            signer = provider.getSigner();
+            const newSignerAddress = await signer.getAddress();
+            console.log('🔐 New signer address after permission request:', newSignerAddress);
+            
+            if (newSignerAddress.toLowerCase() !== correctAddressLower) {
+              showBurnSuccess(`Wallet is connected to ${newSignerAddress} but tokens are in ${correctAddress}. Please manually switch to the correct account in your wallet and try again.`, true);
+              return;
+            }
+          } else {
+            showBurnSuccess(`The account ${correctAddress} is not available in your current wallet. Please switch to the wallet that contains this account and reconnect.`, true);
             return;
           }
         } catch (permissionError) {
           console.log('⚠️ Could not request account switch:', permissionError);
-          showBurnSuccess(`Wallet address mismatch. Please switch to account ${correctAddress} in your wallet to burn these tokens.`, true);
+          showBurnSuccess(`Wallet address mismatch. Please manually switch to account ${correctAddress} in your wallet to burn these tokens.`, true);
           return;
         }
       }
