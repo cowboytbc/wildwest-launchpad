@@ -14,6 +14,8 @@
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
+  <!-- Quick diagnostic for troubleshooting -->
+  <script src="../js/rpc-diagnostic.js"></script>
   
   <!-- Mark that we're handling the wallet button ourselves -->
   <script>
@@ -24,6 +26,8 @@
   <script src="../js/wallet.js"></script>
   <!-- Unified wallet connection system (fixes all connection issues) -->
   <script src="../js/unified-wallet-connection.js"></script>
+  <!-- Bypass unified wallet for lock pages to restore original functionality -->
+  <script src="../js/lock-page-wallet-bypass.js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #181c22 0%, #23272f 100%);
