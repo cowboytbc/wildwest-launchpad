@@ -2233,7 +2233,9 @@ async function updateBalance() {
       
       let errorMsg = 'Unable to fetch balance.';
       if (e && e.message) {
-        if (e.message.includes('invalid address')) {
+        if (e.message.includes('call revert exception')) {
+          errorMsg = 'Invalid token contract. This address is not an ERC20 token.';
+        } else if (e.message.includes('invalid address')) {
           errorMsg = 'Invalid token address.';
         } else if (e.message.includes('network')) {
           errorMsg = 'Network error. Check connection.';
