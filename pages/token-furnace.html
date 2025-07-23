@@ -2234,17 +2234,56 @@ async function updateBalance() {
         provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
       }
       
+      // First, check if this address is actually a contract
+      try {
+        const code = await provider.getCode(tokenAddress);
+        console.log('📋 Contract code check:', { address: tokenAddress, hasCode: code !== '0x', codeLength: code.length });
+        
+        if (code === '0x') {
+          document.getElementById('tokenBalance').textContent = 'This address is not a contract (EOA wallet address).';
+          return;
+        }
+      } catch (e) {
+        console.log('⚠️ Could not check contract code:', e);
+      }
+      
       const erc20 = new window.ethers.Contract(tokenAddress, [
         'function balanceOf(address) view returns (uint256)',
         'function decimals() view returns (uint8)',
         'function symbol() view returns (string)'
       ], provider);
       
-      const [bal, dec, sym] = await Promise.all([
-        erc20.balanceOf(currentAddress),
-        erc20.decimals(),
-        erc20.symbol().catch(() => '')
-      ]);
+      console.log('📋 Calling contract methods...');
+      
+      // Try each method individually to see which one fails
+      let bal, dec, sym;
+      
+      try {
+        console.log('🔢 Fetching decimals...');
+        dec = await erc20.decimals();
+        console.log('✅ Decimals:', dec);
+      } catch (e) {
+        console.error('❌ Decimals failed:', e.message);
+        throw new Error('Failed to get token decimals: ' + e.message);
+      }
+      
+      try {
+        console.log('🏷️ Fetching symbol...');
+        sym = await erc20.symbol();
+        console.log('✅ Symbol:', sym);
+      } catch (e) {
+        console.log('⚠️ Symbol failed, using empty:', e.message);
+        sym = '';
+      }
+      
+      try {
+        console.log('💰 Fetching balance for:', currentAddress);
+        bal = await erc20.balanceOf(currentAddress);
+        console.log('✅ Balance:', bal.toString());
+      } catch (e) {
+        console.error('❌ Balance fetch failed:', e.message);
+        throw new Error('Failed to get token balance: ' + e.message);
+      }
       
       console.log('📊 Raw balance data:', { rawBalance: bal.toString(), decimals: dec, symbol: sym });
       
@@ -2364,12 +2403,19 @@ async function burnEvmToken(tokenAddress, amount) {
     }
     
     // Check balance before burning
-    const balance = await erc20.balanceOf(currentAddress);
-    const balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
-    console.log('💰 Current balance:', balanceFormatted);
-    
-    if (parseFloat(amount) > parseFloat(balanceFormatted)) {
-      showBurnSuccess(`Insufficient balance. You have ${balanceFormatted} tokens.`, true);
+    console.log('💰 Checking token balance...');
+    try {
+      const balance = await erc20.balanceOf(currentAddress);
+      const balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
+      console.log('💰 Current balance:', balanceFormatted, 'Raw:', balance.toString());
+      
+      if (parseFloat(amount) > parseFloat(balanceFormatted)) {
+        showBurnSuccess(`Insufficient balance. You have ${balanceFormatted} tokens.`, true);
+        return;
+      }
+    } catch (balanceError) {
+      console.error('❌ Failed to check balance:', balanceError);
+      showBurnSuccess('Cannot read token balance. This token may have access restrictions or be paused.', true);
       return;
     }
     
