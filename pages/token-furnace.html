@@ -1796,12 +1796,33 @@ function showChainSelectionModal() {
                 providers: window.ethereum.providers?.length || 0
               });
               
-              // If multiple providers, ensure MetaMask is selected
-              if (window.ethereum.providers && window.ethereum.providers.length > 1) {
-                const metamaskProvider = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom);
-                if (metamaskProvider) {
-                  console.log('✅ Selecting dedicated MetaMask provider for Base connection');
-                  window.ethereum = metamaskProvider;
+              // Force MetaMask selection if both wallets are detected
+              if (window.ethereum.isPhantom && window.ethereum.isMetaMask) {
+                console.log('🔄 Both MetaMask and Phantom detected, forcing MetaMask selection...');
+                
+                // Try to access MetaMask directly
+                if (window.ethereum.providers && window.ethereum.providers.length > 0) {
+                  const metamaskProvider = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom);
+                  if (metamaskProvider) {
+                    console.log('✅ Found dedicated MetaMask provider, switching to it');
+                    window.ethereum = metamaskProvider;
+                  }
+                } else if (window.ethereum._metamask || window.ethereum.isMetaMask) {
+                  console.log('✅ Using MetaMask directly');
+                  // MetaMask is already the primary provider
+                }
+                
+                // Try direct MetaMask access methods
+                try {
+                  if (window.ethereum.request) {
+                    console.log('🔄 Requesting MetaMask account switch...');
+                    await window.ethereum.request({
+                      method: 'wallet_requestPermissions',
+                      params: [{ eth_accounts: {} }]
+                    });
+                  }
+                } catch (permError) {
+                  console.log('⚠️ Direct MetaMask permission request failed:', permError);
                 }
               }
             }
@@ -2413,6 +2434,19 @@ async function burnEvmToken(tokenAddress, amount) {
         } else {
           console.log('⚠️ Could not find dedicated MetaMask provider, using default');
         }
+      } else if (window.ethereum.isPhantom && window.ethereum.isMetaMask) {
+        // Special case: Both wallets detected but only one provider object
+        console.log('🔄 Both wallets detected in single provider, attempting MetaMask selection...');
+        
+        // Try to access MetaMask specifically
+        if (window.ethereum._metamask) {
+          console.log('✅ Using MetaMask via _metamask property');
+          ethProvider = window.ethereum;
+        } else {
+          console.log('⚠️ Cannot isolate MetaMask, user may need to disable Phantom temporarily');
+          showBurnSuccess('Multiple wallets detected. Please disable Phantom wallet temporarily or switch to the MetaMask account manually in your wallet.', true);
+          return;
+        }
       }
       
       provider = new window.ethers.providers.Web3Provider(ethProvider);
@@ -2462,8 +2496,39 @@ async function burnEvmToken(tokenAddress, amount) {
               return;
             }
           } else {
-            showBurnSuccess(`The account ${correctAddress} is not available in your current wallet. Please switch to the wallet that contains this account and reconnect.`, true);
-            return;
+            console.log('❌ Correct address not found in wallet accounts');
+            console.log('🔄 Attempting to request access to the correct account...');
+            
+            // Try multiple approaches to get the correct account
+            try {
+              // Method 1: Request specific account access
+              const newAccounts = await ethProvider.request({
+                method: 'eth_requestAccounts',
+                params: []
+              });
+              console.log('🔐 New accounts after request:', newAccounts);
+              
+              if (newAccounts.some(acc => acc.toLowerCase() === correctAddressLower)) {
+                console.log('✅ Correct address now available after request');
+                // Recreate provider and signer
+                provider = new window.ethers.providers.Web3Provider(ethProvider);
+                signer = provider.getSigner();
+                const finalAddress = await signer.getAddress();
+                console.log('🔐 Final signer address:', finalAddress);
+                
+                if (finalAddress.toLowerCase() !== correctAddressLower) {
+                  showBurnSuccess(`Please manually switch to account ${correctAddress} in your wallet and try burning again.`, true);
+                  return;
+                }
+              } else {
+                showBurnSuccess(`The account ${correctAddress} is not available in your current wallet. Please switch to MetaMask or add this account to your wallet.`, true);
+                return;
+              }
+            } catch (accountError) {
+              console.log('❌ Failed to request correct account:', accountError);
+              showBurnSuccess(`Cannot access account ${correctAddress}. Please ensure you're using MetaMask with the correct account and try again.`, true);
+              return;
+            }
           }
         } catch (permissionError) {
           console.log('⚠️ Could not request account switch:', permissionError);
