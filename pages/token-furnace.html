@@ -2078,6 +2078,301 @@ document.addEventListener('DOMContentLoaded', function() {
   // Completely independent wallet connection for Token Furnace
   setupTokenFurnaceWallet();
   
+  // Make functions globally accessible for debugging
+  window.showChainSelectionModal = showChainSelectionModal;
+  window.setupTokenFurnaceWallet = setupTokenFurnaceWallet;
+  
+  // Define functions immediately
+  function showChainSelectionModal() {
+    console.log('🚀 showChainSelectionModal called!');
+    
+    // Detect available wallets
+    const availableWallets = {
+      ethereum: [],
+      solana: []
+    };
+    
+    // Detect Ethereum/Base wallets
+    if (window.ethereum) {
+      // Check for multiple providers
+      const providers = window.ethereum.providers || [window.ethereum];
+      
+      providers.forEach(provider => {
+        if (provider.isMetaMask) {
+          availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
+        }
+        if (provider.isCoinbaseWallet) {
+          availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
+        }
+        if (provider.isRabby) {
+          availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
+        }
+        if (provider.isTrust) {
+          availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
+        }
+      });
+      
+      // If no specific wallet detected but ethereum exists, add as generic
+      if (availableWallets.ethereum.length === 0) {
+        availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
+      }
+    }
+    
+    // Detect Solana wallets - be very specific about providers
+    const solanaWallets = [];
+    
+    // Phantom - check multiple locations
+    if (window.phantom?.solana?.isPhantom) {
+      solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
+    } else if (window.solana?.isPhantom) {
+      solanaWallets.push({name: 'Phantom', provider: window.solana});
+    }
+    
+    // Other Solana wallets
+    if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
+      solanaWallets.push({name: 'Solflare', provider: window.solflare});
+    }
+    if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
+      solanaWallets.push({name: 'Backpack', provider: window.backpack});
+    }
+    if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
+      solanaWallets.push({name: 'Glow', provider: window.glow});
+    }
+    if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
+      solanaWallets.push({name: 'Slope', provider: window.slope});
+    }
+    
+    availableWallets.solana = solanaWallets;
+    
+    console.log('🔍 Detected wallets:', availableWallets);
+    
+    // Create modal with consistent styling
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+      z-index: 10000; animation: fadeIn 0.2s ease-out;
+    `;
+    
+    // Generate wallet options HTML
+    let walletOptionsHTML = '';
+    
+    if (availableWallets.ethereum.length > 0) {
+      walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Base Network (Ethereum)</h4>';
+      availableWallets.ethereum.forEach((wallet, index) => {
+        walletOptionsHTML += `
+          <button onclick="connectSpecificWallet('ethereum', ${index})" style="
+            display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
+            background: linear-gradient(135deg, #0052ff, #0041cc);
+            color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+            cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+            transition: all 0.3s ease; text-align: center;
+          " onmouseover="this.style.background='linear-gradient(135deg, #0066ff, #0052ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #0052ff, #0041cc)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+            Connect ${wallet.name}
+          </button>
+        `;
+      });
+    }
+    
+    if (availableWallets.solana.length > 0) {
+      walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Solana Network</h4>';
+      availableWallets.solana.forEach((wallet, index) => {
+        walletOptionsHTML += `
+          <button onclick="connectSpecificWallet('solana', ${index})" style="
+            display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
+            background: linear-gradient(135deg, #9945ff, #7c3aed);
+            color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+            cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+            transition: all 0.3s ease; text-align: center;
+          " onmouseover="this.style.background='linear-gradient(135deg, #a855f7, #9945ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #9945ff, #7c3aed)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+            Connect ${wallet.name}
+          </button>
+        `;
+      });
+    }
+    
+    if (availableWallets.ethereum.length === 0 && availableWallets.solana.length === 0) {
+      walletOptionsHTML = `
+        <div style="text-align: center; padding: 2rem; color: #ff6b6b;">
+          <h4 style="color: #ff6b6b; margin-bottom: 1rem;">No Wallets Detected</h4>
+          <p style="margin-bottom: 1rem; color: #c0c0c0;">Please install a wallet to continue:</p>
+          <div style="text-align: left;">
+            <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://metamask.io" target="_blank" style="color: #00eaff;">MetaMask</a> (for Base/Ethereum)</p>
+            <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://phantom.app" target="_blank" style="color: #00eaff;">Phantom</a> (for Solana + Ethereum)</p>
+            <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://wallet.coinbase.com" target="_blank" style="color: #00eaff;">Coinbase Wallet</a> (for Base/Ethereum)</p>
+          </div>
+        </div>
+      `;
+    }
+    
+    modal.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 2px solid #00eaff;
+        border-radius: 16px;
+        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+        max-width: 400px;
+        width: 90vw;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease-out;
+        font-family: 'Orbitron', sans-serif;
+      ">
+        <div style="
+          padding: 1.5rem;
+          border-bottom: 1px solid rgba(0, 234, 255, 0.2);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        ">
+          <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem; font-weight: 600;">Connect Wallet</h3>
+          <button class="close-modal-btn" style="
+            background: none;
+            border: none;
+            color: #00eaff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+          " onmouseover="this.style.backgroundColor='rgba(0, 234, 255, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
+        </div>
+        <div style="padding: 1.5rem;">
+          ${walletOptionsHTML}
+          <button class="cancel-modal-btn" style="
+            display: block; width: 100%; margin-top: 1rem; padding: 10px;
+            background: rgba(102, 102, 102, 0.8); color: white;
+            border: 1px solid rgba(0, 234, 255, 0.2); border-radius: 8px;
+            cursor: pointer; font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s ease;
+          " onmouseover="this.style.background='rgba(102, 102, 102, 1)'; this.style.borderColor='rgba(0, 234, 255, 0.4)'" onmouseout="this.style.background='rgba(102, 102, 102, 0.8)'; this.style.borderColor='rgba(0, 234, 255, 0.2)'">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add close functionality after modal is added to DOM
+    const closeBtn = modal.querySelector('.close-modal-btn');
+    const cancelBtn = modal.querySelector('.cancel-modal-btn');
+    
+    function closeModal() {
+      modal.remove();
+    }
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close when clicking outside the modal
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Store available wallets for connection functions
+    window.availableWallets = availableWallets;
+  }
+  
+  // Specific wallet connection function
+  window.connectSpecificWallet = async function(network, walletIndex) {
+    console.log(`🔗 Connecting to wallet ${walletIndex} on ${network} network`);
+    
+    try {
+      if (network === 'ethereum') {
+        const wallet = window.availableWallets.ethereum[walletIndex];
+        if (!wallet) {
+          throw new Error(`Wallet not found at index ${walletIndex}`);
+        }
+        
+        console.log(`📋 Connecting to ${wallet.name} with provider:`, wallet.provider);
+        
+        // Use the specific provider for this wallet
+        const accounts = await wallet.provider.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          // Switch to Base network if not already on it
+          try {
+            await wallet.provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x2105' }], // Base mainnet
+            });
+          } catch (switchError) {
+            // If the chain doesn't exist, add it
+            if (switchError.code === 4902) {
+              await wallet.provider.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x2105',
+                  chainName: 'Base',
+                  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: ['https://mainnet.base.org'],
+                  blockExplorerUrls: ['https://basescan.org']
+                }]
+              });
+            }
+          }
+          
+          // Update global state
+          currentAddress = accounts[0];
+          currentChain = 'base';
+          currentProvider = wallet.provider;
+          currentEvmProvider = wallet.provider;
+          currentSolanaProvider = null;
+          
+          updateTokenFurnaceUI();
+          updateBalance();
+          
+          // Close modal
+          document.querySelector('[style*="position: fixed"]').remove();
+          
+          showBurnSuccess(`${wallet.name} connected successfully!`, false);
+        }
+      } else if (network === 'solana') {
+        const wallet = window.availableWallets.solana[walletIndex];
+        if (!wallet) {
+          throw new Error(`Wallet not found at index ${walletIndex}`);
+        }
+        
+        console.log(`📋 Connecting to ${wallet.name} with provider:`, wallet.provider);
+        
+        // Use the specific provider for this wallet
+        const response = await wallet.provider.connect();
+        
+        // Update global state
+        currentAddress = response.publicKey.toString();
+        currentChain = 'solana';
+        currentProvider = wallet.provider;
+        currentSolanaProvider = wallet.provider;
+        currentEvmProvider = null;
+        
+        updateTokenFurnaceUI();
+        updateBalance();
+        
+        // Close modal
+        document.querySelector('[style*="position: fixed"]').remove();
+        
+        showBurnSuccess(`${wallet.name} connected successfully!`, false);
+      }
+    } catch (error) {
+      const walletName = network === 'ethereum' ? 
+        window.availableWallets.ethereum[walletIndex]?.name : 
+        window.availableWallets.solana[walletIndex]?.name;
+      console.error(`❌ ${walletName} connection failed:`, error);
+      showBurnSuccess(`${walletName} connection failed: ${error.message}`, true);
+    }
+  };
+  
   function setupTokenFurnaceWallet() {
     console.log('🔧 Setting up token furnace wallet connection');
     
@@ -2104,8 +2399,8 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('Already connected, showing wallet details');
           showWalletDetails();
         } else {
-          console.log('Not connected, showing chain selection');
-          showChainSelectionModal();
+          console.log('Not connected, showing wallet selection modal');
+          window.showChainSelectionModal();
         }
       });
       
@@ -2117,36 +2412,31 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Check for existing connections on page load
-  checkExistingConnections();
+  // DISABLED: Don't auto-connect, let user choose
+  // checkExistingConnections();
   
   function checkExistingConnections() {
-    console.log('🔍 Checking for existing wallet connections');
+    console.log('🔍 Checking for existing wallet connections (but not auto-connecting)');
     
-    // Check for existing Base connection
+    // We can check if wallets are available but don't auto-connect
+    // This prevents the page from automatically connecting to wallets in new tabs
+    
+    // Check for existing Base connection (but don't auto-connect)
     if (window.ethereum) {
       window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
         if (accounts && accounts.length > 0) {
-          console.log('🔗 Found existing Base connection:', accounts[0]);
-          currentAddress = accounts[0];
-          currentChain = 'base';
-          currentProvider = window.ethereum;
-          currentEvmProvider = window.ethereum;
-          updateTokenFurnaceUI();
-          updateBalance();
+          console.log('🔗 Base wallet available but not auto-connecting:', accounts[0]);
+          // Don't auto-connect - let user choose
         }
       }).catch(e => {
         console.log('No existing Base connection');
       });
     }
     
-    // Check for existing Solana connection
+    // Check for existing Solana connection (but don't auto-connect)
     if (window.solana && window.solana.isConnected) {
-      console.log('🔗 Found existing Solana connection:', window.solana.publicKey?.toString());
-      currentAddress = window.solana.publicKey?.toString();
-      currentChain = 'solana';
-      currentProvider = window.solana;
-      updateTokenFurnaceUI();
-      updateBalance();
+      console.log('🔗 Solana wallet available but not auto-connecting:', window.solana.publicKey?.toString());
+      // Don't auto-connect - let user choose
     }
   }
 });
@@ -2332,51 +2622,6 @@ function showChainSelectionModal() {
             console.error('❌ Direct Base wallet connection error:', error);
             showBurnSuccess('Base wallet connection error: ' + (error.message || error), true);
           }
-        } else {
-          console.log('❌ No Ethereum provider found');
-          showBurnSuccess('No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.', true);
-        }
-              console.log('🔍 wildWestWallet.provider:', !!window.wildWestWallet.provider);
-              
-              currentChain = 'base';
-              currentAddress = window.wildWestWallet.account;
-              currentProvider = window.wildWestWallet.provider;
-              currentEvmProvider = window.wildWestWallet.provider;
-              currentSolanaProvider = null;
-              
-              console.log('🔄 Token furnace state updated:', {
-                chain: currentChain,
-                address: currentAddress,
-                hasProvider: !!currentProvider
-              });
-              
-              // Double-check the address by getting it directly from the provider
-              if (currentProvider) {
-                try {
-                  const provider = new window.ethers.providers.Web3Provider(window.ethereum);
-                  const signer = provider.getSigner();
-                  const signerAddress = await signer.getAddress();
-                  console.log('🔍 Direct signer address:', signerAddress);
-                  
-                  if (signerAddress !== currentAddress) {
-                    console.log('⚠️ Address mismatch detected, updating currentAddress to match signer');
-                    currentAddress = signerAddress;
-                  }
-                } catch (e) {
-                  console.error('❌ Error getting signer address:', e);
-                }
-              }
-              
-              // Use setTimeout to ensure DOM is ready and state is synced
-              setTimeout(() => {
-                updateTokenFurnaceUI();
-                // Add small delay before balance fetch to ensure address is synced
-                setTimeout(updateBalance, 200);
-              }, 100);
-              
-              showBurnSuccess('Base wallet connected successfully!', false);
-            } else {
-              console.log('Base wallet connection failed - no connection returned'); // Debug
         } else {
           console.log('❌ No Ethereum provider found');
           showBurnSuccess('No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.', true);
