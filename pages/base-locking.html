@@ -11,8 +11,6 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="../js/production-config.js"></script>
-  <!-- Emergency RPC override until GitHub Secrets deployment is fixed -->
-  <script src="../js/emergency-rpc-override.js"></script>
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
@@ -891,15 +889,24 @@
           return;
         }
         for (const lockAddr of lockAddresses) {
-          const lock = new ethers.Contract(lockAddr, LOCK_ABI, signer);
-          const [name, amount, releaseTime, released, beneficiary] = await Promise.all([
-            lock.lockName(),
-            lock.amount(),
-            lock.releaseTime(),
-            lock.released(),
-            lock.beneficiary()
-          ]);
-          if (released) continue; // Skip claimed locks
+          console.log(`🔍 Processing lock ${lockAddresses.indexOf(lockAddr) + 1}/${lockAddresses.length}: ${lockAddr}`);
+          
+          try {
+            const lock = new ethers.Contract(lockAddr, LOCK_ABI, provider);
+            const [name, amount, releaseTime, released, beneficiary] = await Promise.all([
+              lock.lockName(),
+              lock.amount(), 
+              lock.releaseTime(),
+              lock.released(),
+              lock.beneficiary()
+            ]);
+            
+            console.log(`📝 Lock details: ${name}, Amount: ${amount.toString()}, Released: ${released}`);
+            
+            if (released) {
+              console.log(`⏭️ Skipping released lock: ${name}`);
+              continue; // Skip claimed locks
+            }
           const now = Math.floor(Date.now() / 1000);
           
           // Determine user's relationship to this lock
@@ -1063,10 +1070,20 @@
 
           li.appendChild(actionsDiv);
           userLocksList.appendChild(li);
+          
+          } catch (lockErr) {
+            console.error(`❌ Error processing lock ${lockAddr}:`, lockErr);
+            const li = document.createElement('li');
+            li.textContent = `Error loading lock ${lockAddr.slice(0,6)}...${lockAddr.slice(-4)}: ${lockErr.message}`;
+            li.style.color = '#ff6c6c';
+            userLocksList.appendChild(li);
+          }
         }
       } catch (err) {
+        console.error('❌ Error in loadUserLocks:', err);
         const li = document.createElement('li');
         li.textContent = 'Error loading locks: ' + (err.message || err);
+        li.style.color = '#ff6c6c';
         userLocksList.appendChild(li);
       }
     }

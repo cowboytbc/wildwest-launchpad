@@ -36,12 +36,21 @@ jobs:
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         WTFDUDE: ${{ secrets.WTFDUDE }}
       run: |
-        echo "Injecting production secrets..."
+        echo "🔧 Injecting QuickNode endpoints from GitHub Secrets..."
         
-        echo "// Production configuration injected at build time from GitHub Secrets" > js/production-config.js
+        if [ -z "$SOLANA_RPC_ENDPOINT" ] || [ -z "$BASE_RPC_ENDPOINT" ]; then
+          echo "❌ ERROR: Required secrets not found!"
+          echo "SOLANA_RPC_ENDPOINT: $([ -n "$SOLANA_RPC_ENDPOINT" ] && echo "SET" || echo "MISSING")"
+          echo "BASE_RPC_ENDPOINT: $([ -n "$BASE_RPC_ENDPOINT" ] && echo "SET" || echo "MISSING")"
+          exit 1
+        fi
+        
+        echo "✅ Secrets found, creating production config..."
+        
+        echo "// Production QuickNode endpoints injected from GitHub Secrets" > js/production-config.js
         echo "(function() {" >> js/production-config.js
         echo "  'use strict';" >> js/production-config.js
-        echo "  console.log('Production config loading...');" >> js/production-config.js
+        echo "  console.log('🔐 Loading QuickNode endpoints from GitHub Secrets...');" >> js/production-config.js
         echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
         echo "    token: '$WTFDUDE'," >> js/production-config.js
         echo "    rpc: {" >> js/production-config.js
@@ -49,17 +58,15 @@ jobs:
         echo "      base: '$BASE_RPC_ENDPOINT'" >> js/production-config.js
         echo "    }," >> js/production-config.js
         echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
-        echo "    source: 'github-actions-deploy-new'" >> js/production-config.js
+        echo "    source: 'github-secrets-quicknode'" >> js/production-config.js
         echo "  };" >> js/production-config.js
-        echo "  console.log('Production configuration loaded!');" >> js/production-config.js
-        echo "  console.log('RPC Status:', {" >> js/production-config.js
-        echo "    solana: !!window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED' : 'MISSING'," >> js/production-config.js
-        echo "    base: !!window.PRODUCTION_CONFIG.rpc.base ? 'LOADED' : 'MISSING'" >> js/production-config.js
-        echo "  });" >> js/production-config.js
+        echo "  console.log('✅ QuickNode endpoints loaded successfully!');" >> js/production-config.js
+        echo "  console.log('🟣 Solana RPC ready');" >> js/production-config.js
+        echo "  console.log('🔵 Base RPC ready');" >> js/production-config.js
         echo "})();" >> js/production-config.js
         
-        echo "Production secrets injected successfully!"
-        echo "Verifying production config:"
+        echo "✅ QuickNode endpoints injected!"
+        echo "Verifying config file:"
         head -10 js/production-config.js
         
     - name: Setup Pages
