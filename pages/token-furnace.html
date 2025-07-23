@@ -3094,13 +3094,39 @@ async function updateBalance() {
       }
       
       console.log('📋 Creating ERC20 contract instance...');
-      const erc20 = new window.ethers.Contract(tokenAddress, [
-        'function balanceOf(address) view returns (uint256)',
-        'function decimals() view returns (uint8)',
-        'function symbol() view returns (string)'
-      ], provider);
+      console.log('🔍 About to create contract with address:', tokenAddress);
+      console.log('🔍 Provider details:', {
+        url: provider.connection?.url,
+        isConnected: !!provider.connection
+      });
+      
+      let erc20;
+      try {
+        erc20 = new window.ethers.Contract(tokenAddress, [
+          'function balanceOf(address) view returns (uint256)',
+          'function decimals() view returns (uint8)',
+          'function symbol() view returns (string)'
+        ], provider);
+        console.log('✅ ERC20 contract instance created successfully');
+      } catch (contractError) {
+        console.error('❌ Failed to create contract instance:', contractError);
+        throw new Error('Failed to create contract instance: ' + contractError.message);
+      }
       
       console.log('📋 Contract instance created successfully. Calling contract methods...');
+      
+      // Test contract responsiveness first
+      console.log('🧪 Testing contract responsiveness...');
+      try {
+        const testCall = await Promise.race([
+          erc20.decimals(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Test timeout')), 5000))
+        ]);
+        console.log('✅ Contract responsive - decimals test successful:', testCall);
+      } catch (testError) {
+        console.error('❌ Contract responsiveness test failed:', testError);
+        console.log('🔄 Proceeding anyway in case it was a timeout...');
+      }
       
       // Try each method individually with timeout protection
       let bal, dec, sym;
@@ -3164,15 +3190,27 @@ async function updateBalance() {
       checkAccountMismatch();
     } catch (e) {
       console.error('❌ Error fetching Base token balance:', e);
+      console.error('❌ Error details:', {
+        message: e.message,
+        code: e.code,
+        stack: e.stack,
+        name: e.name
+      });
       
       let errorMsg = 'Unable to fetch balance.';
       if (e && e.message) {
-        if (e.message.includes('call revert exception')) {
+        if (e.message.includes('call revert exception') || e.message.includes('execution reverted')) {
           errorMsg = 'Invalid token contract. This address is not an ERC20 token.';
         } else if (e.message.includes('invalid address')) {
           errorMsg = 'Invalid token address.';
-        } else if (e.message.includes('network')) {
-          errorMsg = 'Network error. Check connection.';
+        } else if (e.message.includes('network') || e.message.includes('timeout') || e.message.includes('Timeout')) {
+          errorMsg = 'Network error or timeout. Please try again.';
+        } else if (e.message.includes('Failed to get token decimals')) {
+          errorMsg = 'Cannot read token decimals. Not a valid ERC20 token.';
+        } else if (e.message.includes('Failed to get token balance')) {
+          errorMsg = 'Cannot read token balance. Check wallet connection.';
+        } else {
+          errorMsg = 'Error: ' + e.message;
         }
       }
       
