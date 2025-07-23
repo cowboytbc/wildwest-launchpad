@@ -3078,53 +3078,68 @@ async function updateBalance() {
           const backupCode = await backupProvider.getCode(tokenAddress);
           
           if (backupCode === '0x') {
+            console.log('❌ Backup RPC also shows no contract code - this is likely an EOA wallet address');
             document.getElementById('tokenBalance').textContent = 'This address is not a contract (EOA wallet address).';
             return;
           } else {
             console.log('✅ Contract found with backup RPC - switching provider');
             provider = backupProvider;
           }
+        } else {
+          console.log('✅ Contract code found with primary RPC - proceeding with token calls');
         }
       } catch (e) {
         console.log('⚠️ Could not check contract code:', e);
         console.log('🔄 Continuing anyway - might still be a valid token...');
       }
       
+      console.log('📋 Creating ERC20 contract instance...');
       const erc20 = new window.ethers.Contract(tokenAddress, [
         'function balanceOf(address) view returns (uint256)',
         'function decimals() view returns (uint8)',
         'function symbol() view returns (string)'
       ], provider);
       
-      console.log('📋 Calling contract methods...');
+      console.log('📋 Contract instance created successfully. Calling contract methods...');
       
-      // Try each method individually to see which one fails
+      // Try each method individually with timeout protection
       let bal, dec, sym;
       
       try {
         console.log('🔢 Fetching decimals...');
-        dec = await erc20.decimals();
-        console.log('✅ Decimals:', dec);
+        dec = await Promise.race([
+          erc20.decimals(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+        ]);
+        console.log('✅ Decimals fetched successfully:', dec);
       } catch (e) {
         console.error('❌ Decimals failed:', e.message);
+        console.error('❌ Full error:', e);
         throw new Error('Failed to get token decimals: ' + e.message);
       }
       
       try {
         console.log('🏷️ Fetching symbol...');
-        sym = await erc20.symbol();
-        console.log('✅ Symbol:', sym);
+        sym = await Promise.race([
+          erc20.symbol(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+        ]);
+        console.log('✅ Symbol fetched successfully:', sym);
       } catch (e) {
-        console.log('⚠️ Symbol failed, using empty:', e.message);
+        console.log('⚠️ Symbol failed, using empty string:', e.message);
         sym = '';
       }
       
       try {
-        console.log('💰 Fetching balance for:', addressToUse);
-        bal = await erc20.balanceOf(addressToUse);
-        console.log('✅ Balance:', bal.toString());
+        console.log('💰 Fetching balance for wallet:', addressToUse);
+        bal = await Promise.race([
+          erc20.balanceOf(addressToUse),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+        ]);
+        console.log('✅ Balance fetched successfully:', bal.toString());
       } catch (e) {
         console.error('❌ Balance fetch failed:', e.message);
+        console.error('❌ Full error:', e);
         throw new Error('Failed to get token balance: ' + e.message);
       }
       
