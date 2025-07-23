@@ -2280,18 +2280,16 @@ async function updateBalance() {
         console.log('💰 Fetching balance for:', currentAddress);
         console.log('🔐 Also checking wildWestWallet account:', window.wildWestWallet?.account);
         
-        // Use wildWestWallet account if it's different from currentAddress
+        // Always use wildWestWallet account if available, as it's the authoritative source
         const addressToCheck = window.wildWestWallet?.account || currentAddress;
         console.log('💰 Final address to check balance for:', addressToCheck);
         
         bal = await erc20.balanceOf(addressToCheck);
         console.log('✅ Balance:', bal.toString());
         
-        // Update currentAddress to match what we actually checked
-        if (addressToCheck !== currentAddress) {
-          console.log('🔄 Updating currentAddress to match checked address');
-          currentAddress = addressToCheck;
-        }
+        // Always update currentAddress to match the address that has the tokens
+        currentAddress = addressToCheck;
+        console.log('🔄 Updated currentAddress to:', currentAddress);
       } catch (e) {
         console.error('❌ Balance fetch failed:', e.message);
         throw new Error('Failed to get token balance: ' + e.message);
@@ -2368,19 +2366,41 @@ async function burnEvmToken(tokenAddress, amount) {
       console.log('🔐 Current address:', currentAddress);
       console.log('🔐 WildWest wallet account:', window.wildWestWallet?.account);
       
-      // Use the wildWestWallet account if available, as it's more reliable
-      if (window.wildWestWallet?.account && window.wildWestWallet.account.toLowerCase() !== signerAddress.toLowerCase()) {
-        console.log('🔄 Using wildWestWallet account instead of signer address');
-        currentAddress = window.wildWestWallet.account;
-      } else if (signerAddress.toLowerCase() !== currentAddress.toLowerCase()) {
-        console.log('⚠️ Wallet address mismatch detected. Auto-correcting...');
-        console.log('  Expected:', currentAddress);
-        console.log('  Actual:', signerAddress);
+      // Always use wildWestWallet account if available, as it's the authoritative source
+      const correctAddress = window.wildWestWallet?.account || currentAddress;
+      
+      if (correctAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+        console.log('🔄 Address mismatch detected, requesting wallet to switch account...');
+        console.log('  Token holder address:', correctAddress);
+        console.log('  Current signer address:', signerAddress);
         
-        // Auto-correct the address instead of failing
-        currentAddress = signerAddress;
-        console.log('✅ Updated currentAddress to match signer:', currentAddress);
+        // Try to request the wallet to switch to the correct account
+        try {
+          console.log('🔄 Requesting wallet to switch to account:', correctAddress);
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }]
+          });
+          
+          // Get the updated signer after permission request
+          signer = provider.getSigner();
+          const newSignerAddress = await signer.getAddress();
+          console.log('🔐 New signer address after permission request:', newSignerAddress);
+          
+          if (newSignerAddress.toLowerCase() !== correctAddress.toLowerCase()) {
+            showBurnSuccess(`Wallet is connected to ${newSignerAddress} but tokens are in ${correctAddress}. Please switch to the correct account in your wallet.`, true);
+            return;
+          }
+        } catch (permissionError) {
+          console.log('⚠️ Could not request account switch:', permissionError);
+          showBurnSuccess(`Wallet address mismatch. Please switch to account ${correctAddress} in your wallet to burn these tokens.`, true);
+          return;
+        }
       }
+      
+      // Update our state to match the verified signer
+      currentAddress = await signer.getAddress();
+      console.log('✅ Verified transaction will be sent from:', currentAddress);
     } else {
       provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
       console.log('🔗 Using JsonRpcProvider (read-only)');
@@ -2423,12 +2443,14 @@ async function burnEvmToken(tokenAddress, amount) {
     console.log('💰 Checking token balance...');
     let balanceFormatted;
     try {
-      const balance = await erc20.balanceOf(currentAddress);
+      // Always use the current signer address for balance check
+      const currentSignerAddress = await signer.getAddress();
+      const balance = await erc20.balanceOf(currentSignerAddress);
       balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
-      console.log('💰 Current balance:', balanceFormatted, 'Raw:', balance.toString());
+      console.log('💰 Current balance for signer address:', balanceFormatted, 'Raw:', balance.toString());
       
       if (parseFloat(amount) > parseFloat(balanceFormatted)) {
-        showBurnSuccess(`Insufficient balance. You have ${balanceFormatted} tokens.`, true);
+        showBurnSuccess(`Insufficient balance. You have ${balanceFormatted} tokens in the connected account.`, true);
         return;
       }
     } catch (balanceError) {
