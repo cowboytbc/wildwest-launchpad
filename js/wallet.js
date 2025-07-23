@@ -1613,7 +1613,9 @@ class WildWestWallet {
       });
 
       window.ethereum.on('chainChanged', (chainId) => {
-        this.currentChain = parseInt(chainId, 16);
+        const numericChainId = parseInt(chainId, 16);
+        this.currentChain = numericChainId === 8453 ? 'base' : numericChainId; // Map Base chainId to 'base'
+        console.log('🔗 Chain changed to:', chainId, '→', this.currentChain);
         this.updateWalletUI();
         window.location.reload();
       });

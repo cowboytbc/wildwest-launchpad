@@ -691,7 +691,7 @@
           loadUserLocks();
           // Reload fee display to check for exemptions
           loadLockCreationFee();
-        } else if (connected && window.wildWestWallet.currentChain !== 'base' && window.wildWestWallet.currentChain !== 8453) {
+        } else if (connected && window.wildWestWallet.currentChain !== 'base' && window.wildWestWallet.currentChain !== 8453 && window.wildWestWallet.currentChain !== '8453') {
           console.log('⚠️ Connected but wrong network. Current:', window.wildWestWallet.currentChain);
           alert('Please connect to Base network for token locking.');
         } else {
