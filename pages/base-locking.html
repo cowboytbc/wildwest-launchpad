@@ -677,16 +677,21 @@
         console.log('🔵 connectToSpecificChain result:', connected);
         console.log('🔵 Current chain after connection:', window.wildWestWallet.currentChain);
         
-        if (connected && window.wildWestWallet.currentChain === 'base') {
+        if (connected && (window.wildWestWallet.currentChain === 'base' || window.wildWestWallet.currentChain === 8453 || window.wildWestWallet.currentChain === '8453')) {
           provider = window.wildWestWallet.provider;
           signer = window.wildWestWallet.signer;
           userAddress = window.wildWestWallet.account;
           document.getElementById('walletAddress').textContent = 'Connected: ' + userAddress;
+          
+          console.log('✅ Base wallet connected successfully');
+          console.log('📍 Provider set:', !!provider);
+          console.log('📍 Signer set:', !!signer);
+          console.log('📍 User address:', userAddress);
+          
           loadUserLocks();
           // Reload fee display to check for exemptions
           loadLockCreationFee();
-          console.log('✅ Base wallet connected successfully');
-        } else if (connected && window.wildWestWallet.currentChain !== 'base') {
+        } else if (connected && window.wildWestWallet.currentChain !== 'base' && window.wildWestWallet.currentChain !== 8453) {
           console.log('⚠️ Connected but wrong network. Current:', window.wildWestWallet.currentChain);
           alert('Please connect to Base network for token locking.');
         } else {
