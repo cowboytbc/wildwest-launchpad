@@ -29,61 +29,37 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Inject GitHub token and QuickNode RPC endpoints
+    - name: Inject production secrets
       env:
         PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
         BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         WTFDUDE: ${{ secrets.WTFDUDE }}
       run: |
-        echo "🔧 Injecting production secrets..."
+        echo "Injecting production secrets..."
         
-        # Inject GitHub token into secure-config.js
-        echo "📝 Injecting GitHub token into secure-config.js..."
-        sed -i 's/getServiceTokenDirect() {/getServiceTokenDirect() {\n    \/\/ Method 0: Production token from GitHub Secrets (injected at build time)\n    const PRODUCTION_TOKEN = "${{ secrets.PERSONAL_ACCESS_TOKEN }}";\n    if (PRODUCTION_TOKEN \&\& PRODUCTION_TOKEN.length > 10) {\n      console.log("✅ Production GitHub token loaded from build injection");\n      return PRODUCTION_TOKEN;\n    }/g' js/secure-config.js
+        echo "// Production configuration injected at build time from GitHub Secrets" > js/production-config.js
+        echo "(function() {" >> js/production-config.js
+        echo "  'use strict';" >> js/production-config.js
+        echo "  console.log('Production config loading...');" >> js/production-config.js
+        echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
+        echo "    token: '$WTFDUDE'," >> js/production-config.js
+        echo "    rpc: {" >> js/production-config.js
+        echo "      solana: '$SOLANA_RPC_ENDPOINT'," >> js/production-config.js
+        echo "      base: '$BASE_RPC_ENDPOINT'" >> js/production-config.js
+        echo "    }," >> js/production-config.js
+        echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
+        echo "    source: 'github-actions-deploy-new'" >> js/production-config.js
+        echo "  };" >> js/production-config.js
+        echo "  console.log('Production configuration loaded!');" >> js/production-config.js
+        echo "  console.log('RPC Status:', {" >> js/production-config.js
+        echo "    solana: !!window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED' : 'MISSING'," >> js/production-config.js
+        echo "    base: !!window.PRODUCTION_CONFIG.rpc.base ? 'LOADED' : 'MISSING'" >> js/production-config.js
+        echo "  });" >> js/production-config.js
+        echo "})();" >> js/production-config.js
         
-        # Add production build marker
-        sed -i 's/console\.log("🔍 SecureConfig Debug Info:");/console.log("🔍 SecureConfig Debug Info:");\n        console.log("🚀 PRODUCTION BUILD - Token injected at build time");/g' js/secure-config.js
-        
-        # Create production config with QuickNode endpoints
-        echo "� Creating production-config.js with QuickNode endpoints..."
-        echo "Solana endpoint preview: ${SOLANA_RPC_ENDPOINT:0:50}..."
-        echo "Base endpoint preview: ${BASE_RPC_ENDPOINT:0:50}..."
-        
-        cp js/production-config.js js/production-config.js.backup
-        
-        cat > js/production-config.js << 'EOF'
-        // Production configuration injected at build time from GitHub Secrets
-        (function() {
-          'use strict';
-          console.log('🔍 QuickNode production config loading...');
-          window.PRODUCTION_CONFIG = {
-            token: 'WTFDUDE_PLACEHOLDER',
-            rpc: {
-              solana: 'SOLANA_RPC_PLACEHOLDER',
-              base: 'BASE_RPC_PLACEHOLDER'
-            },
-            injectedAt: new Date().toISOString(),
-            source: 'github-actions-deploy-new'
-          };
-          console.log('🔐 QuickNode production configuration loaded!');
-          console.log('📊 RPC Status:', {
-            solana: !!window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED' : 'MISSING',
-            base: !!window.PRODUCTION_CONFIG.rpc.base ? 'LOADED' : 'MISSING',
-            solanaPreview: window.PRODUCTION_CONFIG.rpc.solana ? window.PRODUCTION_CONFIG.rpc.solana.substring(0, 50) + '...' : 'NONE'
-          });
-        })();
-        EOF
-        
-        # Replace placeholders with actual values
-        sed -i "s|WTFDUDE_PLACEHOLDER|${WTFDUDE}|g" js/production-config.js
-        sed -i "s|SOLANA_RPC_PLACEHOLDER|${SOLANA_RPC_ENDPOINT}|g" js/production-config.js
-        sed -i "s|BASE_RPC_PLACEHOLDER|${BASE_RPC_ENDPOINT}|g" js/production-config.js
-        
-        echo "✅ Production secrets injected successfully!"
-        echo "🔍 Verifying token injection:"
-        grep -A 3 "PRODUCTION_TOKEN" js/secure-config.js | head -5
-        echo "🔍 Verifying production config:"
+        echo "Production secrets injected successfully!"
+        echo "Verifying production config:"
         head -10 js/production-config.js
         
     - name: Setup Pages
