@@ -3013,13 +3013,116 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 0.9rem;
   ">
     <div style="max-width: 1200px; margin: 0 auto;">
-      <div style="margin-bottom: 1rem;">
+      <div style="margin-bottom: 1.5rem;">
         <span style="color: #00eaff; font-weight: 600; font-size: 1.1rem;">WILDWEST LAUNCHPAD</span>
       </div>
+      
+      <!-- Social Links -->
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <a href="https://t.me/wildwestlaunchpad" target="_blank" rel="noopener noreferrer" style="
+            color: #00eaff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 234, 255, 0.1);
+            transition: all 0.3s ease;
+            font-weight: 500;
+          " onmouseover="this.style.background='rgba(0, 234, 255, 0.2)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(0, 234, 255, 0.1)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+            <span style="font-size: 1.2rem;">📱</span>
+            <span>Telegram</span>
+          </a>
+          
+          <a href="https://x.com/WILDWESTLP?t=RI3IQU3KASjN3Ak-yrfZnw&s=09" target="_blank" rel="noopener noreferrer" style="
+            color: #00eaff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 234, 255, 0.1);
+            transition: all 0.3s ease;
+            font-weight: 500;
+          " onmouseover="this.style.background='rgba(0, 234, 255, 0.2)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(0, 234, 255, 0.1)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+            <span style="font-size: 1.2rem;">𝕏</span>
+            <span>Twitter</span>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Contract Address -->
+      <div style="margin-bottom: 1.5rem;">
+        <div style="
+          background: rgba(255, 174, 0, 0.1);
+          border: 1px solid rgba(255, 174, 0, 0.3);
+          border-radius: 12px;
+          padding: 1rem;
+          display: inline-block;
+          max-width: 100%;
+        ">
+          <div style="color: #ffae00; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            $WILDW Contract Address
+          </div>
+          <div style="
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem;
+            border-radius: 6px;
+            word-break: break-all;
+            cursor: pointer;
+            position: relative;
+          " onclick="navigator.clipboard.writeText('0x8129609E5303910464FCe3022a809fA44455Fe9A').then(() => {
+            const tooltip = document.createElement('div');
+            tooltip.textContent = 'Copied!';
+            tooltip.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #00eaff; color: black; padding: 0.5rem 1rem; border-radius: 6px; font-weight: bold; z-index: 10000; animation: fadeInOut 2s forwards;';
+            document.body.appendChild(tooltip);
+            setTimeout(() => document.body.removeChild(tooltip), 2000);
+          })" title="Click to copy">
+            0x8129609E5303910464FCe3022a809fA44455Fe9A
+            <span style="
+              position: absolute;
+              right: 0.5rem;
+              top: 50%;
+              transform: translateY(-50%);
+              color: #ffae00;
+              font-size: 0.8rem;
+            ">📋</span>
+          </div>
+        </div>
+      </div>
+      
       <div style="margin-bottom: 0.5rem;">
         © 2025 Wild West Launchpad. All rights reserved.
       </div>
     </div>
+    
+    <style>
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      }
+      
+      @media (max-width: 768px) {
+        footer div[style*="display: flex"] {
+          flex-direction: column !important;
+          gap: 1rem !important;
+        }
+        
+        footer div[style*="display: flex"] a {
+          justify-content: center !important;
+        }
+      }
+    </style>
   </footer>
 </body>
 </html>
