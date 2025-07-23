@@ -2075,39 +2075,45 @@ document.addEventListener('DOMContentLoaded', function() {
   
   optimizeForWalletBrowser();
   
-  // Simple wallet connection - no conflicts with main wallet system
+  // Completely independent wallet connection for Token Furnace
   setupTokenFurnaceWallet();
   
   function setupTokenFurnaceWallet() {
-    const connectBtn = document.getElementById('connectWalletBtn');
-    if (!connectBtn) {
-      console.error('❌ Connect wallet button not found');
-      return;
-    }
-    
     console.log('🔧 Setting up token furnace wallet connection');
     
-    // Remove any existing event listeners by cloning the button
-    const newButton = connectBtn.cloneNode(true);
-    connectBtn.parentNode.replaceChild(newButton, connectBtn);
-    
-    // Add our simple click handler
-    newButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      console.log('🔘 Wallet button clicked');
-      
-      if (currentAddress && currentChain) {
-        console.log('Already connected, showing wallet details');
-        showWalletDetails();
-      } else {
-        console.log('Not connected, showing chain selection');
-        showChainSelectionModal();
+    // Wait a moment for DOM to be fully ready and wallet.js to load
+    setTimeout(() => {
+      const connectBtn = document.getElementById('connectWalletBtn');
+      if (!connectBtn) {
+        console.error('❌ Connect wallet button not found');
+        return;
       }
-    });
-    
-    console.log('✅ Token furnace wallet setup complete');
+      
+      // Force remove any event listeners from main wallet system
+      const newButton = connectBtn.cloneNode(true);
+      connectBtn.parentNode.replaceChild(newButton, connectBtn);
+      
+      // Add our simple click handler
+      newButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🔘 Token Furnace wallet button clicked');
+        
+        if (currentAddress && currentChain) {
+          console.log('Already connected, showing wallet details');
+          showWalletDetails();
+        } else {
+          console.log('Not connected, showing chain selection');
+          showChainSelectionModal();
+        }
+      });
+      
+      console.log('✅ Token furnace wallet setup complete');
+      
+      // Update UI based on current state
+      updateTokenFurnaceUI();
+    }, 500); // Give time for wallet.js to load but then take over
   }
   
   // Check for existing connections on page load
@@ -2251,57 +2257,85 @@ function showChainSelectionModal() {
       
       if (chain === 'base') {
         console.log('Base chain selected'); // Debug
-        // Use wallet.js for Base connection
-        if (window.wildWestWallet) {
-          console.log('wildWestWallet found, attempting Base connection'); // Debug
+        // Direct Base connection - no dependency on wildWestWallet
+        if (window.ethereum) {
           try {
-            // Ensure we're connecting to MetaMask specifically for Base
-            if (window.ethereum) {
-              console.log('🔍 Pre-connection wallet info:', {
-                isMetaMask: window.ethereum.isMetaMask,
-                isPhantom: window.ethereum.isPhantom,
-                providers: window.ethereum.providers?.length || 0
-              });
+            console.log('🔵 Connecting directly to Base wallet...');
+            
+            // Request account access
+            const accounts = await window.ethereum.request({ 
+              method: 'eth_requestAccounts' 
+            });
+            
+            if (accounts && accounts.length > 0) {
+              console.log('🔵 Accounts received:', accounts);
               
-              // Force MetaMask selection if both wallets are detected
-              if (window.ethereum.isPhantom && window.ethereum.isMetaMask) {
-                console.log('🔄 Both MetaMask and Phantom detected, forcing MetaMask selection...');
-                
-                // Try to access MetaMask directly
-                if (window.ethereum.providers && window.ethereum.providers.length > 0) {
-                  const metamaskProvider = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom);
-                  if (metamaskProvider) {
-                    console.log('✅ Found dedicated MetaMask provider, switching to it');
-                    window.ethereum = metamaskProvider;
-                  }
-                } else if (window.ethereum._metamask || window.ethereum.isMetaMask) {
-                  console.log('✅ Using MetaMask directly');
-                  // MetaMask is already the primary provider
-                }
-                
-                // Try direct MetaMask access methods
-                try {
-                  if (window.ethereum.request) {
-                    console.log('🔄 Requesting MetaMask account switch...');
-                    await window.ethereum.request({
-                      method: 'wallet_requestPermissions',
-                      params: [{ eth_accounts: {} }]
-                    });
-                  }
-                } catch (permError) {
-                  console.log('⚠️ Direct MetaMask permission request failed:', permError);
+              // Set up provider
+              const provider = new window.ethers.providers.Web3Provider(window.ethereum);
+              
+              // Switch to Base network first
+              try {
+                await window.ethereum.request({
+                  method: 'wallet_switchEthereumChain',
+                  params: [{ chainId: '0x2105' }], // Base mainnet
+                });
+                console.log('✅ Switched to Base network');
+              } catch (switchError) {
+                if (switchError.code === 4902) {
+                  console.log('🔵 Base network not found, adding it...');
+                  // Add Base network if it doesn't exist
+                  await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                      chainId: '0x2105',
+                      chainName: 'Base',
+                      nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                      rpcUrls: ['https://mainnet.base.org'],
+                      blockExplorerUrls: ['https://basescan.org']
+                    }]
+                  });
+                  console.log('✅ Base network added');
+                } else {
+                  console.log('⚠️ Network switch error:', switchError);
                 }
               }
-            }
-            
-            const connected = await window.wildWestWallet.connectBaseWallet();
-            console.log('Base wallet connection result:', connected); // Debug
-            if (connected) {
-              console.log('Base wallet connected successfully'); // Debug
               
-              // Manually sync the state from wildWestWallet to token furnace
-              console.log('🔄 Syncing Base wallet state to token furnace...');
-              console.log('🔍 wildWestWallet.account:', window.wildWestWallet.account);
+              // Get the connected account
+              const signer = provider.getSigner();
+              const address = await signer.getAddress();
+              
+              console.log('✅ Base wallet connected:', address);
+              
+              // Update Token Furnace state
+              currentChain = 'base';
+              currentAddress = address;
+              currentProvider = provider;
+              currentEvmProvider = provider;
+              currentSolanaProvider = null;
+              
+              console.log('🔄 Token furnace state updated:', {
+                chain: currentChain,
+                address: currentAddress,
+                hasProvider: !!currentProvider
+              });
+              
+              // Update UI and balance
+              updateTokenFurnaceUI();
+              setTimeout(updateBalance, 200);
+              
+              showBurnSuccess('Base wallet connected successfully!', false);
+            } else {
+              console.log('❌ No accounts returned from wallet');
+              showBurnSuccess('Failed to get wallet accounts. Please try again.', true);
+            }
+          } catch (error) {
+            console.error('❌ Direct Base wallet connection error:', error);
+            showBurnSuccess('Base wallet connection error: ' + (error.message || error), true);
+          }
+        } else {
+          console.log('❌ No Ethereum provider found');
+          showBurnSuccess('No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.', true);
+        }
               console.log('🔍 wildWestWallet.provider:', !!window.wildWestWallet.provider);
               
               currentChain = 'base';
@@ -2343,17 +2377,12 @@ function showChainSelectionModal() {
               showBurnSuccess('Base wallet connected successfully!', false);
             } else {
               console.log('Base wallet connection failed - no connection returned'); // Debug
-              showBurnSuccess('Failed to connect Base wallet. Please try again.', true);
-            }
-          } catch (error) {
-            console.error('Error connecting Base wallet:', error); // Debug
-            showBurnSuccess('Base wallet connection error: ' + (error.message || error), true);
-          }
         } else {
-          console.log('wildWestWallet not found'); // Debug
-          showBurnSuccess('Wallet system not loaded. Please refresh the page.', true);
+          console.log('❌ No Ethereum provider found');
+          showBurnSuccess('No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.', true);
         }
       } else if (chain === 'solana') {
+        console.log('Solana chain selected');
         await connectSolanaWallet();
       }
     });
@@ -2460,46 +2489,58 @@ async function connectSolanaWallet() {
 function updateTokenFurnaceUI() {
   console.log('🔄 Updating token furnace UI:', { currentAddress, currentChain });
   
-  const walletBtnText = document.getElementById('walletBtnText');
-  const connectBtn = document.getElementById('connectWalletBtn');
-  const chainIndicator = document.getElementById('chainIndicator');
-  
-  if (!walletBtnText || !connectBtn) {
-    console.error('❌ Required wallet UI elements not found');
-    return;
-  }
-  
-  if (currentAddress && currentChain) {
-    const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
-    walletBtnText.textContent = shortAddress;
+  // Wait a moment for DOM to be ready if needed
+  setTimeout(() => {
+    const walletBtnText = document.getElementById('walletBtnText');
+    const connectBtn = document.getElementById('connectWalletBtn');
+    const chainIndicator = document.getElementById('chainIndicator');
     
-    // Update button state
-    connectBtn.classList.remove('disconnected');
-    connectBtn.classList.add('connected');
+    console.log('🔍 UI Elements found:', {
+      walletBtnText: !!walletBtnText,
+      connectBtn: !!connectBtn,
+      chainIndicator: !!chainIndicator
+    });
     
-    // Update chain indicator
-    if (chainIndicator) {
-      if (currentChain === 'base') {
-        chainIndicator.textContent = 'BASE';
-        chainIndicator.style.background = '#0052ff';
-      } else if (currentChain === 'solana') {
-        chainIndicator.textContent = 'SOL';
-        chainIndicator.style.background = '#9945ff';
+    if (!walletBtnText || !connectBtn) {
+      console.error('❌ Required wallet UI elements not found');
+      return;
+    }
+    
+    if (currentAddress && currentChain) {
+      const shortAddress = `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`;
+      walletBtnText.textContent = shortAddress;
+      
+      // Update button state
+      connectBtn.classList.remove('disconnected');
+      connectBtn.classList.add('connected');
+      
+      // Update chain indicator
+      if (chainIndicator) {
+        if (currentChain === 'base') {
+          chainIndicator.textContent = 'BASE';
+          chainIndicator.style.background = '#0052ff';
+          chainIndicator.style.display = 'inline-block';
+        } else if (currentChain === 'solana') {
+          chainIndicator.textContent = 'SOL';
+          chainIndicator.style.background = '#9945ff';
+          chainIndicator.style.display = 'inline-block';
+        }
       }
+      
+      console.log('✅ UI updated for connected wallet:', shortAddress);
+    } else {
+      walletBtnText.textContent = 'CONNECT WALLET';
+      connectBtn.classList.remove('connected');
+      connectBtn.classList.add('disconnected');
+      
+      if (chainIndicator) {
+        chainIndicator.textContent = '';
+        chainIndicator.style.display = 'none';
+      }
+      
+      console.log('🔌 UI updated for disconnected state');
     }
-    
-    console.log('✅ UI updated for connected wallet:', shortAddress);
-  } else {
-    walletBtnText.textContent = 'CONNECT WALLET';
-    connectBtn.classList.remove('connected');
-    connectBtn.classList.add('disconnected');
-    
-    if (chainIndicator) {
-      chainIndicator.textContent = '';
-    }
-    
-    console.log('🔌 UI updated for disconnected state');
-  }
+  }, 100);
 }
 
 function showWalletDetails() {
