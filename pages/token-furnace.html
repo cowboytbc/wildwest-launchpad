@@ -2424,6 +2424,102 @@ async function burnEvmToken(tokenAddress, amount) {
   
   console.log('🔥 Starting Base token burn:', { tokenAddress, amount, currentAddress });
   
+  // COMPREHENSIVE WALLET ISOLATION SYSTEM
+  console.log('🔒 Initializing wallet isolation system...');
+  
+  let isolatedMetaMaskProvider = null;
+  let isolatedPhantomProvider = null;
+  
+  // Step 1: Catalog all available wallet providers
+  const walletCatalog = {
+    metamask: [],
+    phantom: [],
+    other: []
+  };
+  
+  if (window.ethereum) {
+    if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+      console.log('📋 Multiple providers detected, cataloging...');
+      window.ethereum.providers.forEach((provider, index) => {
+        console.log(`🔍 Provider ${index}:`, {
+          isMetaMask: provider.isMetaMask,
+          isPhantom: provider.isPhantom,
+          isCoinbaseWallet: provider.isCoinbaseWallet,
+          isRainbow: provider.isRainbow,
+          isTrust: provider.isTrust
+        });
+        
+        if (provider.isMetaMask && !provider.isPhantom) {
+          walletCatalog.metamask.push(provider);
+        } else if (provider.isPhantom && !provider.isMetaMask) {
+          walletCatalog.phantom.push(provider);
+        } else if (provider.isMetaMask && provider.isPhantom) {
+          // Handle edge case where both are detected
+          console.log('⚠️ Provider claims to be both MetaMask and Phantom');
+          if (provider._metamask) {
+            walletCatalog.metamask.push(provider);
+          } else if (provider._phantom) {
+            walletCatalog.phantom.push(provider);
+          } else {
+            walletCatalog.other.push(provider);
+          }
+        } else {
+          walletCatalog.other.push(provider);
+        }
+      });
+    } else {
+      // Single provider object
+      console.log('📋 Single provider detected, analyzing...');
+      if (window.ethereum.isMetaMask && !window.ethereum.isPhantom) {
+        walletCatalog.metamask.push(window.ethereum);
+      } else if (window.ethereum.isPhantom && !window.ethereum.isMetaMask) {
+        walletCatalog.phantom.push(window.ethereum);
+      } else if (window.ethereum.isMetaMask && window.ethereum.isPhantom) {
+        // Both detected in single object - try to isolate
+        if (window.ethereum._metamask) {
+          walletCatalog.metamask.push(window.ethereum);
+        } else {
+          console.log('⚠️ Cannot isolate MetaMask from mixed provider');
+          walletCatalog.other.push(window.ethereum);
+        }
+      }
+    }
+  }
+  
+  console.log('📊 Wallet catalog complete:', {
+    metamask: walletCatalog.metamask.length,
+    phantom: walletCatalog.phantom.length,
+    other: walletCatalog.other.length
+  });
+  
+  // Step 2: Select ONLY MetaMask provider for Base transactions
+  if (walletCatalog.metamask.length > 0) {
+    isolatedMetaMaskProvider = walletCatalog.metamask[0];
+    console.log('✅ Isolated MetaMask provider selected');
+  } else if (walletCatalog.other.length > 0) {
+    // Try to find MetaMask in 'other' category
+    const possibleMetaMask = walletCatalog.other.find(p => p.isMetaMask || p._metamask);
+    if (possibleMetaMask) {
+      isolatedMetaMaskProvider = possibleMetaMask;
+      console.log('✅ Found MetaMask in mixed providers');
+    }
+  }
+  
+  if (!isolatedMetaMaskProvider) {
+    console.error('🚨 NO METAMASK PROVIDER FOUND');
+    showWalletManagementModal(walletCatalog);
+    return;
+  }
+  
+  // Step 3: Verify isolation - ensure we're not using Phantom
+  if (isolatedMetaMaskProvider.isPhantom && !isolatedMetaMaskProvider.isMetaMask) {
+    console.error('🚨 PHANTOM CONTAMINATION DETECTED');
+    showBurnSuccess('ERROR: System isolated Phantom instead of MetaMask. Please disable other wallet extensions temporarily and refresh the page.', true);
+    return;
+  }
+  
+  console.log('🔒 Wallet isolation complete - MetaMask secured for Base transactions');
+  
   try {
     let provider, signer;
     if (window.ethereum) {
@@ -2435,35 +2531,51 @@ async function burnEvmToken(tokenAddress, amount) {
         selectedAddress: window.ethereum.selectedAddress
       });
       
-      // If multiple providers exist, try to select MetaMask specifically
-      let ethProvider = window.ethereum;
-      if (window.ethereum.providers && window.ethereum.providers.length > 1) {
-        console.log('🔍 Multiple wallet providers detected, looking for MetaMask...');
-        const metamaskProvider = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom);
-        if (metamaskProvider) {
-          console.log('✅ Found dedicated MetaMask provider');
-          ethProvider = metamaskProvider;
-        } else {
-          console.log('⚠️ Could not find dedicated MetaMask provider, using default');
-        }
-      } else if (window.ethereum.isPhantom && window.ethereum.isMetaMask) {
-        // Special case: Both wallets detected but only one provider object
-        console.log('🔄 Both wallets detected in single provider, attempting MetaMask selection...');
-        
-        // Try to access MetaMask specifically
-        if (window.ethereum._metamask) {
-          console.log('✅ Using MetaMask via _metamask property');
-          ethProvider = window.ethereum;
-        } else {
-          console.log('⚠️ Cannot isolate MetaMask, user may need to disable Phantom temporarily');
-          showBurnSuccess('Multiple wallets detected. Please disable Phantom wallet temporarily or switch to the MetaMask account manually in your wallet.', true);
-          return;
-        }
+      // USE ISOLATED METAMASK PROVIDER ONLY
+      let ethProvider = isolatedMetaMaskProvider;
+      
+      console.log('🎯 Using isolated MetaMask provider:', {
+        isMetaMask: ethProvider.isMetaMask,
+        isPhantom: ethProvider.isPhantom,
+        hasRequest: !!ethProvider.request,
+        hasMetaMaskProperty: !!ethProvider._metamask
+      });
+      
+      // Final safety check on isolated provider
+      if (!ethProvider.isMetaMask) {
+        console.error('� ISOLATED PROVIDER IS NOT METAMASK');
+        showBurnSuccess('ERROR: Failed to isolate MetaMask provider. Please disable other wallet extensions and refresh the page.', true);
+        return;
+      }
+      
+      if (ethProvider.isPhantom && !ethProvider._metamask) {
+        console.error('🚨 ISOLATED PROVIDER CONTAMINATED WITH PHANTOM');
+        showBurnSuccess('ERROR: MetaMask provider contaminated with Phantom. Please disable Phantom extension and refresh the page.', true);
+        return;
       }
       
       provider = new window.ethers.providers.Web3Provider(ethProvider);
       signer = provider.getSigner();
-      console.log('🔗 Using Web3Provider with signer');
+      console.log('🔗 Using Web3Provider with MetaMask signer');
+      
+      // IMMEDIATELY verify this is the correct provider
+      try {
+        const testAddress = await signer.getAddress();
+        console.log('🧪 Test signer address from selected provider:', testAddress);
+        
+        // Double-check that we're using MetaMask and not Phantom
+        if (ethProvider.isPhantom && !ethProvider.isMetaMask) {
+          console.error('❌ PHANTOM DETECTED - This should not happen!');
+          showBurnSuccess('Error: System is trying to use Phantom instead of MetaMask. Please disable Phantom temporarily and refresh the page.', true);
+          return;
+        }
+        
+        console.log('✅ Confirmed using MetaMask provider');
+      } catch (providerError) {
+        console.error('❌ Provider verification failed:', providerError);
+        showBurnSuccess('Wallet provider error. Please refresh the page and try again.', true);
+        return;
+      }
       
       // Verify the signer address matches our current address
       const signerAddress = await signer.getAddress();
@@ -2878,6 +2990,176 @@ async function burnSolanaToken(tokenAddress, amount) {
   } catch (e) {
     showBurnSuccess('Burn failed: ' + (e && e.message ? e.message : e), true);
   }
+}
+
+function showWalletManagementModal(walletCatalog) {
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  const metamaskCount = walletCatalog.metamask.length;
+  const phantomCount = walletCatalog.phantom.length;
+  const otherCount = walletCatalog.other.length;
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #ff6b6b;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+      max-width: 500px;
+      width: 90vw;
+      overflow: hidden;
+    ">
+      <div style="
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <h3 style="margin: 0; color: #ff6b6b; font-size: 1.25rem;">🔧 Wallet Management</h3>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #ff6b6b;
+          font-size: 1.5rem;
+          cursor: pointer;
+        ">×</button>
+      </div>
+      <div style="padding: 1.5rem; color: white;">
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="color: #00eaff; margin: 0 0 1rem 0;">🔍 Detected Wallets:</h4>
+          <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <p style="margin: 0.5rem 0;">
+              🦊 <strong>MetaMask:</strong> ${metamaskCount} provider${metamaskCount !== 1 ? 's' : ''} 
+              ${metamaskCount > 0 ? '✅' : '❌'}
+            </p>
+            <p style="margin: 0.5rem 0;">
+              👻 <strong>Phantom:</strong> ${phantomCount} provider${phantomCount !== 1 ? 's' : ''} 
+              ${phantomCount > 0 ? '⚠️' : '✅'}
+            </p>
+            <p style="margin: 0.5rem 0;">
+              🔧 <strong>Other Wallets:</strong> ${otherCount} provider${otherCount !== 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+        
+        ${metamaskCount === 0 ? `
+          <div style="background: #3a1a1a; border: 1px solid #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <p style="margin: 0 0 1rem 0; color: #ff6b6b; font-weight: bold;">
+              ❌ MetaMask Not Found
+            </p>
+            <p style="margin: 0 0 1rem 0;">
+              Base token burning requires MetaMask. Please:
+            </p>
+            <ol style="margin: 0; padding-left: 1.2rem; color: #ffae00;">
+              <li>Install MetaMask browser extension</li>
+              <li>Refresh this page</li>
+              <li>Try burning again</li>
+            </ol>
+          </div>
+        ` : `
+          <div style="background: #1a3a1a; border: 1px solid #00ff00; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <p style="margin: 0; color: #00ff00; font-weight: bold;">
+              ✅ MetaMask Ready for Base Token Burning
+            </p>
+          </div>
+        `}
+        
+        ${phantomCount > 0 ? `
+          <div style="background: #3a2a1a; border: 1px solid #ffae00; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <p style="margin: 0 0 1rem 0; color: #ffae00; font-weight: bold;">
+              ⚠️ Multiple Wallets Detected
+            </p>
+            <p style="margin: 0 0 1rem 0;">
+              For best results with Base tokens:
+            </p>
+            <ol style="margin: 0; padding-left: 1.2rem;">
+              <li>Temporarily disable Phantom extension</li>
+              <li>Keep only MetaMask enabled</li>
+              <li>Refresh this page</li>
+            </ol>
+          </div>
+        ` : ''}
+        
+        <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+          ${metamaskCount > 0 ? `
+            <button class="continue-btn" style="
+              flex: 1;
+              padding: 0.75rem;
+              border: 1px solid #00eaff;
+              border-radius: 8px;
+              background: transparent;
+              color: #00eaff;
+              cursor: pointer;
+              font-weight: 500;
+            ">Continue Anyway</button>
+          ` : ''}
+          <button class="refresh-btn" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ffae00;
+            border-radius: 8px;
+            background: transparent;
+            color: #ffae00;
+            cursor: pointer;
+            font-weight: 500;
+          ">Refresh Page</button>
+          <button class="close-modal" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #666;
+            border-radius: 8px;
+            background: transparent;
+            color: #ccc;
+            cursor: pointer;
+            font-weight: 500;
+          ">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle modal interactions
+  modal.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+  });
+  
+  const continueBtn = modal.querySelector('.continue-btn');
+  if (continueBtn) {
+    continueBtn.addEventListener('click', () => {
+      document.body.removeChild(modal);
+      // Force proceed with available MetaMask (if any)
+      console.log('🔄 User chose to continue with available wallets');
+    });
+  }
+  
+  modal.querySelector('.refresh-btn').addEventListener('click', () => {
+    window.location.reload();
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
 }
 
 // --- BURN SUCCESS/ERROR UI ---
