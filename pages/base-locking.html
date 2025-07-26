@@ -1733,14 +1733,16 @@
       const tokenAddress = document.getElementById('tokenAddress').value.trim();
       const tokenInfoDiv = document.getElementById('tokenInfo');
       tokenInfoDiv.textContent = '';
-      if (!tokenAddress || !ethers.utils.isAddress(tokenAddress) || !provider) return;
+      if (!tokenAddress || !ethers.utils.isAddress(tokenAddress) || !provider || !userAddress) return;
       try {
+        // Create proper ethers provider from wallet provider
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
         const erc20 = new ethers.Contract(tokenAddress, [
           {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"type":"function"},
           {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
           {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
           {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}
-        ], provider);
+        ], ethersProvider);
         const [name, symbol, decimals, balance] = await Promise.all([
           erc20.name(),
           erc20.symbol(),
