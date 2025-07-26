@@ -2049,23 +2049,53 @@
   <nav class="main-nav">
     <ul>
       <li class="launch-token-dropdown">
-        <a href="#" id="launchTokenDropdownBtn">Launch Token ▼</a>
-        <ul class="launch-token-menu" id="launchTokenMenu">
+        <a href="#" id="launchTokenDropdownBtn" onclick="
+          event.preventDefault();
+          var menu = document.getElementById('launchTokenMenu');
+          var allMenus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
+          allMenus.forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m && m !== menu) m.style.display = 'none';
+          });
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+          console.log('Launch dropdown clicked, display:', menu.style.display);
+        ">Launch Token ▼</a>
+        <ul class="launch-token-menu" id="launchTokenMenu" style="display: none;">
           <li><a href="pages/base-launch.html" class="launch-token-link">Base</a></li>
           <li><a href="pages/solana-launch.html" class="launch-token-link">Solana</a></li>
         </ul>
       </li>
       <li><a href="pages/nft-marketplace.html">NFT Marketplace</a></li>
       <li class="staking-dropdown">
-        <a href="#" id="stakingDropdownBtn">Staking ▼</a>
-        <ul class="staking-menu" id="stakingMenu">
+        <a href="#" id="stakingDropdownBtn" onclick="
+          event.preventDefault();
+          var menu = document.getElementById('stakingMenu');
+          var menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
+          menus.forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m && m !== menu) m.style.display = 'none';
+          });
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+          console.log('Staking dropdown clicked, display:', menu.style.display);
+        ">Staking ▼</a>
+        <ul class="staking-menu" id="stakingMenu" style="display: none;">
           <li><a href="pages/base-staking.html" class="staking-link">Base</a></li>
           <li><a href="pages/solana-staking.html" class="staking-link">Solana</a></li>
         </ul>
       </li>
       <li class="token-locking-dropdown">
-        <a href="#" id="tokenLockingDropdownBtn">Token Locking ▼</a>
-        <ul class="token-locking-menu" id="tokenLockingMenu">
+        <a href="#" id="tokenLockingDropdownBtn" onclick="
+          event.preventDefault();
+          var menu = document.getElementById('tokenLockingMenu');
+          var menuList = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
+          menuList.forEach(function(id) {
+            var m = document.getElementById(id);
+            if (m && m !== menu) m.style.display = 'none';
+          });
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+          console.log('Token Locking dropdown clicked, display:', menu.style.display);
+        ">Token Locking ▼</a>
+        <ul class="token-locking-menu" id="tokenLockingMenu" style="display: none;">
           <li><a href="pages/base-locking.html" class="token-lock-link">Base</a></li>
           <li><a href="pages/solana-locking.html" class="token-lock-link">Solana</a></li>
         </ul>
@@ -2074,6 +2104,19 @@
       <li><a href="pages/the-team.html">The Team</a></li>
     </ul>
   </nav>
+
+  <!-- Simple click outside handler -->
+  <script>
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.main-nav')) {
+      ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'].forEach(function(id) {
+        var menu = document.getElementById(id);
+        if (menu) menu.style.display = 'none';
+      });
+    }
+  });
+  console.log('✅ Dropdown click-outside handler active');
+  </script>
   
   <!-- Top Ad Banner -->
   <section class="ad-banner top-ad">
