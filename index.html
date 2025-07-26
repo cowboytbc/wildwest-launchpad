@@ -795,11 +795,24 @@
     
     /* Mobile optimizations for dropdowns */
     @media (max-width: 768px) {
-      /* Disable hover on mobile, use click instead */
+      /* Completely disable hover on mobile */
+      .launch-token-dropdown,
+      .staking-dropdown,
+      .token-locking-dropdown {
+        pointer-events: auto;
+      }
+      
       .launch-token-dropdown:hover .launch-token-menu,
       .staking-dropdown:hover .staking-menu,
       .token-locking-dropdown:hover .token-locking-menu {
         display: none !important;
+      }
+      
+      /* Remove any default mobile hover effects */
+      .launch-token-dropdown > a:hover,
+      .staking-dropdown > a:hover,
+      .token-locking-dropdown > a:hover {
+        background: none !important;
       }
       
       /* Mobile dropdown styles when shown via JavaScript */
@@ -815,27 +828,14 @@
         width: 85vw;
         z-index: 9999 !important;
         border: 2px solid rgba(0, 234, 255, 0.5);
-        background: rgba(20, 24, 34, 0.98);
+        background: rgba(20, 24, 34, 0.98) !important;
         backdrop-filter: blur(10px);
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         display: block !important;
       }
       
-      /* Add backdrop when dropdowns are visible */
-      .launch-token-menu[style*="display: block"]::before,
-      .staking-menu[style*="display: block"]::before,
-      .token-locking-menu[style*="display: block"]::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9998;
-        backdrop-filter: blur(2px);
-      }
+      /* Remove backdrop CSS approach and let JS handle it */
       
       .launch-token-menu a,
       .staking-menu a,
@@ -2127,31 +2127,52 @@
       const menu = document.querySelector(dropdown.menu);
       
       if (trigger && menu) {
-        // Prevent default link behavior on mobile
+        console.log('✅ Setting up dropdown:', dropdown.trigger);
+        
+        // Prevent default link behavior on mobile and desktop
         trigger.addEventListener('click', function(e) {
+          console.log('🔥 Dropdown clicked:', dropdown.trigger);
           e.preventDefault();
           e.stopPropagation();
           
           // Check if this menu is already open
           const isOpen = menu.style.display === 'block';
+          console.log('📊 Menu open state:', isOpen);
           
           // Close all menus first
           closeAllDropdowns();
           
           // If it wasn't open, open this one
           if (!isOpen) {
+            console.log('🚀 Opening dropdown menu');
             // Create backdrop on mobile
             if (window.innerWidth <= 768) {
+              console.log('📱 Mobile detected, creating backdrop');
               createBackdrop();
             }
             menu.style.display = 'block';
           }
         });
         
-        // Touch event for better mobile responsiveness
-        trigger.addEventListener('touchstart', function(e) {
+        // Add pointer events for better mobile interaction
+        trigger.style.cursor = 'pointer';
+        trigger.style.userSelect = 'none';
+        trigger.style.webkitUserSelect = 'none';
+        trigger.style.webkitTapHighlightColor = 'rgba(0, 234, 255, 0.2)';
+        
+        // Also add touchend event as fallback for mobile
+        trigger.addEventListener('touchend', function(e) {
+          console.log('👆 Touch end on:', dropdown.trigger);
           e.preventDefault();
+          e.stopPropagation();
+          
+          // Trigger the same logic as click
+          setTimeout(() => {
+            trigger.click();
+          }, 10);
         }, { passive: false });
+      } else {
+        console.warn('⚠️ Could not find elements for:', dropdown.trigger, dropdown.menu);
       }
     });
     
