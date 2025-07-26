@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banner Debug Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: white; }
+    .ad-banner { width: 100%; height: 100px; margin: 20px 0; background: #16213e; border: 2px solid #00eaff; }
+    .ad-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .console-output { background: #000; color: #0f0; padding: 10px; font-family: monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Banner System Debug</h1>
+  
+  <!-- Top Banner -->
+  <div class="ad-banner top-ad">
+    <div class="ad-content">
+      <span class="ad-text">ADVERTISE HERE</span>
+    </div>
+  </div>
+  
+  <!-- Bottom Banner -->
+  <div class="ad-banner bottom-ad">
+    <div class="ad-content">
+      <span class="ad-text">ADVERTISE HERE</span>
+    </div>
+  </div>
+  
+  <div class="console-output" id="console-output"></div>
+  
+  <button onclick="testBannerSystem()">Test Banner System</button>
+  <button onclick="testGitHubConnection()">Test GitHub Connection</button>
+  <button onclick="clearOutput()">Clear Output</button>
+
+  <script>
+    // Capture console output
+    const output = document.getElementById('console-output');
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      output.textContent += '✅ ' + args.join(' ') + '\n';
+    };
+    
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      output.textContent += '❌ ' + args.join(' ') + '\n';
+    };
+    
+    function clearOutput() {
+      output.textContent = '';
+    }
+    
+    function testGitHubConnection() {
+      console.log('Testing GitHub API connection...');
+      
+      // Test GitHub API directly
+      fetch('https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/top')
+        .then(response => {
+          console.log('GitHub API response status:', response.status);
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('GitHub API request failed: ' + response.status);
+          }
+        })
+        .then(data => {
+          console.log('GitHub API success! Found', data.length, 'top banner files');
+          data.forEach(file => {
+            console.log('- File:', file.name, 'Size:', file.size);
+          });
+        })
+        .catch(error => {
+          console.error('GitHub API failed:', error.message);
+        });
+        
+      // Test bottom banners too
+      fetch('https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/bottom')
+        .then(response => {
+          console.log('Bottom banners GitHub API status:', response.status);
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('GitHub API request failed: ' + response.status);
+          }
+        })
+        .then(data => {
+          console.log('GitHub API success! Found', data.length, 'bottom banner files');
+          data.forEach(file => {
+            console.log('- File:', file.name, 'Size:', file.size);
+          });
+        })
+        .catch(error => {
+          console.error('GitHub API failed:', error.message);
+        });
+    }
+    
+    function testBannerSystem() {
+      console.log('Testing banner system initialization...');
+      
+      // Check if banner scripts are loaded
+      if (typeof BANNER_CONFIG === 'undefined') {
+        console.error('BANNER_CONFIG not loaded! Loading banner-config.js...');
+        loadBannerConfig();
+      } else {
+        console.log('BANNER_CONFIG is available');
+        testBannerConfig();
+      }
+    }
+    
+    function loadBannerConfig() {
+      const script1 = document.createElement('script');
+      script1.src = 'js/banner-config.js';
+      script1.onload = function() {
+        console.log('banner-config.js loaded');
+        
+        const script2 = document.createElement('script');
+        script2.src = 'js/banner-rotation.js';
+        script2.onload = function() {
+          console.log('banner-rotation.js loaded');
+          setTimeout(testBannerConfig, 100);
+        };
+        script2.onerror = function() {
+          console.error('Failed to load banner-rotation.js');
+        };
+        document.head.appendChild(script2);
+      };
+      script1.onerror = function() {
+        console.error('Failed to load banner-config.js');
+      };
+      document.head.appendChild(script1);
+    }
+    
+    function testBannerConfig() {
+      console.log('Testing BANNER_CONFIG...');
+      
+      if (window.BANNER_CONFIG) {
+        console.log('✅ BANNER_CONFIG found');
+        console.log('API endpoints:', window.BANNER_CONFIG.API_CONFIG);
+        console.log('Pricing:', window.BANNER_CONFIG.PRICING);
+        
+        // Test banner fetching
+        console.log('Testing banner fetch...');
+        window.BANNER_CONFIG.fetchBanners()
+          .then(() => {
+            console.log('✅ Banner fetch successful');
+            console.log('Top banners:', window.BANNER_CONFIG.TOP_BANNERS.length);
+            console.log('Bottom banners:', window.BANNER_CONFIG.BOTTOM_BANNERS.length);
+            
+            // Test getting current banners
+            const topBanner = window.BANNER_CONFIG.getCurrentBanner('top');
+            const bottomBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+            
+            console.log('Current top banner:', topBanner);
+            console.log('Current bottom banner:', bottomBanner);
+            
+            // Test banner rotation manager
+            if (window.bannerRotationManager) {
+              console.log('✅ Banner rotation manager found');
+              window.bannerRotationManager.updateBanners();
+              console.log('✅ Banner display updated');
+            } else {
+              console.error('❌ Banner rotation manager not found');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Banner fetch failed:', error);
+          });
+      } else {
+        console.error('❌ BANNER_CONFIG still not available');
+      }
+    }
+    
+    // Auto-start test
+    setTimeout(testBannerSystem, 1000);
+  </script>
+</body>
+</html>

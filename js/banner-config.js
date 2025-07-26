@@ -105,12 +105,17 @@ const BANNER_CONFIG = {
     console.log('🌐 Using direct GitHub API for production...');
     
     try {
-      // Get GitHub configuration
-      const githubConfig = window.SECURE_CONFIG ? window.SECURE_CONFIG.getGitHubConfig() : null;
+      // Get GitHub configuration - use fallback if SECURE_CONFIG not available
+      let githubConfig = window.SECURE_CONFIG ? window.SECURE_CONFIG.getGitHubConfig() : null;
+      
+      // Fallback configuration if SECURE_CONFIG is not available
       if (!githubConfig) {
-        console.log('📦 No GitHub config available, setting up defaults');
-        this.setupDefaultBanners();
-        return true;
+        console.log('📦 Using fallback GitHub config for banner storage');
+        githubConfig = {
+          owner: 'cowboytbc',
+          repo: 'wildwest-banner-storage',
+          baseUrl: 'https://cowboytbc.github.io/wildwest-banner-storage'
+        };
       }
       
       // Fetch banners from GitHub repository

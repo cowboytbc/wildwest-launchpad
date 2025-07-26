@@ -2464,15 +2464,29 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Banner rotation system initialized');
       }).catch(error => {
         console.error('❌ Banner rotation system initialization failed:', error);
+        // Try to set up default banners as fallback
+        console.log('🔄 Setting up fallback banners...');
+        if (window.BANNER_CONFIG) {
+          window.BANNER_CONFIG.setupDefaultBanners();
+        }
       });
     } else {
       console.error('❌ Banner rotation manager not found');
     }
   }
   
-  // If SECURE_CONFIG is already available, initialize immediately
-  if (window.SECURE_CONFIG) {
-    initializeBannerSystem();
+  // Initialize banner system immediately, don't wait for SECURE_CONFIG
+  console.log('🚀 Initializing banner system immediately...');
+  initializeBannerSystem();
+  
+  // Also initialize when SECURE_CONFIG becomes available (for enhanced functionality)
+  if (!window.SECURE_CONFIG) {
+    setTimeout(() => {
+      if (window.SECURE_CONFIG) {
+        console.log('🔒 SECURE_CONFIG now available, re-initializing banner system...');
+        initializeBannerSystem();
+      }
+    }, 2000);
   }
   
   // Debug functions for troubleshooting
@@ -2666,31 +2680,14 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ SECURE_CONFIG already available');
   } else {
     console.log('⏳ Waiting for SECURE_CONFIG to load...');
-    // Wait a moment for SECURE_CONFIG to initialize
+    // Wait a moment for SECURE_CONFIG to initialize, but don't block banner system
     setTimeout(() => {
       if (window.SECURE_CONFIG) {
         console.log('✅ SECURE_CONFIG loaded successfully');
-        initializeBannerSystem();
       } else {
-        console.warn('⚠️ SECURE_CONFIG not available, banner system may have limited functionality');
-        initializeBannerSystem();
+        console.warn('⚠️ SECURE_CONFIG not available, using fallback configuration');
       }
     }, 100);
-  }
-  
-  function initializeBannerSystem() {
-    // Initialize Banner Rotation System
-    console.log('🎯 Starting banner rotation system...');
-    
-    if (window.bannerRotationManager) {
-      window.bannerRotationManager.init().then(() => {
-        console.log('✅ Banner rotation system initialized');
-      }).catch(error => {
-        console.error('❌ Banner rotation system initialization failed:', error);
-      });
-    } else {
-      console.error('❌ Banner rotation manager not found');
-    }
   }
   
   // If SECURE_CONFIG is already available, initialize immediately
