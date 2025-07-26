@@ -2049,71 +2049,23 @@
   <nav class="main-nav">
     <ul>
       <li class="launch-token-dropdown">
-        <a href="#" id="launchTokenDropdownBtn" onclick="
-          event.preventDefault();
-          var menu = document.getElementById('launchTokenMenu');
-          var allMenus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
-          allMenus.forEach(function(id) {
-            var m = document.getElementById(id);
-            if (m && m !== menu) m.style.display = 'none';
-          });
-          if (menu.style.display === 'block') {
-            menu.style.display = 'none';
-          } else {
-            menu.style.display = 'block';
-            menu.style.position = 'absolute';
-            menu.style.zIndex = '9999';
-          }
-          console.log('🚀 LAUNCH DROPDOWN CLICKED! Display:', menu.style.display);
-        ">Launch Token ▼</a>
-        <ul class="launch-token-menu" id="launchTokenMenu" style="display: none; position: absolute !important; z-index: 99999 !important; background: rgba(0, 0, 0, 0.95) !important; border: 1px solid #00eaff !important; border-radius: 8px !important; min-width: 150px !important; top: 100% !important; left: 0 !important; margin-top: 5px !important; box-shadow: 0 4px 8px rgba(0, 234, 255, 0.3) !important; list-style: none !important; padding: 0 !important;">
+        <a href="#">Launch Token ▼</a>
+        <ul class="launch-token-menu">
           <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/base-launch.html" class="launch-token-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Base</a></li>
           <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/solana-launch.html" class="launch-token-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Solana</a></li>
         </ul>
       </li>
       <li><a href="pages/nft-marketplace.html">NFT Marketplace</a></li>
       <li class="staking-dropdown">
-        <a href="#" id="stakingDropdownBtn" onclick="
-          event.preventDefault();
-          var menu = document.getElementById('stakingMenu');
-          var menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
-          menus.forEach(function(id) {
-            var m = document.getElementById(id);
-            if (m && m !== menu) m.style.display = 'none';
-          });
-          if (menu.style.display === 'block') {
-            menu.style.display = 'none';
-          } else {
-            menu.style.display = 'block';
-            menu.style.position = 'absolute';
-            menu.style.zIndex = '9999';
-          }
-          console.log('🎯 STAKING DROPDOWN CLICKED! Display:', menu.style.display);
-        ">Staking ▼</a>
-        <ul class="staking-menu" id="stakingMenu" style="display: none; position: absolute !important; z-index: 99999 !important; background: rgba(0, 0, 0, 0.95) !important; border: 1px solid #00eaff !important; border-radius: 8px !important; min-width: 150px !important; top: 100% !important; left: 0 !important; margin-top: 5px !important; box-shadow: 0 4px 8px rgba(0, 234, 255, 0.3) !important; list-style: none !important; padding: 0 !important;">
+        <a href="#">Staking ▼</a>
+        <ul class="staking-menu">
           <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/base-staking.html" class="staking-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Base</a></li>
           <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/solana-staking.html" class="staking-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Solana</a></li>
         </ul>
       </li>
       <li class="token-locking-dropdown">
-        <a href="#" id="tokenLockingDropdownBtn" onclick="
-          event.preventDefault();
-          var menu = document.getElementById('tokenLockingMenu');
-          var menuList = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
-          menuList.forEach(function(id) {
-            var m = document.getElementById(id);
-            if (m && m !== menu) m.style.display = 'none';
-          });
-          if (menu.style.display === 'block') {
-            menu.style.display = 'none';
-          } else {
-            menu.style.display = 'block';
-            menu.style.position = 'absolute';
-            menu.style.zIndex = '9999';
-          }
-          console.log('🔒 TOKEN LOCKING DROPDOWN CLICKED! Display:', menu.style.display);
-        ">Token Locking ▼</a>
-        <ul class="token-locking-menu" id="tokenLockingMenu" style="display: none; position: absolute !important; z-index: 99999 !important; background: rgba(0, 0, 0, 0.95) !important; border: 1px solid #00eaff !important; border-radius: 8px !important; min-width: 150px !important; top: 100% !important; left: 0 !important; margin-top: 5px !important; box-shadow: 0 4px 8px rgba(0, 234, 255, 0.3) !important; list-style: none !important; padding: 0 !important;">
+        <a href="#">Token Locking ▼</a>
+        <ul class="token-locking-menu">
           <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/base-locking.html" class="token-lock-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Base</a></li>
           <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/solana-locking.html" class="token-lock-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Solana</a></li>
         </ul>

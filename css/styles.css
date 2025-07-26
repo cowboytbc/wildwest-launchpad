@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@700&family=Orbitron:wght@700&display=swap');
 
-/* IMPORTANT: Dropdown menus hidden by default - stronger rules */
+/* SIMPLE HOVER DROPDOWNS - NO JAVASCRIPT NEEDED */
+.launch-token-dropdown,
+.staking-dropdown,
+.token-locking-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
 .launch-token-menu,
 .staking-menu,
 .token-locking-menu {
@@ -10,42 +17,20 @@
   border: 1px solid #00eaff;
   border-radius: 8px;
   min-width: 150px;
-  z-index: 1000;
+  z-index: 99999;
   margin-top: 5px;
   box-shadow: 0 4px 8px rgba(0, 234, 255, 0.3);
   top: 100%;
   left: 0;
+  list-style: none;
+  padding: 0;
 }
 
-/* Only show when explicitly toggled via JavaScript */
-.launch-token-menu.show-menu,
-.staking-menu.show-menu,
-.token-locking-menu.show-menu {
+/* SHOW ON HOVER */
+.launch-token-dropdown:hover .launch-token-menu,
+.staking-dropdown:hover .staking-menu,
+.token-locking-dropdown:hover .token-locking-menu {
   display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* NUCLEAR OPTION: Force dropdowns to show when JavaScript sets display block */
-ul.launch-token-menu[style*="display: block"],
-ul.staking-menu[style*="display: block"], 
-ul.token-locking-menu[style*="display: block"],
-.launch-token-menu[style*="display: block"],
-.staking-menu[style*="display: block"], 
-.token-locking-menu[style*="display: block"] {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: absolute !important;
-  z-index: 99999 !important;
-  background: rgba(0, 0, 0, 0.95) !important;
-  border: 1px solid #00eaff !important;
-  border-radius: 8px !important;
-  min-width: 150px !important;
-  top: 100% !important;
-  left: 0 !important;
-  margin-top: 5px !important;
-  box-shadow: 0 4px 8px rgba(0, 234, 255, 0.3) !important;
 }
 
 .launch-token-menu li,
