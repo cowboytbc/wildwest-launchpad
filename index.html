@@ -795,44 +795,29 @@
     
     /* Mobile optimizations for dropdowns */
     @media (max-width: 768px) {
-      /* Completely disable hover on mobile */
-      .launch-token-dropdown,
-      .staking-dropdown,
-      .token-locking-dropdown {
-        pointer-events: auto;
-      }
-      
+      /* Disable all hover effects on mobile */
       .launch-token-dropdown:hover .launch-token-menu,
       .staking-dropdown:hover .staking-menu,
       .token-locking-dropdown:hover .token-locking-menu {
         display: none !important;
       }
       
-      /* Remove any default mobile hover effects */
-      .launch-token-dropdown > a:hover,
-      .staking-dropdown > a:hover,
-      .token-locking-dropdown > a:hover {
-        background: none !important;
-      }
-      
-      /* Mobile dropdown styles when shown via JavaScript */
-      .launch-token-menu[style*="display: block"],
-      .staking-menu[style*="display: block"],
-      .token-locking-menu[style*="display: block"] {
+      /* Simple mobile dropdown display */
+      .launch-token-menu,
+      .staking-menu,
+      .token-locking-menu {
         position: fixed !important;
         left: 50% !important;
         top: 50% !important;
         transform: translate(-50%, -50%) !important;
-        min-width: 250px;
-        max-width: 320px;
-        width: 85vw;
+        min-width: 250px !important;
+        max-width: 320px !important;
+        width: 85vw !important;
         z-index: 9999 !important;
-        border: 2px solid rgba(0, 234, 255, 0.5);
         background: rgba(20, 24, 34, 0.98) !important;
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        display: block !important;
+        border: 2px solid rgba(0, 234, 255, 0.5) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
       }
       
       /* Remove backdrop CSS approach and let JS handle it */
@@ -2056,144 +2041,74 @@
     </ul>
   </nav>
 
-  <!-- Simplified mobile dropdown handler -->
+  <!-- Simple working mobile dropdown -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    let activeBackdrop = null;
-    let dropdownTimeout = null;
+    console.log('🚀 Setting up simple dropdowns');
     
-    // Create backdrop element
-    function createBackdrop() {
-      if (activeBackdrop) return activeBackdrop;
-      
-      const backdrop = document.createElement('div');
-      backdrop.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9998;
-        backdrop-filter: blur(2px);
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      `;
-      
-      document.body.appendChild(backdrop);
-      
-      // Trigger fade in
-      setTimeout(() => backdrop.style.opacity = '1', 10);
-      
-      // Close on backdrop click
-      backdrop.addEventListener('click', closeAllDropdowns);
-      
-      activeBackdrop = backdrop;
-      return backdrop;
+    // Get all dropdown elements
+    const launchDropdown = document.querySelector('.launch-token-dropdown');
+    const stakingDropdown = document.querySelector('.staking-dropdown');
+    const lockingDropdown = document.querySelector('.token-locking-dropdown');
+    
+    const launchMenu = document.querySelector('.launch-token-menu');
+    const stakingMenu = document.querySelector('.staking-menu');
+    const lockingMenu = document.querySelector('.token-locking-menu');
+    
+    // Close all menus
+    function closeAll() {
+      if (launchMenu) launchMenu.style.display = 'none';
+      if (stakingMenu) stakingMenu.style.display = 'none';
+      if (lockingMenu) lockingMenu.style.display = 'none';
     }
     
-    // Remove backdrop
-    function removeBackdrop() {
-      if (activeBackdrop) {
-        activeBackdrop.style.opacity = '0';
-        setTimeout(() => {
-          if (activeBackdrop && activeBackdrop.parentNode) {
-            activeBackdrop.parentNode.removeChild(activeBackdrop);
-          }
-          activeBackdrop = null;
-        }, 200);
+    // Toggle menu function
+    function toggleMenu(menu) {
+      const isOpen = menu.style.display === 'block';
+      closeAll();
+      if (!isOpen) {
+        menu.style.display = 'block';
       }
     }
     
-    // Close all dropdowns
-    function closeAllDropdowns() {
-      const menus = document.querySelectorAll('.launch-token-menu, .staking-menu, .token-locking-menu');
-      menus.forEach(function(menu) {
-        menu.style.display = 'none';
+    // Launch Token dropdown
+    if (launchDropdown && launchMenu) {
+      const trigger = launchDropdown.querySelector('a');
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Launch dropdown clicked');
+        toggleMenu(launchMenu);
       });
-      removeBackdrop();
     }
     
-    // Simple dropdown handling
-    const dropdowns = [
-      { trigger: '.launch-token-dropdown > a', menu: '.launch-token-menu' },
-      { trigger: '.staking-dropdown > a', menu: '.staking-menu' },
-      { trigger: '.token-locking-dropdown > a', menu: '.token-locking-menu' }
-    ];
+    // Staking dropdown
+    if (stakingDropdown && stakingMenu) {
+      const trigger = stakingDropdown.querySelector('a');
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Staking dropdown clicked');
+        toggleMenu(stakingMenu);
+      });
+    }
     
-    dropdowns.forEach(function(dropdown) {
-      const trigger = document.querySelector(dropdown.trigger);
-      const menu = document.querySelector(dropdown.menu);
-      
-      if (trigger && menu) {
-        console.log('✅ Setting up dropdown:', dropdown.trigger);
-        
-        // Single event handler for both desktop and mobile
-        trigger.addEventListener('click', function(e) {
-          console.log('🔥 Dropdown clicked:', dropdown.trigger);
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // Clear any pending timeout
-          if (dropdownTimeout) {
-            clearTimeout(dropdownTimeout);
-            dropdownTimeout = null;
-          }
-          
-          // Check if this menu is already open
-          const isOpen = menu.style.display === 'block';
-          console.log('📊 Menu open state:', isOpen);
-          
-          // Close all menus first
-          closeAllDropdowns();
-          
-          // If it wasn't open, open this one after a small delay
-          if (!isOpen) {
-            dropdownTimeout = setTimeout(() => {
-              console.log('🚀 Opening dropdown menu');
-              // Create backdrop on mobile
-              if (window.innerWidth <= 768) {
-                console.log('📱 Mobile detected, creating backdrop');
-                createBackdrop();
-              }
-              menu.style.display = 'block';
-            }, 50);
-          }
-        });
-        
-        // Add mobile-friendly styles
-        trigger.style.cursor = 'pointer';
-        trigger.style.userSelect = 'none';
-        trigger.style.webkitUserSelect = 'none';
-        trigger.style.webkitTapHighlightColor = 'rgba(0, 234, 255, 0.2)';
-      } else {
-        console.warn('⚠️ Could not find elements for:', dropdown.trigger, dropdown.menu);
-      }
-    });
+    // Token Locking dropdown
+    if (lockingDropdown && lockingMenu) {
+      const trigger = lockingDropdown.querySelector('a');
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Locking dropdown clicked');
+        toggleMenu(lockingMenu);
+      });
+    }
     
-    // Simple click outside handler
+    // Close when clicking outside
     document.addEventListener('click', function(e) {
-      // Allow navigation links to work
-      if (e.target.matches('.launch-token-menu a, .staking-menu a, .token-locking-menu a')) {
-        console.log('🔗 Navigation link clicked:', e.target.href);
-        closeAllDropdowns();
-        return;
-      }
-      
-      // Close dropdowns if clicking outside
       if (!e.target.closest('.main-nav')) {
-        closeAllDropdowns();
+        closeAll();
       }
     });
     
-    // Handle window resize
-    window.addEventListener('resize', function() {
-      if (window.innerWidth > 768 && activeBackdrop) {
-        removeBackdrop();
-      }
-    });
-    
-    console.log('✅ Simplified dropdown handlers active');
+    console.log('✅ Simple dropdowns ready');
   });
   </script>
 
