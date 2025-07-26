@@ -751,7 +751,7 @@
     .launch-token-menu,
     .staking-menu,
     .token-locking-menu {
-      display: none;
+      display: none !important;
       position: absolute;
       left: 0;
       top: 100%;
@@ -810,22 +810,23 @@
         backdrop-filter: blur(2px);
       }
       
-      .launch-token-menu,
-      .staking-menu,
-      .token-locking-menu {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
+      .launch-token-dropdown:hover .launch-token-menu,
+      .staking-dropdown:hover .staking-menu,
+      .token-locking-dropdown:hover .token-locking-menu {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
         min-width: 250px;
         max-width: 320px;
         width: 85vw;
-        z-index: 9999;
+        z-index: 9999 !important;
         border: 2px solid rgba(0, 234, 255, 0.5);
         background: rgba(20, 24, 34, 0.98);
         backdrop-filter: blur(10px);
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        display: block !important;
       }
       
       .launch-token-menu a,
@@ -844,73 +845,6 @@
       }
     }
     
-    /* New styles for launch token dropdown */
-    .launch-token-dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    .launch-token-menu {
-      display: none;
-      position: absolute;
-      left: 0;
-      top: 100%;
-      background: rgba(30, 34, 44, 0.98);
-      border-radius: 12px;
-      box-shadow: 0 4px 16px #0008;
-      padding: 0.5em 0.7em;
-      z-index: 100;
-      min-width: 180px;
-    }
-    .launch-token-menu a {
-      display: block;
-      padding: 0.4em 0.6em;
-      color: #00eaff;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    .launch-token-menu a:hover {
-      background: rgba(0, 234, 255, 0.1);
-    }
-    .token-locking-menu a {
-      display: block;
-      padding: 0.4em 0.6em;
-      color: #00eaff;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    .token-locking-menu a:hover {
-      background: rgba(0, 234, 255, 0.1);
-    }
-    /* New styles for launch token dropdown */
-    .launch-token-dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    .launch-token-menu {
-      display: none;
-      position: absolute;
-      left: 0;
-      top: 100%;
-      background: rgba(30, 34, 44, 0.98);
-      border-radius: 12px;
-      box-shadow: 0 4px 16px #0008;
-      padding: 0.5em 0.7em;
-      z-index: 100;
-      min-width: 180px;
-    }
-    .launch-token-menu a {
-      display: block;
-      padding: 0.4em 0.6em;
-      color: #00eaff;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    .launch-token-menu a:hover {
-      background: rgba(0, 234, 255, 0.1);
-    }
     /* Desktop navigation optimization */
     @media (min-width: 701px) {
       .main-nav {
@@ -2113,24 +2047,6 @@
   console.log('✅ Dropdown click-outside handler active');
   </script>
 
-  <!-- FORCE DROPDOWN VISIBILITY -->
-  <style>
-  .launch-token-menu[style*="display: block"],
-  .staking-menu[style*="display: block"],
-  .token-locking-menu[style*="display: block"] {
-    display: block !important;
-    position: absolute !important;
-    z-index: 9999 !important;
-    background: rgba(30, 34, 44, 0.98) !important;
-    border: 1px solid rgba(0, 234, 255, 0.3) !important;
-    border-radius: 12px !important;
-    padding: 0.5em 0 !important;
-    min-width: 180px !important;
-    top: 100% !important;
-    left: 0 !important;
-  }
-  </style>
-  
   <!-- Top Ad Banner -->
   <section class="ad-banner top-ad">
     <div class="ad-container">
