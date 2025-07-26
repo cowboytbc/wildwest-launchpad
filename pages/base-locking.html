@@ -1732,36 +1732,77 @@
     async function fetchTokenInfo() {
       const tokenAddress = document.getElementById('tokenAddress').value.trim();
       const tokenInfoDiv = document.getElementById('tokenInfo');
+      
+      console.log('🔍 fetchTokenInfo called with:', tokenAddress);
+      console.log('🔍 provider available:', !!provider);
+      console.log('🔍 userAddress available:', !!userAddress);
+      
       tokenInfoDiv.textContent = '';
-      if (!tokenAddress || !ethers.utils.isAddress(tokenAddress) || !provider || !userAddress) return;
+      
+      if (!tokenAddress) {
+        console.log('❌ No token address provided');
+        return;
+      }
+      
+      if (!ethers.utils.isAddress(tokenAddress)) {
+        console.log('❌ Invalid token address');
+        tokenInfoDiv.textContent = 'Invalid token address';
+        return;
+      }
+      
+      if (!provider) {
+        console.log('❌ No provider available');
+        tokenInfoDiv.textContent = 'Connect wallet first to view token info';
+        return;
+      }
+      
       try {
+        tokenInfoDiv.textContent = 'Loading token info...';
+        console.log('🔄 Creating ethers provider...');
+        
         // Create proper ethers provider from wallet provider
         const ethersProvider = new ethers.providers.Web3Provider(provider);
+        console.log('✅ Ethers provider created');
+        
         const erc20 = new ethers.Contract(tokenAddress, [
           {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"type":"function"},
           {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"},
           {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
           {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}
         ], ethersProvider);
-        const [name, symbol, decimals, balance] = await Promise.all([
+        
+        console.log('🔄 Fetching token details...');
+        
+        // First get basic token info (name, symbol, decimals)
+        const [name, symbol, decimals] = await Promise.all([
           erc20.name(),
           erc20.symbol(),
-          erc20.decimals(),
-          erc20.balanceOf(userAddress)
+          erc20.decimals()
         ]);
-        let usdValue = '';
-        // TODO: Implement price fetching using QuickNode or on-chain price oracles
-        // This reduces external API dependencies and improves site efficiency
-        // Example: Use Chainlink price feeds via QuickNode Base endpoint
-        try {
-          // Disabled CoinGecko API for efficiency - implement QuickNode price feeds instead
-          // const resp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${symbol.toLowerCase()}&vs_currencies=usd`);
-          // Price fetching temporarily disabled for efficiency
-          usdValue = ''; // Remove USD pricing for now to eliminate external API calls
-        } catch {}
-        tokenInfoDiv.textContent = `Name: ${name} | Symbol: ${symbol} | Balance: ${ethers.utils.formatUnits(balance, decimals)}${symbol}${usdValue}`;
+        
+        console.log('✅ Token info fetched:', { name, symbol, decimals });
+        
+        // If we have userAddress, get balance too
+        let balanceText = '';
+        if (userAddress) {
+          try {
+            const balance = await erc20.balanceOf(userAddress);
+            const formattedBalance = ethers.utils.formatUnits(balance, decimals);
+            balanceText = ` | Balance: ${formattedBalance} ${symbol}`;
+            console.log('✅ Balance fetched:', formattedBalance);
+          } catch (balanceErr) {
+            console.log('⚠️ Could not fetch balance:', balanceErr.message);
+            balanceText = ' | Balance: Unable to fetch';
+          }
+        }
+        
+        tokenInfoDiv.textContent = `Name: ${name} | Symbol: ${symbol}${balanceText}`;
+        tokenInfoDiv.style.color = '#008080';
+        
       } catch (err) {
-        tokenInfoDiv.textContent = 'Could not fetch token info.';
+        console.error('❌ Error fetching token info:', err);
+        tokenInfoDiv.textContent = 'Could not fetch token info: ' + err.message;
+        tokenInfoDiv.style.color = '#ff6b6b';
       }
     }
     document.getElementById('tokenAddress').addEventListener('input', function() {
