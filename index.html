@@ -795,24 +795,17 @@
     
     /* Mobile optimizations for dropdowns */
     @media (max-width: 768px) {
-      /* Center dropdowns on mobile and add backdrop */
-      .launch-token-dropdown:hover::before,
-      .staking-dropdown:hover::before,
-      .token-locking-dropdown:hover::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9998;
-        backdrop-filter: blur(2px);
-      }
-      
+      /* Disable hover on mobile, use click instead */
       .launch-token-dropdown:hover .launch-token-menu,
       .staking-dropdown:hover .staking-menu,
       .token-locking-dropdown:hover .token-locking-menu {
+        display: none !important;
+      }
+      
+      /* Mobile dropdown styles when shown via JavaScript */
+      .launch-token-menu[style*="display: block"],
+      .staking-menu[style*="display: block"],
+      .token-locking-menu[style*="display: block"] {
         position: fixed !important;
         left: 50% !important;
         top: 50% !important;
@@ -829,6 +822,21 @@
         display: block !important;
       }
       
+      /* Add backdrop when dropdowns are visible */
+      .launch-token-menu[style*="display: block"]::before,
+      .staking-menu[style*="display: block"]::before,
+      .token-locking-menu[style*="display: block"]::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        backdrop-filter: blur(2px);
+      }
+      
       .launch-token-menu a,
       .staking-menu a,
       .token-locking-menu a {
@@ -842,6 +850,20 @@
       .staking-menu a:last-child,
       .token-locking-menu a:last-child {
         border-bottom: none;
+      }
+      
+      /* Make dropdown triggers more touch-friendly */
+      .launch-token-dropdown > a,
+      .staking-dropdown > a,
+      .token-locking-dropdown > a {
+        padding: 0.8em 1em !important;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        -webkit-tap-highlight-color: rgba(0, 234, 255, 0.2);
       }
     }
     
@@ -2034,17 +2056,121 @@
     </ul>
   </nav>
 
-  <!-- Simple click outside handler -->
+  <!-- Enhanced mobile dropdown handler -->
   <script>
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.main-nav')) {
-      ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'].forEach(function(id) {
-        var menu = document.getElementById(id);
-        if (menu) menu.style.display = 'none';
-      });
+  document.addEventListener('DOMContentLoaded', function() {
+    let activeBackdrop = null;
+    
+    // Create backdrop element
+    function createBackdrop() {
+      if (activeBackdrop) return activeBackdrop;
+      
+      const backdrop = document.createElement('div');
+      backdrop.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      `;
+      
+      document.body.appendChild(backdrop);
+      
+      // Trigger fade in
+      setTimeout(() => backdrop.style.opacity = '1', 10);
+      
+      // Close on backdrop click
+      backdrop.addEventListener('click', closeAllDropdowns);
+      
+      activeBackdrop = backdrop;
+      return backdrop;
     }
+    
+    // Remove backdrop
+    function removeBackdrop() {
+      if (activeBackdrop) {
+        activeBackdrop.style.opacity = '0';
+        setTimeout(() => {
+          if (activeBackdrop && activeBackdrop.parentNode) {
+            activeBackdrop.parentNode.removeChild(activeBackdrop);
+          }
+          activeBackdrop = null;
+        }, 200);
+      }
+    }
+    
+    // Close all dropdowns
+    function closeAllDropdowns() {
+      dropdowns.forEach(function(dropdown) {
+        const menu = document.querySelector(dropdown.menu);
+        if (menu) {
+          menu.style.display = 'none';
+        }
+      });
+      removeBackdrop();
+    }
+    
+    // Mobile-friendly dropdown handling
+    const dropdowns = [
+      { trigger: '.launch-token-dropdown > a', menu: '.launch-token-menu' },
+      { trigger: '.staking-dropdown > a', menu: '.staking-menu' },
+      { trigger: '.token-locking-dropdown > a', menu: '.token-locking-menu' }
+    ];
+    
+    dropdowns.forEach(function(dropdown) {
+      const trigger = document.querySelector(dropdown.trigger);
+      const menu = document.querySelector(dropdown.menu);
+      
+      if (trigger && menu) {
+        // Prevent default link behavior on mobile
+        trigger.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Check if this menu is already open
+          const isOpen = menu.style.display === 'block';
+          
+          // Close all menus first
+          closeAllDropdowns();
+          
+          // If it wasn't open, open this one
+          if (!isOpen) {
+            // Create backdrop on mobile
+            if (window.innerWidth <= 768) {
+              createBackdrop();
+            }
+            menu.style.display = 'block';
+          }
+        });
+        
+        // Touch event for better mobile responsiveness
+        trigger.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+        }, { passive: false });
+      }
+    });
+    
+    // Click outside to close dropdowns
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.main-nav')) {
+        closeAllDropdowns();
+      }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768 && activeBackdrop) {
+        removeBackdrop();
+      }
+    });
+    
+    console.log('✅ Enhanced mobile dropdown handlers active');
   });
-  console.log('✅ Dropdown click-outside handler active');
   </script>
 
   <!-- Top Ad Banner -->
