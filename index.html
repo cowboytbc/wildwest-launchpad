@@ -2490,7 +2490,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Debug functions for troubleshooting
-  window.debugTokenStatus = function() {
+  window.debugTokenStatus = async function() {
     console.log(`🔗 Connecting to wallet ${walletIndex} on ${network} network`);
     
     try {
