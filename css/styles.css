@@ -27,13 +27,15 @@
   opacity: 1 !important;
 }
 
-/* Override any other display rules that might interfere */
+/* Override any other display rules that might interfere - SHOW WHEN DISPLAY BLOCK */
 .launch-token-menu[style*="display: block"],
 .staking-menu[style*="display: block"], 
 .token-locking-menu[style*="display: block"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  z-index: 9999 !important;
 }
 
 .launch-token-menu li,
