@@ -2329,8 +2329,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   };
   
-  console.log('✅ Simple dropdown system initialized');
-  console.log('💡 Test with: testDropdowns()');
+  console.log('✅ Dropdowns fixed');
 });
 
 // Load more projects functionality
@@ -3793,6 +3792,108 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Make toggleDropdown globally accessible
     window.toggleDropdown = toggleDropdown;
+  </script>
+
+  <!-- DROPDOWN FIX SCRIPT -->
+  <script>
+  // OVERRIDE ALL DROPDOWN BS WITH SIMPLE VERSION THAT ACTUALLY WORKS
+  (function() {
+    console.log('🔧 FIXING DROPDOWNS FOR REAL...');
+    
+    function setupDropdowns() {
+      // Get elements
+      const launchBtn = document.getElementById('launchTokenDropdownBtn');
+      const launchMenu = document.getElementById('launchTokenMenu');
+      const stakingBtn = document.getElementById('stakingDropdownBtn');
+      const stakingMenu = document.getElementById('stakingMenu');
+      const lockingBtn = document.getElementById('tokenLockingDropdownBtn');
+      const lockingMenu = document.getElementById('tokenLockingMenu');
+
+      console.log('📋 Elements found:', {
+        launchBtn: !!launchBtn,
+        launchMenu: !!launchMenu,
+        stakingBtn: !!stakingBtn,
+        stakingMenu: !!stakingMenu,
+        lockingBtn: !!lockingBtn,
+        lockingMenu: !!lockingMenu
+      });
+
+      // Hide all initially
+      if (launchMenu) launchMenu.style.display = 'none';
+      if (stakingMenu) stakingMenu.style.display = 'none';  
+      if (lockingMenu) lockingMenu.style.display = 'none';
+
+      // Close all function
+      function closeAll() {
+        if (launchMenu) launchMenu.style.display = 'none';
+        if (stakingMenu) stakingMenu.style.display = 'none';
+        if (lockingMenu) lockingMenu.style.display = 'none';
+      }
+
+      // Remove existing event listeners by cloning
+      if (launchBtn) {
+        const newBtn = launchBtn.cloneNode(true);
+        launchBtn.parentNode.replaceChild(newBtn, launchBtn);
+        newBtn.onclick = function(e) {
+          e.preventDefault();
+          console.log('🚀 Launch dropdown clicked');
+          closeAll();
+          if (launchMenu) {
+            launchMenu.style.display = 'block';
+            console.log('✅ Launch menu shown');
+          }
+        };
+      }
+
+      if (stakingBtn) {
+        const newBtn = stakingBtn.cloneNode(true);
+        stakingBtn.parentNode.replaceChild(newBtn, stakingBtn);
+        newBtn.onclick = function(e) {
+          e.preventDefault();
+          console.log('🚀 Staking dropdown clicked');
+          closeAll();
+          if (stakingMenu) {
+            stakingMenu.style.display = 'block';
+            console.log('✅ Staking menu shown');
+          }
+        };
+      }
+
+      if (lockingBtn) {
+        const newBtn = lockingBtn.cloneNode(true);
+        lockingBtn.parentNode.replaceChild(newBtn, lockingBtn);
+        newBtn.onclick = function(e) {
+          e.preventDefault();
+          console.log('🚀 Locking dropdown clicked');
+          closeAll();
+          if (lockingMenu) {
+            lockingMenu.style.display = 'block';
+            console.log('✅ Locking menu shown');
+          }
+        };
+      }
+
+      // Click outside to close
+      document.onclick = function(e) {
+        if (!e.target.closest('.launch-token-dropdown, .staking-dropdown, .token-locking-dropdown')) {
+          closeAll();
+        }
+      };
+
+      console.log('✅ DROPDOWNS FIXED FOR REAL THIS TIME');
+    }
+
+    // Run the fix
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupDropdowns);
+    } else {
+      setupDropdowns();
+    }
+    
+    // Also run after delay to override other scripts
+    setTimeout(setupDropdowns, 500);
+    setTimeout(setupDropdowns, 2000);
+  })();
   </script>
 
 </body>
