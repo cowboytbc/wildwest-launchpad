@@ -2455,9 +2455,33 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Initialize Banner System
+  let bannerInitRetries = 0;
+  const maxBannerRetries = 50; // 5 seconds total
+  
   function initializeBannerSystem() {
+    // Check if banner dependencies are loaded
+    if (!window.BANNER_CONFIG || !window.bannerRotationManager) {
+      bannerInitRetries++;
+      console.log(`⏳ Banner dependencies not ready yet, retrying in 100ms... (${bannerInitRetries}/${maxBannerRetries})`);
+      console.log('  - window.BANNER_CONFIG exists:', !!window.BANNER_CONFIG);
+      console.log('  - window.bannerRotationManager exists:', !!window.bannerRotationManager);
+      
+      if (bannerInitRetries < maxBannerRetries) {
+        // Retry after a short delay
+        setTimeout(initializeBannerSystem, 100);
+        return;
+      } else {
+        console.error('❌ Banner system initialization failed - dependencies not loaded after 5 seconds');
+        console.error('🔍 Available global objects:', Object.keys(window).filter(key => key.includes('banner') || key.includes('BANNER')));
+        return;
+      }
+    }
+    
     // Initialize Banner Rotation System
     console.log('🎯 Starting banner rotation system...');
+    console.log('✅ Banner dependencies loaded:');
+    console.log('  - BANNER_CONFIG:', !!window.BANNER_CONFIG);
+    console.log('  - bannerRotationManager:', !!window.bannerRotationManager);
     
     if (window.bannerRotationManager) {
       window.bannerRotationManager.init().then(() => {
@@ -2475,8 +2499,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Initialize banner system immediately, don't wait for SECURE_CONFIG
-  console.log('🚀 Initializing banner system immediately...');
+  // Initialize banner system with retry logic
+  console.log('🚀 Initializing banner system with dependency check...');
   initializeBannerSystem();
   
   // Also initialize when SECURE_CONFIG becomes available (for enhanced functionality)
