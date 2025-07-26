@@ -740,12 +740,91 @@
         letter-spacing: 0.5px;
       }
     }
-    /* New styles for staking dropdown */
-    .staking-dropdown {
+    /* Enhanced dropdown styles for better mobile/desktop compatibility */
+    .launch-token-dropdown,
+    .staking-dropdown,
+    .token-locking-dropdown {
       position: relative;
       display: inline-block;
     }
-    .staking-menu {
+    
+    .launch-token-menu,
+    .staking-menu,
+    .token-locking-menu {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background: rgba(30, 34, 44, 0.98);
+      border: 1px solid rgba(0, 234, 255, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      padding: 0.5em 0;
+      z-index: 1000;
+      min-width: 180px;
+      margin-top: 2px;
+    }
+    
+    .launch-token-menu a,
+    .staking-menu a,
+    .token-locking-menu a {
+      display: block;
+      padding: 0.6em 1em;
+      color: #00eaff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9em;
+      transition: all 0.2s ease;
+      border: none;
+      background: none;
+    }
+    
+    .launch-token-menu a:hover,
+    .staking-menu a:hover,
+    .token-locking-menu a:hover {
+      background: rgba(0, 234, 255, 0.15);
+      color: #ffffff;
+    }
+    
+    /* Mobile optimizations for dropdowns */
+    @media (max-width: 768px) {
+      .launch-token-menu,
+      .staking-menu,
+      .token-locking-menu {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 200px;
+        max-width: 300px;
+        z-index: 9999;
+        border: 2px solid rgba(0, 234, 255, 0.5);
+        background: rgba(20, 24, 34, 0.98);
+        backdrop-filter: blur(10px);
+      }
+      
+      .launch-token-menu a,
+      .staking-menu a,
+      .token-locking-menu a {
+        padding: 1em;
+        font-size: 1.1em;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 234, 255, 0.1);
+      }
+      
+      .launch-token-menu a:last-child,
+      .staking-menu a:last-child,
+      .token-locking-menu a:last-child {
+        border-bottom: none;
+      }
+    }
+    
+    /* New styles for launch token dropdown */
+    .launch-token-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .launch-token-menu {
       display: none;
       position: absolute;
       left: 0;
@@ -757,7 +836,7 @@
       z-index: 100;
       min-width: 180px;
     }
-    .staking-menu a {
+    .launch-token-menu a {
       display: block;
       padding: 0.4em 0.6em;
       color: #00eaff;
@@ -765,25 +844,8 @@
       font-weight: 500;
       transition: background 0.2s;
     }
-    .staking-menu a:hover {
+    .launch-token-menu a:hover {
       background: rgba(0, 234, 255, 0.1);
-    }
-    /* New styles for token locking dropdown */
-    .token-locking-dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    .token-locking-menu {
-      display: none;
-      position: absolute;
-      left: 0;
-      top: 100%;
-      background: rgba(30, 34, 44, 0.98);
-      border-radius: 12px;
-      box-shadow: 0 4px 16px #0008;
-      padding: 0.5em 0.7em;
-      z-index: 100;
-      min-width: 180px;
     }
     .token-locking-menu a {
       display: block;
@@ -2182,260 +2244,94 @@
   <script>
 // Initialize dropdown menus properly
 (function() {
-  // Initialize menus when DOM is ready
-  function initializeMenus() {
-    const menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
-    menus.forEach(menuId => {
-      const menu = document.getElementById(menuId);
-      if (menu) {
-        menu.style.display = 'none';
-        menu.style.visibility = 'visible'; // Ensure visibility is set to visible
-      }
-    });
-  }
-  
-  // Initialize when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeMenus);
-  } else {
-    initializeMenus();
-  }
+  console.log('🚀 Dropdown system loading...');
 })();
 
-// Initialize dropdown menus on DOM ready
+
+
+// Simple, reliable dropdown functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize all dropdown menus
-  const menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
-  menus.forEach(menuId => {
-    const menu = document.getElementById(menuId);
-    if (menu) {
+  const dropdowns = [
+    { btn: 'launchTokenDropdownBtn', menu: 'launchTokenMenu' },
+    { btn: 'stakingDropdownBtn', menu: 'stakingMenu' },
+    { btn: 'tokenLockingDropdownBtn', menu: 'tokenLockingMenu' }
+  ];
+
+  dropdowns.forEach(dropdown => {
+    const btn = document.getElementById(dropdown.btn);
+    const menu = document.getElementById(dropdown.menu);
+    
+    if (btn && menu) {
+      // Ensure menu is hidden initially
       menu.style.display = 'none';
-      menu.style.visibility = 'visible'; // Ensure menus are visible when shown
+      menu.style.visibility = 'visible';
+      
+      // Simple click handler - works on all devices
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Close all other dropdowns first
+        dropdowns.forEach(otherDropdown => {
+          if (otherDropdown.menu !== dropdown.menu) {
+            const otherMenu = document.getElementById(otherDropdown.menu);
+            if (otherMenu) {
+              otherMenu.style.display = 'none';
+            }
+          }
+        });
+        
+        // Toggle current dropdown
+        if (menu.style.display === 'block') {
+          menu.style.display = 'none';
+        } else {
+          menu.style.display = 'block';
+        }
+      });
+      
+      // Close dropdown when clicking menu items
+      const menuLinks = menu.querySelectorAll('a');
+      menuLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          menu.style.display = 'none';
+        });
+      });
     }
   });
+  
+  // Close all dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    const isDropdownClick = e.target.closest('.launch-token-dropdown, .staking-dropdown, .token-locking-dropdown');
+    
+    if (!isDropdownClick) {
+      dropdowns.forEach(dropdown => {
+        const menu = document.getElementById(dropdown.menu);
+        if (menu) {
+          menu.style.display = 'none';
+        }
+      });
+    }
+  });
+  
+  // Test function for debugging
+  window.testDropdowns = function() {
+    console.log('🧪 Testing dropdown functionality...');
+    dropdowns.forEach(dropdown => {
+      const btn = document.getElementById(dropdown.btn);
+      const menu = document.getElementById(dropdown.menu);
+      console.log(`� ${dropdown.btn}:`, {
+        btnExists: !!btn,
+        menuExists: !!menu,
+        display: menu?.style.display || 'not set',
+        visibility: menu?.style.visibility || 'not set'
+      });
+    });
+  };
+  
+  console.log('✅ Simple dropdown system initialized');
+  console.log('💡 Test with: testDropdowns()');
 });
-
-// Launch token dropdown functionality
-const launchTokenBtn = document.getElementById('launchTokenDropdownBtn');
-const launchTokenMenu = document.getElementById('launchTokenMenu');
-let launchTokenMenuTimeout = null;
-if (launchTokenBtn && launchTokenMenu) {
-  // Ensure dropdown is hidden on page load
-  launchTokenMenu.style.display = 'none';
-  
-  // Check if device supports touch (mobile/tablet)
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  
-  // Desktop: hover, Mobile: click
-  function showLaunchTokenMenu() {
-    clearTimeout(launchTokenMenuTimeout);
-    launchTokenMenu.style.display = 'block';
-    launchTokenMenu.style.visibility = 'visible';
-  }
-  function hideLaunchTokenMenu() {
-    launchTokenMenuTimeout = setTimeout(() => {
-      launchTokenMenu.style.display = 'none';
-    }, 180);
-  }
-  
-  // Always add click functionality for mobile compatibility
-  launchTokenBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('🔘 Launch Token dropdown clicked!', {
-      isTouchDevice,
-      windowWidth: window.innerWidth,
-      currentDisplay: launchTokenMenu.style.display
-    });
-    
-    // Always use click on mobile/touch devices or small screens
-    if (isTouchDevice || window.innerWidth <= 768) {
-      if (launchTokenMenu.style.display === 'block') {
-        launchTokenMenu.style.display = 'none';
-        console.log('📱 Mobile: Hiding launch token menu');
-      } else {
-        launchTokenMenu.style.display = 'block';
-        launchTokenMenu.style.visibility = 'visible'; // Ensure it's visible
-        console.log('📱 Mobile: Showing launch token menu');
-      }
-    } else {
-      // Desktop click behavior - just show menu
-      showLaunchTokenMenu();
-      console.log('🖥️ Desktop: Showing launch token menu');
-    }
-  });
-  
-  // Add hover events only for non-touch devices with larger screens
-  if (!isTouchDevice && window.innerWidth > 768) {
-    launchTokenBtn.addEventListener('mouseenter', showLaunchTokenMenu);
-    launchTokenBtn.addEventListener('mouseleave', hideLaunchTokenMenu);
-    launchTokenMenu.addEventListener('mouseenter', showLaunchTokenMenu);
-    launchTokenMenu.addEventListener('mouseleave', hideLaunchTokenMenu);
-  }
-  
-  // Hide dropdown when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!launchTokenBtn.contains(e.target) && !launchTokenMenu.contains(e.target)) {
-      launchTokenMenu.style.display = 'none';
-    }
-  });
-  
-  // Close dropdown on link click
-  document.querySelectorAll('.launch-token-link').forEach(link => {
-    link.addEventListener('click', function() {
-      launchTokenMenu.style.display = 'none';
-    });
-  });
-}
-
-// Staking dropdown functionality
-const stakingBtn = document.getElementById('stakingDropdownBtn');
-const stakingMenu = document.getElementById('stakingMenu');
-let stakingMenuTimeout = null;
-if (stakingBtn && stakingMenu) {
-  // Ensure dropdown is hidden on page load
-  stakingMenu.style.display = 'none';
-  
-  // Check if device supports touch (mobile/tablet)
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  
-  // Desktop: hover, Mobile: click
-  function showStakingMenu() {
-    clearTimeout(stakingMenuTimeout);
-    stakingMenu.style.display = 'block';
-    stakingMenu.style.visibility = 'visible';
-  }
-  function hideStakingMenu() {
-    stakingMenuTimeout = setTimeout(() => {
-      stakingMenu.style.display = 'none';
-    }, 180);
-  }
-  
-  // Always add click functionality for mobile compatibility
-  stakingBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('🔘 Staking dropdown clicked!', {
-      isTouchDevice,
-      windowWidth: window.innerWidth,
-      currentDisplay: stakingMenu.style.display
-    });
-    
-    // Always use click on mobile/touch devices or small screens
-    if (isTouchDevice || window.innerWidth <= 768) {
-      if (stakingMenu.style.display === 'block') {
-        stakingMenu.style.display = 'none';
-        console.log('📱 Mobile: Hiding staking menu');
-      } else {
-        stakingMenu.style.display = 'block';
-        stakingMenu.style.visibility = 'visible'; // Ensure it's visible
-        console.log('📱 Mobile: Showing staking menu');
-      }
-    } else {
-      // Desktop click behavior - just show menu
-      showStakingMenu();
-      console.log('🖥️ Desktop: Showing staking menu');
-    }
-  });
-  
-  // Add hover events only for non-touch devices with larger screens
-  if (!isTouchDevice && window.innerWidth > 768) {
-    stakingBtn.addEventListener('mouseenter', showStakingMenu);
-    stakingBtn.addEventListener('mouseleave', hideStakingMenu);
-    stakingMenu.addEventListener('mouseenter', showStakingMenu);
-    stakingMenu.addEventListener('mouseleave', hideStakingMenu);
-  }
-  
-  // Hide dropdown when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!stakingBtn.contains(e.target) && !stakingMenu.contains(e.target)) {
-      stakingMenu.style.display = 'none';
-    }
-  });
-  
-  // Close dropdown on link click
-  document.querySelectorAll('.staking-link').forEach(link => {
-    link.addEventListener('click', function() {
-      stakingMenu.style.display = 'none';
-    });
-  });
-}
-
-// Token locking dropdown functionality
-const tokenLockingBtn = document.getElementById('tokenLockingDropdownBtn');
-const tokenLockingMenu = document.getElementById('tokenLockingMenu');
-let tokenLockingMenuTimeout = null;
-if (tokenLockingBtn && tokenLockingMenu) {
-  // Ensure dropdown is hidden on page load
-  tokenLockingMenu.style.display = 'none';
-  
-  // Check if device supports touch (mobile/tablet)
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  
-  // Desktop: hover, Mobile: click
-  function showMenu() {
-    clearTimeout(tokenLockingMenuTimeout);
-    tokenLockingMenu.style.display = 'block';
-    tokenLockingMenu.style.visibility = 'visible';
-  }
-  function hideMenu() {
-    tokenLockingMenuTimeout = setTimeout(() => {
-      tokenLockingMenu.style.display = 'none';
-    }, 180);
-  }
-  
-  // Always add click functionality for mobile compatibility
-  tokenLockingBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('🔘 Token Locking dropdown clicked!', {
-      isTouchDevice,
-      windowWidth: window.innerWidth,
-      currentDisplay: tokenLockingMenu.style.display
-    });
-    
-    // Always use click on mobile/touch devices or small screens
-    if (isTouchDevice || window.innerWidth <= 768) {
-      if (tokenLockingMenu.style.display === 'block') {
-        tokenLockingMenu.style.display = 'none';
-        console.log('📱 Mobile: Hiding token locking menu');
-      } else {
-        tokenLockingMenu.style.display = 'block';
-        tokenLockingMenu.style.visibility = 'visible'; // Ensure it's visible
-        console.log('📱 Mobile: Showing token locking menu');
-      }
-    } else {
-      // Desktop click behavior - just show menu
-      showMenu();
-      console.log('🖥️ Desktop: Showing token locking menu');
-    }
-  });
-  
-  // Add hover events only for non-touch devices with larger screens
-  if (!isTouchDevice && window.innerWidth > 768) {
-    tokenLockingBtn.addEventListener('mouseenter', showMenu);
-    tokenLockingBtn.addEventListener('mouseleave', hideMenu);
-    tokenLockingMenu.addEventListener('mouseenter', showMenu);
-    tokenLockingMenu.addEventListener('mouseleave', hideMenu);
-  }
-  
-  // Hide dropdown when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!tokenLockingBtn.contains(e.target) && !tokenLockingMenu.contains(e.target)) {
-      tokenLockingMenu.style.display = 'none';
-    }
-  });
-  
-  // Close dropdown on link click
-  document.querySelectorAll('.token-lock-link').forEach(link => {
-    link.addEventListener('click', function() {
-      tokenLockingMenu.style.display = 'none';
-    });
-  });
-}
 
 // Load more projects functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -2977,33 +2873,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
   console.log('🎯 Index page: Using unified wallet connection system');
-  
-  // Add dropdown test function for mobile debugging
-  window.testDropdowns = function() {
-    console.log('🧪 Testing dropdown functionality...');
-    const dropdowns = [
-      { name: 'Launch Token', menu: document.getElementById('launchTokenMenu') },
-      { name: 'Staking', menu: document.getElementById('stakingMenu') },
-      { name: 'Token Locking', menu: document.getElementById('tokenLockingMenu') }
-    ];
-    
-    dropdowns.forEach(dropdown => {
-      console.log(`📋 ${dropdown.name}:`, {
-        exists: !!dropdown.menu,
-        display: dropdown.menu?.style.display || 'not set',
-        visibility: dropdown.menu?.style.visibility || 'not set',
-        computed: dropdown.menu ? window.getComputedStyle(dropdown.menu).display : 'N/A'
-      });
-    });
-    
-    console.log('🔧 Device Info:', {
-      isTouchDevice: ('ontouchstart' in window) || (navigator.maxTouchPoints > 0),
-      windowWidth: window.innerWidth,
-      userAgent: navigator.userAgent.substring(0, 50) + '...'
-    });
-  };
-  
-  console.log('💡 Test dropdowns with: testDropdowns()');
 });
   </script>
 
