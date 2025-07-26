@@ -14,6 +14,9 @@ service-credentials.json
 # Development token injection (NEVER commit)
 dev-token-inject.js
 
+# Mobile wallet bridge is safe to commit (no secrets)
+# js/mobile-wallet-bridge.js - ALLOWED
+
 # Node modules
 node_modules/
 

@@ -48,24 +48,24 @@ jobs:
         # Create production config with QuickNode endpoints
         echo "✅ Creating production config with QuickNode endpoints..."
         cat > js/production-config.js << 'EOF'
-// Production QuickNode endpoints injected from GitHub Secrets
-(function() {
-  'use strict';
-  console.log('🔐 Loading QuickNode endpoints from GitHub Secrets...');
-  window.PRODUCTION_CONFIG = {
-    token: 'PLACEHOLDER_TOKEN',
-    rpc: {
-      solana: 'PLACEHOLDER_SOLANA',
-      base: 'PLACEHOLDER_BASE'
-    },
-    injectedAt: new Date().toISOString(),
-    source: 'github-secrets-quicknode'
-  };
-  console.log('✅ QuickNode endpoints loaded successfully!');
-  console.log('🟣 Solana RPC ready');
-  console.log('🔵 Base RPC ready');
-})();
-EOF
+        // Production QuickNode endpoints injected from GitHub Secrets
+        (function() {
+          'use strict';
+          console.log('🔐 Loading QuickNode endpoints from GitHub Secrets...');
+          window.PRODUCTION_CONFIG = {
+            token: 'PLACEHOLDER_TOKEN',
+            rpc: {
+              solana: 'PLACEHOLDER_SOLANA',
+              base: 'PLACEHOLDER_BASE'
+            },
+            injectedAt: new Date().toISOString(),
+            source: 'github-secrets-quicknode'
+          };
+          console.log('✅ QuickNode endpoints loaded successfully!');
+          console.log('🟣 Solana RPC ready');
+          console.log('🔵 Base RPC ready');
+        })();
+        EOF
         
         # Replace placeholders with actual values
         sed -i "s|PLACEHOLDER_TOKEN|${WTFDUDE}|g" js/production-config.js

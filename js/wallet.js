@@ -634,7 +634,7 @@ class WildWestWallet {
     }
   }
 
-  // Direct Base wallet connection without isConnecting check - used by connectToSpecificChain
+  // Direct Base wallet connection with enhanced mobile support  
   async connectBaseWalletDirect() {
     console.log('🔵 connectBaseWalletDirect called - bypassing isConnecting check');
     
@@ -645,8 +645,21 @@ class WildWestWallet {
       
       if (availableWallets.length === 0) {
         if (isMobile) {
+          // Try mobile wallet bridge if available
+          if (window.mobileWalletBridge) {
+            try {
+              console.log('📱 Using mobile wallet bridge for Base connection');
+              const result = await window.mobileWalletBridge.connectMobileWallet('ethereum', 'MetaMask');
+              if (result && result.provider) {
+                return await this.completeBaseConnection(result.provider, 'MetaMask');
+              }
+            } catch (bridgeError) {
+              console.log('📱 Mobile wallet bridge failed, falling back to installation guide:', bridgeError.message);
+            }
+          }
+          
           // On mobile, show wallet installation guide
-          this.showWalletInstallationGuide('base');
+          this.showWalletInstallationGuide('base', 'MetaMask');
           return false;
         } else {
           throw new Error('No EVM wallet detected. Please install MetaMask, Coinbase Wallet, or another Web3 wallet.');
@@ -663,7 +676,21 @@ class WildWestWallet {
           console.log(`🔵 Mobile: Auto-connecting to ${walletBrowser.name} wallet browser`);
           selectedWallet = availableWallets.find(w => w.name === walletBrowser.name) || availableWallets[0];
         } else {
-          // Mobile but not in wallet browser - use first available
+          // Mobile but not in wallet browser - try mobile wallet bridge first
+          if (window.mobileWalletBridge && availableWallets.length > 0) {
+            try {
+              console.log('📱 Mobile standard browser: Using mobile wallet bridge');
+              const walletName = availableWallets[0].name;
+              const result = await window.mobileWalletBridge.connectMobileWallet('ethereum', walletName);
+              if (result && result.provider) {
+                return await this.completeBaseConnection(result.provider, walletName);
+              }
+            } catch (bridgeError) {
+              console.log('📱 Mobile wallet bridge failed:', bridgeError.message);
+            }
+          }
+          
+          // Fallback to first available wallet
           selectedWallet = availableWallets[0];
         }
       }
@@ -680,44 +707,50 @@ class WildWestWallet {
         selectedWallet = availableWallets[0];
       }
       
-      console.log(`🔵 Using EVM wallet: ${selectedWallet.name}`);
-      
-      // Always request user approval for connection
-      console.log('🔵 Requesting wallet connection (eth_requestAccounts)...');
-      const accounts = await selectedWallet.provider.request({ method: 'eth_requestAccounts' });
-      console.log('🔵 Wallet connection response:', accounts);
-      console.log('🔍 DEBUG: All accounts returned by wallet:', accounts);
-      console.log('🔍 DEBUG: Selected account (accounts[0]):', accounts[0]);
-      console.log('🔍 DEBUG: Using wallet provider:', selectedWallet.name, selectedWallet.provider);
-      
-      if (accounts && accounts.length > 0) {
-        console.log('🔵 Setting up wallet connection...');
-        this.account = accounts[0];
-        console.log('🔍 DEBUG: this.account set to:', this.account);
-        this.isConnected = true;
-        this.provider = new ethers.providers.Web3Provider(selectedWallet.provider);
-        this.signer = this.provider.getSigner();
-        
-        // Switch to Base network
-        console.log('🔵 About to switch to Base network...');
-        await this.switchToBase(selectedWallet.provider);
-        console.log('🔵 Network switch completed, getting network info...');
-        
-        const network = await this.provider.getNetwork();
-        this.currentChain = network.chainId === 8453 ? 'base' : network.chainId; // Map Base chainId to 'base'
-        console.log('🔵 Connected to network:', network.chainId, this.getChainName(network.chainId), 'currentChain set to:', this.currentChain);
-        
-        this.updateWalletUI();
-        this.showStatus(`Base wallet connected via ${selectedWallet.name}`, 'success');
-        localStorage.setItem('wildwest_wallet_connected', 'base');
-        return true;
-      } else {
-        throw new Error('No accounts returned from wallet connection');
-      }
+      return await this.completeBaseConnection(selectedWallet.provider, selectedWallet.name);
+
     } catch (error) {
       console.error('🔵 Direct Base wallet connection error:', error);
       this.showStatus('Failed to connect Base wallet: ' + error.message, 'error');
       return false;
+    }
+  }
+
+  // Helper method to complete Base wallet connection
+  async completeBaseConnection(provider, walletName) {
+    console.log(`🔵 Using EVM wallet: ${walletName}`);
+    
+    // Always request user approval for connection
+    console.log('🔵 Requesting wallet connection (eth_requestAccounts)...');
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+    console.log('🔵 Wallet connection response:', accounts);
+    console.log('🔍 DEBUG: All accounts returned by wallet:', accounts);
+    console.log('🔍 DEBUG: Selected account (accounts[0]):', accounts[0]);
+    console.log('🔍 DEBUG: Using wallet provider:', walletName, provider);
+    
+    if (accounts && accounts.length > 0) {
+      console.log('🔵 Setting up wallet connection...');
+      this.account = accounts[0];
+      console.log('🔍 DEBUG: this.account set to:', this.account);
+      this.isConnected = true;
+      this.provider = new ethers.providers.Web3Provider(provider);
+      this.signer = this.provider.getSigner();
+      
+      // Switch to Base network
+      console.log('🔵 About to switch to Base network...');
+      await this.switchToBase(provider);
+      console.log('🔵 Network switch completed, getting network info...');
+      
+      const network = await this.provider.getNetwork();
+      this.currentChain = network.chainId === 8453 ? 'base' : network.chainId; // Map Base chainId to 'base'
+      console.log('🔵 Connected to network:', network.chainId, this.getChainName(network.chainId), 'currentChain set to:', this.currentChain);
+      
+      this.updateWalletUI();
+      this.showStatus(`Base wallet connected via ${walletName}`, 'success');
+      localStorage.setItem('wildwest_wallet_connected', 'base');
+      return true;
+    } else {
+      throw new Error('No accounts returned from wallet connection');
     }
   }
 
