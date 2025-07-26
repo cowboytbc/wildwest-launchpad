@@ -383,8 +383,20 @@
   <!-- Solana Web3.js for Solana support -->
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
   <!-- Banner Configuration and Rotation -->
-  <script src="js/banner-config.js"></script>
-  <script src="js/banner-rotation.js"></script>
+  <script src="js/banner-config.js" onload="console.log('✅ banner-config.js loaded')" onerror="console.error('❌ banner-config.js failed to load')"></script>
+  <script src="js/banner-rotation.js" onload="console.log('✅ banner-rotation.js loaded')" onerror="console.error('❌ banner-rotation.js failed to load')"></script>
+  <script>
+    // Debug banner script loading
+    console.log('🔍 Checking banner objects after script tags:');
+    console.log('  - window.BANNER_CONFIG exists:', !!window.BANNER_CONFIG);
+    console.log('  - window.bannerRotationManager exists:', !!window.bannerRotationManager);
+    if (window.BANNER_CONFIG) {
+      console.log('  - BANNER_CONFIG type:', typeof window.BANNER_CONFIG);
+    }
+    if (window.bannerRotationManager) {
+      console.log('  - bannerRotationManager type:', typeof window.bannerRotationManager);
+    }
+  </script>
   <!-- Add Google Fonts for Ewert, UnifrakturMaguntia, Creepster -->
   <link href="https://fonts.googleapis.com/css2?family=Ewert&family=UnifrakturMaguntia&family=Creepster&display=swap" rel="stylesheet">
   <style>
