@@ -3057,14 +3057,9 @@ async function updateBalance() {
         productionConfigBase: window.PRODUCTION_CONFIG?.rpc?.base
       });
       
-      let provider;
-      if (window.ethereum) {
-        provider = new window.ethers.providers.Web3Provider(window.ethereum);
-        console.log('📡 Using Web3Provider (connected wallet)');
-      } else {
-        provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
-        console.log('📡 Using JsonRpcProvider:', BASE_RPC);
-      }
+      // Always use QuickNode endpoint for balance checking (more reliable than wallet RPC)
+      const provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      console.log('📡 Using QuickNode JsonRpcProvider for balance check:', BASE_RPC);
       
       // First, check if this address is actually a contract
       try {
@@ -4278,12 +4273,8 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     }
     
     try {
-      let provider;
-      if (window.ethereum) {
-        provider = new window.ethers.providers.Web3Provider(window.ethereum);
-      } else {
-        provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
-      }
+      // Always use QuickNode endpoint for better reliability
+      const provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
       const erc20 = new window.ethers.Contract(tokenAddress, [
         'function balanceOf(address) view returns (uint256)',
         'function decimals() view returns (uint8)'
