@@ -35,8 +35,343 @@
   <script src="js/multi-wallet-manager.js"></script>
   <!-- Wallet Integration -->
   <script src="js/wallet.js"></script>
-  <!-- Unified wallet connection system (fixes all connection issues) -->
-  <script src="js/unified-wallet-connection.js"></script>
+  <!-- Token Furnace Style Wallet Modal System -->
+  <script>
+    // Token Furnace Style Wallet Modal Implementation
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM loaded, setting up token furnace style wallet');
+      setupIndexWallet();
+    });
+
+    function showChainSelectionModal() {
+      console.log('🚀 showChainSelectionModal called!');
+      
+      // Detect available wallets
+      const availableWallets = {
+        ethereum: [],
+        solana: []
+      };
+      
+      // Detect Ethereum/Base wallets
+      if (window.ethereum) {
+        // Check for multiple providers
+        const providers = window.ethereum.providers || [window.ethereum];
+        
+        providers.forEach(provider => {
+          if (provider.isMetaMask) {
+            availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
+          }
+          if (provider.isCoinbaseWallet) {
+            availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
+          }
+          if (provider.isRabby) {
+            availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
+          }
+          if (provider.isTrust) {
+            availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
+          }
+        });
+        
+        // If no specific wallet detected but ethereum exists, add as generic
+        if (availableWallets.ethereum.length === 0) {
+          availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
+        }
+      }
+      
+      // Detect Solana wallets
+      const solanaWallets = [];
+      
+      // Phantom - check multiple locations
+      if (window.phantom?.solana?.isPhantom) {
+        solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
+      } else if (window.solana?.isPhantom) {
+        solanaWallets.push({name: 'Phantom', provider: window.solana});
+      }
+      
+      // Other Solana wallets
+      if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
+        solanaWallets.push({name: 'Solflare', provider: window.solflare});
+      }
+      if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
+        solanaWallets.push({name: 'Backpack', provider: window.backpack});
+      }
+      if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
+        solanaWallets.push({name: 'Glow', provider: window.glow});
+      }
+      if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
+        solanaWallets.push({name: 'Slope', provider: window.slope});
+      }
+      
+      availableWallets.solana = solanaWallets;
+      
+      console.log('🔍 Detected wallets:', availableWallets);
+      
+      // Create modal with consistent styling
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+        z-index: 10000; animation: fadeIn 0.2s ease-out;
+      `;
+      
+      // Generate wallet options HTML
+      let walletOptionsHTML = '';
+      
+      if (availableWallets.ethereum.length > 0) {
+        walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Base Network (Ethereum)</h4>';
+        availableWallets.ethereum.forEach((wallet, index) => {
+          walletOptionsHTML += `
+            <button onclick="connectSpecificWallet('ethereum', ${index})" style="
+              display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
+              background: linear-gradient(135deg, #0052ff, #0041cc);
+              color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+              cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+              transition: all 0.3s ease; text-align: center;
+            " onmouseover="this.style.background='linear-gradient(135deg, #0066ff, #0052ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #0052ff, #0041cc)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+              Connect ${wallet.name}
+            </button>
+          `;
+        });
+      }
+      
+      if (availableWallets.solana.length > 0) {
+        walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Solana Network</h4>';
+        availableWallets.solana.forEach((wallet, index) => {
+          walletOptionsHTML += `
+            <button onclick="connectSpecificWallet('solana', ${index})" style="
+              display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
+              background: linear-gradient(135deg, #9945ff, #7c3aed);
+              color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+              cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+              transition: all 0.3s ease; text-align: center;
+            " onmouseover="this.style.background='linear-gradient(135deg, #a855f7, #9945ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #9945ff, #7c3aed)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+              Connect ${wallet.name}
+            </button>
+          `;
+        });
+      }
+      
+      if (availableWallets.ethereum.length === 0 && availableWallets.solana.length === 0) {
+        walletOptionsHTML = `
+          <div style="text-align: center; padding: 2rem; color: #ff6b6b;">
+            <h4 style="color: #ff6b6b; margin-bottom: 1rem;">No Wallets Detected</h4>
+            <p style="margin-bottom: 1rem; color: #c0c0c0;">Please install a wallet to continue:</p>
+            <div style="text-align: left;">
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://metamask.io" target="_blank" style="color: #00eaff;">MetaMask</a> (for Base/Ethereum)</p>
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://phantom.app" target="_blank" style="color: #00eaff;">Phantom</a> (for Solana + Ethereum)</p>
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://wallet.coinbase.com" target="_blank" style="color: #00eaff;">Coinbase Wallet</a> (for Base/Ethereum)</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      modal.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #1a1a2e, #16213e);
+          border: 2px solid #00eaff;
+          border-radius: 16px;
+          box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+          max-width: 400px;
+          width: 90vw;
+          max-height: 80vh;
+          overflow-y: auto;
+          animation: slideUp 0.3s ease-out;
+          font-family: 'Orbitron', sans-serif;
+        ">
+          <div style="
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 234, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          ">
+            <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem; font-weight: 600;">Connect Wallet</h3>
+            <button class="close-modal-btn" style="
+              background: none;
+              border: none;
+              color: #00eaff;
+              font-size: 1.5rem;
+              cursor: pointer;
+              padding: 0;
+              width: 30px;
+              height: 30px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 50%;
+              transition: background-color 0.2s;
+            " onmouseover="this.style.backgroundColor='rgba(0, 234, 255, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
+          </div>
+          <div style="padding: 1.5rem;">
+            ${walletOptionsHTML}
+            <button class="cancel-modal-btn" style="
+              display: block; width: 100%; margin-top: 1rem; padding: 10px;
+              background: rgba(102, 102, 102, 0.8); color: white;
+              border: 1px solid rgba(0, 234, 255, 0.2); border-radius: 8px;
+              cursor: pointer; font-family: 'Orbitron', sans-serif;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(102, 102, 102, 1)'; this.style.borderColor='rgba(0, 234, 255, 0.4)'" onmouseout="this.style.background='rgba(102, 102, 102, 0.8)'; this.style.borderColor='rgba(0, 234, 255, 0.2)'">
+              Cancel
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Add close functionality after modal is added to DOM
+      const closeBtn = modal.querySelector('.close-modal-btn');
+      const cancelBtn = modal.querySelector('.cancel-modal-btn');
+      
+      function closeModal() {
+        modal.remove();
+      }
+      
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+      }
+      
+      // Close when clicking outside the modal
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+      
+      // Store available wallets for connection functions
+      window.availableWallets = availableWallets;
+    }
+
+    // Specific wallet connection function
+    window.connectSpecificWallet = async function(network, walletIndex) {
+      console.log(`🔗 Connecting to wallet ${walletIndex} on ${network} network`);
+      
+      try {
+        if (network === 'ethereum') {
+          const wallet = window.availableWallets.ethereum[walletIndex];
+          if (!wallet) {
+            throw new Error(`Wallet not found at index ${walletIndex}`);
+          }
+          
+          console.log(`📋 Connecting to ${wallet.name} with provider:`, wallet.provider);
+          
+          // Use the specific provider for this wallet
+          const accounts = await wallet.provider.request({ method: 'eth_requestAccounts' });
+          if (accounts.length > 0) {
+            // Switch to Base network if not already on it
+            try {
+              await wallet.provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x2105' }], // Base mainnet
+              });
+            } catch (switchError) {
+              // If the chain doesn't exist, add it
+              if (switchError.code === 4902) {
+                await wallet.provider.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: '0x2105',
+                    chainName: 'Base',
+                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                    rpcUrls: ['https://mainnet.base.org'],
+                    blockExplorerUrls: ['https://basescan.org']
+                  }]
+                });
+              }
+            }
+            
+            // Update UI
+            currentAddress = accounts[0];
+            currentChain = 'base';
+            currentProvider = wallet.provider;
+            currentEvmProvider = wallet.provider;
+            currentSolanaProvider = null;
+            
+            updateWalletDisplay();
+            
+            // Close modal
+            document.querySelector('[style*="position: fixed"]').remove();
+            
+            console.log(`✅ ${wallet.name} connected successfully!`);
+          }
+        } else if (network === 'solana') {
+          const wallet = window.availableWallets.solana[walletIndex];
+          if (!wallet) {
+            throw new Error(`Wallet not found at index ${walletIndex}`);
+          }
+          
+          console.log(`📋 Connecting to ${wallet.name} with provider:`, wallet.provider);
+          
+          // Use the specific provider for this wallet
+          const response = await wallet.provider.connect();
+          
+          // Update UI
+          currentAddress = response.publicKey.toString();
+          currentChain = 'solana';
+          currentProvider = wallet.provider;
+          currentSolanaProvider = wallet.provider;
+          currentEvmProvider = null;
+          
+          updateWalletDisplay();
+          
+          // Close modal
+          document.querySelector('[style*="position: fixed"]').remove();
+          
+          console.log(`✅ ${wallet.name} connected successfully!`);
+        }
+      } catch (error) {
+        const walletName = network === 'ethereum' ? 
+          window.availableWallets.ethereum[walletIndex]?.name : 
+          window.availableWallets.solana[walletIndex]?.name;
+        console.error(`❌ ${walletName} connection failed:`, error);
+      }
+    };
+
+    function updateWalletDisplay() {
+      const walletBtnText = document.getElementById('walletBtnText');
+      if (walletBtnText && currentAddress) {
+        const shortAddress = currentAddress.substring(0, 6) + '...' + currentAddress.substring(currentAddress.length - 4);
+        walletBtnText.textContent = shortAddress;
+      }
+    }
+
+    function setupIndexWallet() {
+      console.log('🔧 Setting up index wallet connection');
+      
+      const connectBtn = document.getElementById('connectWalletBtn');
+      if (!connectBtn) {
+        console.error('❌ Connect wallet button not found');
+        return;
+      }
+      
+      // Remove existing event listeners and set up new one
+      const newButton = connectBtn.cloneNode(true);
+      connectBtn.parentNode.replaceChild(newButton, connectBtn);
+      
+      newButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔗 Connect button clicked, showing modal');
+        showChainSelectionModal();
+      });
+      
+      console.log('✅ Index wallet setup complete');
+    }
+
+    // Global variables for wallet state
+    let currentAddress = null;
+    let currentChain = null;
+    let currentProvider = null;
+    let currentEvmProvider = null;
+    let currentSolanaProvider = null;
+
+    // Make functions globally accessible
+    window.showChainSelectionModal = showChainSelectionModal;
+    window.setupIndexWallet = setupIndexWallet;
+  </script>
   <!-- GitHub Actions Uploader (core functionality) -->
   <script src="js/github-actions-uploader.js"></script>
   <!-- GitHub Image Uploader (admin panel wrapper) -->
@@ -45,8 +380,6 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Solana Web3.js for Solana support -->
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-  <!-- RPC Configuration -->
-  <script src="js/rpc-config.js"></script>
   <!-- Banner Configuration and Rotation -->
   <script src="js/banner-config.js"></script>
   <script src="js/banner-rotation.js"></script>
@@ -1833,6 +2166,34 @@
   <script src="js/script.js"></script>
   
   <script>
+// Force hide dropdown menus immediately - CRITICAL FIX
+(function() {
+  // Hide menus immediately, before DOM loads
+  function forceHideMenus() {
+    const menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
+    menus.forEach(menuId => {
+      const menu = document.getElementById(menuId);
+      if (menu) {
+        menu.style.display = 'none';
+        menu.style.visibility = 'hidden';
+      }
+    });
+  }
+  
+  // Try to hide immediately
+  forceHideMenus();
+  
+  // Also hide on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', forceHideMenus);
+  } else {
+    forceHideMenus();
+  }
+  
+  // And hide again after a short delay to catch any delayed elements
+  setTimeout(forceHideMenus, 100);
+})();
+
 // Ensure dropdown menus are hidden on page load - IMMEDIATE FIX
 document.addEventListener('DOMContentLoaded', function() {
   // Force hide all dropdown menus
@@ -2044,6 +2405,170 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Note: Ad banner click functionality is now handled by banner-rotation.js
   
+  // Wallet connection delegated to unified-wallet-connection.js
+  console.log('🔗 Index page: Wallet connection system delegated to unified system');
+  console.log('🔍 Index page: Checking wallet systems...');
+  console.log('   - window.wildWestWallet exists:', !!window.wildWestWallet);
+  console.log('   - window.unifiedWalletConnection exists:', !!window.unifiedWalletConnection);
+  
+  // Give unified system a moment to initialize if needed
+  setTimeout(() => {
+    console.log('🔄 Index page: Rechecking unified system after delay...');
+    console.log('   - window.unifiedWalletConnection exists:', !!window.unifiedWalletConnection);
+    console.log('   - wildWestWallet.connectWallet is unified:', 
+      window.wildWestWallet?.connectWallet?.toString?.().includes('unifiedConnect'));
+    
+    if (window.unifiedWalletConnection) {
+      console.log('✅ Index page: Unified wallet system is active and ready');
+    } else {
+      console.warn('⚠️ Index page: Unified wallet system not found after delay');
+    }
+    
+    // Test if button click works with unified system
+    const connectBtn = document.getElementById('connectWalletBtn');
+    if (connectBtn) {
+      console.log('🔘 Index page: Connect button found, click handler should route through unified system');
+    }
+  }, 500);
+  
+  // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
+  console.log('🎯 Index page: Using unified wallet connection system');
+  
+  // Initialize Secure Configuration System
+  console.log('🔒 Initializing secure configuration...');
+  if (window.SECURE_CONFIG) {
+    console.log('✅ SECURE_CONFIG already available');
+  } else {
+    console.log('⏳ Waiting for SECURE_CONFIG to load...');
+    // Wait a moment for SECURE_CONFIG to initialize
+    setTimeout(() => {
+      if (window.SECURE_CONFIG) {
+        console.log('✅ SECURE_CONFIG loaded successfully');
+        initializeBannerSystem();
+      } else {
+        console.warn('⚠️ SECURE_CONFIG not available, banner system may have limited functionality');
+        initializeBannerSystem();
+      }
+    }, 100);
+  }
+  
+  // Initialize Banner System
+  function initializeBannerSystem() {
+    // Initialize Banner Rotation System
+    console.log('🎯 Starting banner rotation system...');
+    
+    if (window.bannerRotationManager) {
+      window.bannerRotationManager.init().then(() => {
+        console.log('✅ Banner rotation system initialized');
+      }).catch(error => {
+        console.error('❌ Banner rotation system initialization failed:', error);
+      });
+    } else {
+      console.error('❌ Banner rotation manager not found');
+    }
+  }
+  
+  // If SECURE_CONFIG is already available, initialize immediately
+  if (window.SECURE_CONFIG) {
+    initializeBannerSystem();
+  }
+  
+  // Debug functions for troubleshooting
+  window.debugTokenStatus = function() {
+    console.log(`🔗 Connecting to wallet ${walletIndex} on ${network} network`);
+    
+    try {
+      if (network === 'ethereum') {
+        const wallet = window.availableWallets.ethereum[walletIndex];
+        if (!wallet) {
+          throw new Error(`Wallet not found at index ${walletIndex}`);
+        }
+        
+        console.log(`📋 Connecting to ${wallet.name} with provider:`, wallet.provider);
+        
+        // Use the specific provider for this wallet
+        const accounts = await wallet.provider.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          // Switch to Base network if not already on it
+          try {
+            await wallet.provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x2105' }], // Base mainnet
+            });
+          } catch (switchError) {
+            // If the chain doesn't exist, add it
+            if (switchError.code === 4902) {
+              await wallet.provider.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x2105',
+                  chainName: 'Base',
+                  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: ['https://mainnet.base.org'],
+                  blockExplorerUrls: ['https://basescan.org']
+                }]
+              });
+            }
+          }
+          
+          // Update wildWestWallet state
+          if (window.wildWestWallet) {
+            window.wildWestWallet.provider = wallet.provider;
+            window.wildWestWallet.account = accounts[0];
+            window.wildWestWallet.currentChain = 'base';
+            window.wildWestWallet.isConnected = true;
+            
+            // Update UI
+            if (window.wildWestWallet.updateWalletUI) {
+              window.wildWestWallet.updateWalletUI();
+            }
+          }
+          
+          // Close modal
+          document.querySelector('[style*="position: fixed"]').remove();
+          
+          console.log(`✅ ${wallet.name} connected successfully!`);
+        }
+      } else if (network === 'solana') {
+        const wallet = window.availableWallets.solana[walletIndex];
+        if (!wallet) {
+          throw new Error(`Wallet not found at index ${walletIndex}`);
+        }
+        
+        console.log(`📋 Connecting to ${wallet.name} with provider:`, wallet.provider);
+        
+        // Use the specific provider for this wallet
+        const response = await wallet.provider.connect();
+        
+        if (response && response.publicKey) {
+          // Update wildWestWallet state
+          if (window.wildWestWallet) {
+            window.wildWestWallet.provider = wallet.provider;
+            window.wildWestWallet.account = response.publicKey.toString();
+            window.wildWestWallet.currentChain = 'solana';
+            window.wildWestWallet.isConnected = true;
+            
+            // Update UI
+            if (window.wildWestWallet.updateWalletUI) {
+              window.wildWestWallet.updateWalletUI();
+            }
+          }
+          
+          // Close modal
+          document.querySelector('[style*="position: fixed"]').remove();
+          
+          console.log(`✅ ${wallet.name} connected successfully!`);
+        }
+      }
+    } catch (error) {
+      const walletName = network === 'ethereum' ? 
+        window.availableWallets.ethereum[walletIndex]?.name : 
+        window.availableWallets.solana[walletIndex]?.name;
+      console.error(`❌ ${walletName} connection failed:`, error);
+      alert(`${walletName} connection failed: ${error.message}`);
+    }
+  };
+  
   // Initialize Wallet Connection System
   function initializeWalletConnection() {
     const connectBtn = document.getElementById('connectWalletBtn');
@@ -2069,37 +2594,16 @@ document.addEventListener('DOMContentLoaded', function() {
           account: window.wildWestWallet.account
         });
         
-        // Force refresh wallet state first to ensure we have accurate connection status
-        if (window.wildWestWallet.checkConnection) {
-          await window.wildWestWallet.checkConnection();
-          console.log('🔄 After checkConnection - isConnected:', window.wildWestWallet.isConnected);
-        }
-        
-        // If already connected, show wallet details/disconnect options
         if (window.wildWestWallet.isConnected) {
           console.log('🔗 Wallet already connected, showing disconnect options');
           // Show dropdown menu for disconnect option
           walletDropdownMenu.style.display = 
             walletDropdownMenu.style.display === 'none' || !walletDropdownMenu.style.display ? 'flex' : 'none';
         } else {
-          // Show chain selection modal - this will call connectWithChainSelection
+          // Show token furnace style wallet selection modal
           try {
-            console.log('🔗 Attempting to connect wallet...');
-            const connected = await window.wildWestWallet.connectWithChainSelection();
-            if (connected) {
-              console.log('✅ Wallet connected successfully!');
-              // Force update the UI after successful connection with a slight delay
-              setTimeout(() => {
-                console.log('🔄 Forcing UI update after connection...');
-                if (window.wildWestWallet.updateWalletUI) {
-                  window.wildWestWallet.updateWalletUI();
-                }
-                // Double-check connection state
-                console.log('🔍 Final state check - isConnected:', window.wildWestWallet.isConnected);
-              }, 200);
-            } else {
-              console.log('❌ Wallet connection failed or cancelled');
-            }
+            console.log('🔗 Showing wallet selection modal - USER APPROVAL REQUIRED...');
+            showChainSelectionModal();
           } catch (error) {
             console.error('❌ Wallet connection failed:', error);
           }
@@ -2122,23 +2626,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       
-      // Check for existing connection on page load
-      console.log('🔍 Checking for existing wallet connection on page load...');
-      if (window.wildWestWallet.checkConnection) {
-        // Use checkConnection to properly refresh the wallet state
-        window.wildWestWallet.checkConnection().then(() => {
-          console.log('🔗 Page load connection check complete - isConnected:', window.wildWestWallet.isConnected);
-          if (window.wildWestWallet.isConnected) {
-            console.log('🔗 Existing wallet connection detected and confirmed');
-            window.wildWestWallet.updateWalletUI();
-          }
-        }).catch(error => {
-          console.error('❌ Error checking connection on page load:', error);
-        });
-      } else if (window.wildWestWallet.isConnected) {
-        console.log('🔗 Existing wallet connection detected (fallback check)');
-        window.wildWestWallet.updateWalletUI();
-      }
+      // NOTE: NO AUTO-CONNECTION ON PAGE LOAD FOR SECURITY
+      // Users must explicitly click the wallet button to connect
+      console.log('� Wallet system ready - no auto-connection for security');
     } else {
       console.log('❌ Wallet initialization failed - missing elements or wildWestWallet');
     }
@@ -2166,7 +2656,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(checkWalletInterval);
       }
     }, 10000);
-  }
+  } // End of disabled inline wallet code - using unified system instead
   
   // Initialize Secure Configuration System
   console.log('🔒 Initializing secure configuration...');
@@ -2360,7 +2850,9 @@ document.addEventListener('DOMContentLoaded', function() {
       bannerCount: bottomBanners?.length || 0
     };
   };
-});
+  
+  // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
+  console.log('🎯 Index page: Using unified wallet connection system');
   </script>
 
   <!-- Banner System Debugging Functions -->
@@ -3017,10 +3509,127 @@ document.addEventListener('DOMContentLoaded', function() {
         <span style="color: #00eaff; font-weight: 600; font-size: 1.1rem;">WILDWEST LAUNCHPAD</span>
       </div>
       
+      <!-- Social Media Links -->
+      <div style="margin-bottom: 1rem;">
+        <a href="https://t.me/wildwestlaunchpad" target="_blank" style="
+          background: linear-gradient(135deg, #0088cc, #00aaff);
+          color: #ffffff;
+          text-decoration: none;
+          margin: 0 0.5rem;
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 0.85rem;
+          transition: all 0.3s ease;
+          display: inline-block;
+          border: 1px solid rgba(255,255,255,0.2);
+        ">
+          TELEGRAM
+        </a>
+        <a href="https://x.com/WILDWESTLP?t=RI3IQU3KASjN3Ak-yrfZnw&s=09" target="_blank" style="
+          background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+          color: #ffffff;
+          text-decoration: none;
+          margin: 0 0.5rem;
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 0.85rem;
+          transition: all 0.3s ease;
+          display: inline-block;
+          border: 1px solid rgba(255,255,255,0.2);
+        ">
+          TWITTER
+        </a>
+      </div>
+      
+      <!-- $WILDW Token Contract Address -->
+      <div style="margin-bottom: 1rem; font-size: 0.85rem;">
+        <div style="margin-bottom: 0.5rem;">
+          <span style="color: #ffae00; font-weight: 600;">$WILDW TOKEN (BASE):</span>
+        </div>
+        <span style="color: #c0c0c0; font-family: 'Courier New', monospace; word-break: break-all; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">
+          0x8129609E5303910464FCe3022a809fA44455Fe9A
+        </span>
+      </div>
+      
       <div style="margin-bottom: 0.5rem;">
         &copy; 2025 Wild West Launchpad. All rights reserved.
       </div>
     </div>
   </footer>
+  
+  <script>
+    // Dropdown Menu Toggle Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔧 Setting up dropdown menu functionality');
+      
+      // Set up dropdown button event listeners
+      const dropdownButtons = [
+        { buttonId: 'launchTokenDropdownBtn', menuId: 'launchTokenMenu' },
+        { buttonId: 'stakingDropdownBtn', menuId: 'stakingMenu' },
+        { buttonId: 'tokenLockingDropdownBtn', menuId: 'tokenLockingMenu' }
+      ];
+      
+      dropdownButtons.forEach(({ buttonId, menuId }) => {
+        const button = document.getElementById(buttonId);
+        if (button) {
+          button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔽 Dropdown button clicked:', buttonId);
+            toggleDropdown(menuId);
+          });
+          console.log('✅ Event listener added for:', buttonId);
+        } else {
+          console.warn('⚠️ Button not found:', buttonId);
+        }
+      });
+      
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', function(e) {
+        // Check if click is outside all dropdown containers
+        const isDropdownClick = e.target.closest('.launch-token-dropdown, .staking-dropdown, .token-locking-dropdown');
+        
+        if (!isDropdownClick) {
+          console.log('🔒 Clicking outside dropdowns, closing all');
+          const dropdowns = document.querySelectorAll('.launch-token-menu, .staking-menu, .token-locking-menu');
+          dropdowns.forEach(dropdown => {
+            dropdown.classList.remove('show-menu');
+          });
+        }
+      });
+      
+      console.log('✅ Dropdown menu functionality setup complete');
+    });
+
+    function toggleDropdown(menuId) {
+      console.log('🔽 Toggling dropdown:', menuId);
+      
+      const menu = document.getElementById(menuId);
+      if (!menu) {
+        console.error('❌ Menu not found:', menuId);
+        return;
+      }
+      
+      // Close all other dropdowns first
+      const allDropdowns = document.querySelectorAll('.launch-token-menu, .staking-menu, .token-locking-menu');
+      allDropdowns.forEach(dropdown => {
+        if (dropdown.id !== menuId) {
+          dropdown.classList.remove('show-menu');
+        }
+      });
+      
+      // Toggle the target dropdown
+      const isShowing = menu.classList.contains('show-menu');
+      menu.classList.toggle('show-menu');
+      
+      console.log('✅ Dropdown toggled:', menuId, isShowing ? 'hidden' : 'shown');
+    }
+
+    // Make toggleDropdown globally accessible
+    window.toggleDropdown = toggleDropdown;
+  </script>
+
 </body>
 </html>

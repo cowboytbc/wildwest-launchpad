@@ -62,10 +62,16 @@ class WildWestWallet {
 
   // Detect available Solana wallets (including mobile support)
   detectSolanaWallets() {
+    // SECURITY: Respect auto-connection blocking flag
+    if (window.WALLET_AUTO_CONNECTION_BLOCKED) {
+      console.log('🚫 Wallet detection blocked - auto-connection prevention active');
+      return [];
+    }
+    
     const wallets = [];
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // DEBUG: Log Solana providers
+    // DEBUG: Log Solana providers (only when auto-connection is not blocked)
     console.log('🔍 DEBUG: window.solana exists:', !!window.solana);
     console.log('🔍 DEBUG: window.solana.isPhantom:', window.solana?.isPhantom);
     console.log('🔍 DEBUG: window.phantom exists:', !!window.phantom);
@@ -457,12 +463,61 @@ class WildWestWallet {
       const wallet = selectedWallet.provider;
       console.log(`🟣 Using Solana wallet: ${selectedWallet.name}`);
 
+      // FORCE FRESH APPROVAL: Disconnect any existing connection first
+      console.log('🔄 Forcing wallet disconnection to ensure fresh user approval...');
+      try {
+        if (wallet.disconnect && typeof wallet.disconnect === 'function') {
+          console.log('🔄 Step 1: Standard wallet disconnect...');
+          await wallet.disconnect();
+          console.log('✅ Standard disconnect completed');
+        }
+        
+        // PHANTOM SPECIFIC: Try to revoke site permissions
+        if (selectedWallet.name === 'Phantom' && wallet.request) {
+          try {
+            console.log('👻 Step 2: Phantom-specific permission revocation...');
+            await wallet.request({
+              method: 'disconnect'
+            });
+            console.log('✅ Phantom permission revocation completed');
+          } catch (phantomErr) {
+            console.log('⚠️ Phantom permission revocation failed (continuing):', phantomErr.message);
+          }
+        }
+        
+        // Wait for disconnection to process
+        console.log('⏳ Step 3: Waiting for disconnection to take effect...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+      } catch (disconnectError) {
+        console.log('⚠️ Error disconnecting wallet (continuing anyway):', disconnectError.message);
+      }
+
       // Ensure wallet has connect method
       if (!wallet.connect || typeof wallet.connect !== 'function') {
         throw new Error('Wallet does not support connection');
       }
       
-      const response = await wallet.connect();
+      // This should NOW force the wallet to show approval popup
+      console.log('🔐 Requesting fresh wallet approval (should show popup)...');
+      
+      // FORCE PHANTOM TO SHOW APPROVAL: Use onlyIfTrusted: false
+      let response;
+      try {
+        if (selectedWallet.name === 'Phantom' && wallet.connect) {
+          // For Phantom specifically, force it to show approval even if site is trusted
+          console.log('👻 Using Phantom-specific connection with onlyIfTrusted: false');
+          response = await wallet.connect({ onlyIfTrusted: false });
+        } else {
+          // For other wallets, use standard connection
+          response = await wallet.connect();
+        }
+      } catch (connectionError) {
+        // If the specific approach fails, try standard connection
+        console.log('⚠️ Specific connection failed, trying standard connect:', connectionError.message);
+        response = await wallet.connect();
+      }
+      
       console.log('🟣 Solana wallet response:', response);
       
       let publicKey = null;
@@ -668,9 +723,15 @@ class WildWestWallet {
 
   // Detect available EVM wallets in priority order (including mobile support)
   detectEVMWallets() {
+    // SECURITY: Respect auto-connection blocking flag
+    if (window.WALLET_AUTO_CONNECTION_BLOCKED) {
+      console.log('🚫 Wallet detection blocked - auto-connection prevention active');
+      return [];
+    }
+    
     const wallets = [];
     
-    // DEBUG: Log all ethereum providers
+    // DEBUG: Log all ethereum providers (only when auto-connection is not blocked)
     console.log('🔍 DEBUG: window.ethereum exists:', !!window.ethereum);
     console.log('🔍 DEBUG: window.ethereum.isMetaMask:', window.ethereum?.isMetaMask);
     console.log('🔍 DEBUG: window.ethereum.isPhantom:', window.ethereum?.isPhantom);
@@ -1444,6 +1505,11 @@ class WildWestWallet {
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
     }
+  }
+
+  // Alias for disconnectWallet for convenience
+  async disconnect() {
+    return this.disconnectWallet();
   }
 
   hideWalletDropdown() {

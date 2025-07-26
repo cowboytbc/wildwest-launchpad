@@ -1,4 +1,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@700&family=Orbitron:wght@700&display=swap');
+
+/* IMPORTANT: Dropdown menus hidden by default - stronger rules */
+.launch-token-menu,
+.staking-menu,
+.token-locking-menu {
+  display: none !important;
+  position: absolute;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid #00eaff;
+  border-radius: 8px;
+  min-width: 150px;
+  z-index: 1000;
+  margin-top: 5px;
+  box-shadow: 0 4px 8px rgba(0, 234, 255, 0.3);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Only show when explicitly toggled via JavaScript */
+.launch-token-menu.show-menu,
+.staking-menu.show-menu,
+.token-locking-menu.show-menu {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Override any other display rules that might interfere */
+.launch-token-menu[style*="display: block"],
+.staking-menu[style*="display: block"], 
+.token-locking-menu[style*="display: block"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.launch-token-menu li,
+.staking-menu li,
+.token-locking-menu li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.launch-token-menu a,
+.staking-menu a,
+.token-locking-menu a {
+  display: block;
+  padding: 10px 15px;
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.launch-token-menu a:hover,
+.staking-menu a:hover,
+.token-locking-menu a:hover {
+  background: rgba(0, 234, 255, 0.2);
+  color: #00eaff;
+}
+
 body {
   margin: 0;
   font-family: 'Orbitron', Arial, sans-serif;

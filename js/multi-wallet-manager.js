@@ -13,6 +13,12 @@ class MultiWalletManager {
   }
 
   init() {
+    // Check if wallet auto-connection is blocked
+    if (window.WALLET_AUTO_CONNECTION_BLOCKED) {
+      console.log('🚫 Multi-wallet manager initialization blocked');
+      return;
+    }
+    
     // Scan for all available wallets on page load
     this.scanAllWallets();
     console.log('🔍 Multi-wallet manager initialized');
@@ -27,6 +33,12 @@ class MultiWalletManager {
 
   // Enhanced Ethereum wallet detection with multi-wallet support
   scanEthereumWallets() {
+    // Check if wallet auto-connection is blocked
+    if (window.WALLET_AUTO_CONNECTION_BLOCKED) {
+      console.log('🚫 Ethereum wallet scanning blocked');
+      return;
+    }
+    
     const wallets = [];
     
     // Check if we have multiple providers injected
@@ -52,6 +64,12 @@ class MultiWalletManager {
 
   // Enhanced Solana wallet detection with multi-wallet support
   scanSolanaWallets() {
+    // Check if wallet auto-connection is blocked
+    if (window.WALLET_AUTO_CONNECTION_BLOCKED) {
+      console.log('🚫 Solana wallet scanning blocked');
+      return;
+    }
+    
     const wallets = [];
     
     // Check for multiple Solana providers
