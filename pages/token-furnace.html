@@ -2360,8 +2360,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Use the specific provider for this wallet
         const response = await wallet.provider.connect();
         
-        // Update global state
-        currentAddress = response.publicKey.toString();
+        // Update global state - handle different wallet response formats
+        if (response && response.publicKey) {
+          currentAddress = response.publicKey.toString();
+        } else if (wallet.provider.publicKey) {
+          currentAddress = wallet.provider.publicKey.toString();
+        } else {
+          throw new Error('No public key received from wallet');
+        }
+        
         currentChain = 'solana';
         currentProvider = wallet.provider;
         currentSolanaProvider = wallet.provider;
@@ -2818,7 +2825,6 @@ function showWalletDetails() {
     animation: fadeIn 0.2s ease-out;
   `;
   
-  const chainEmoji = currentChain === 'base' ? '🔵' : '🟣';
   const chainName = currentChain === 'base' ? 'Base Network' : 'Solana Network';
   
   modal.innerHTML = `
@@ -2859,7 +2865,7 @@ function showWalletDetails() {
             justify-content: center;
             font-size: 1.5rem;
             margin-right: 1rem;
-          ">${chainEmoji}</div>
+          "></div>
           <div style="flex: 1;">
             <div style="color: white; font-family: monospace; margin-bottom: 0.25rem;">
               ${currentAddress.slice(0, 8)}...${currentAddress.slice(-8)}
@@ -4258,7 +4264,7 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     let addressToUse = null;
     if (window.wildWestWallet?.account) {
       addressToUse = window.wildWestWallet.account;
-    } else if (currentChain === 'base' && currentAddress) {
+    } else if (currentAddress && (currentChain === 'base' || currentChain === 'ethereum')) {
       addressToUse = currentAddress;
     } else if (window.ethereum?.selectedAddress) {
       addressToUse = window.ethereum.selectedAddress;
