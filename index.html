@@ -2227,6 +2227,10 @@ let launchTokenMenuTimeout = null;
 if (launchTokenBtn && launchTokenMenu) {
   // Ensure dropdown is hidden on page load
   launchTokenMenu.style.display = 'none';
+  
+  // Check if device supports touch (mobile/tablet)
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  
   // Desktop: hover, Mobile: click
   function showLaunchTokenMenu() {
     clearTimeout(launchTokenMenuTimeout);
@@ -2237,31 +2241,41 @@ if (launchTokenBtn && launchTokenMenu) {
       launchTokenMenu.style.display = 'none';
     }, 180);
   }
-  // Desktop hover
-  if (window.innerWidth > 700) {
-    launchTokenBtn.addEventListener('mouseenter', showLaunchTokenMenu);
-    launchTokenBtn.addEventListener('mouseleave', hideLaunchTokenMenu);
-    launchTokenMenu.addEventListener('mouseenter', showLaunchTokenMenu);
-    launchTokenMenu.addEventListener('mouseleave', hideLaunchTokenMenu);
-  }
-  // Mobile click
+  
+  // Always add click functionality for mobile compatibility
   launchTokenBtn.addEventListener('click', function(e) {
-    if (window.innerWidth <= 700) {
-      e.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Always use click on mobile/touch devices or small screens
+    if (isTouchDevice || window.innerWidth <= 768) {
       if (launchTokenMenu.style.display === 'block') {
         launchTokenMenu.style.display = 'none';
       } else {
         launchTokenMenu.style.display = 'block';
       }
+    } else {
+      // Desktop click behavior - just show menu
+      showLaunchTokenMenu();
     }
   });
+  
+  // Add hover events only for non-touch devices with larger screens
+  if (!isTouchDevice && window.innerWidth > 768) {
+    launchTokenBtn.addEventListener('mouseenter', showLaunchTokenMenu);
+    launchTokenBtn.addEventListener('mouseleave', hideLaunchTokenMenu);
+    launchTokenMenu.addEventListener('mouseenter', showLaunchTokenMenu);
+    launchTokenMenu.addEventListener('mouseleave', hideLaunchTokenMenu);
+  }
+  
   // Hide dropdown when clicking outside
   document.addEventListener('click', function(e) {
     if (!launchTokenBtn.contains(e.target) && !launchTokenMenu.contains(e.target)) {
       launchTokenMenu.style.display = 'none';
     }
   });
-  // Close dropdown on link click (mobile)
+  
+  // Close dropdown on link click
   document.querySelectorAll('.launch-token-link').forEach(link => {
     link.addEventListener('click', function() {
       launchTokenMenu.style.display = 'none';
@@ -2276,6 +2290,10 @@ let stakingMenuTimeout = null;
 if (stakingBtn && stakingMenu) {
   // Ensure dropdown is hidden on page load
   stakingMenu.style.display = 'none';
+  
+  // Check if device supports touch (mobile/tablet)
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  
   // Desktop: hover, Mobile: click
   function showStakingMenu() {
     clearTimeout(stakingMenuTimeout);
@@ -2286,31 +2304,41 @@ if (stakingBtn && stakingMenu) {
       stakingMenu.style.display = 'none';
     }, 180);
   }
-  // Desktop hover
-  if (window.innerWidth > 700) {
-    stakingBtn.addEventListener('mouseenter', showStakingMenu);
-    stakingBtn.addEventListener('mouseleave', hideStakingMenu);
-    stakingMenu.addEventListener('mouseenter', showStakingMenu);
-    stakingMenu.addEventListener('mouseleave', hideStakingMenu);
-  }
-  // Mobile click
+  
+  // Always add click functionality for mobile compatibility
   stakingBtn.addEventListener('click', function(e) {
-    if (window.innerWidth <= 700) {
-      e.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Always use click on mobile/touch devices or small screens
+    if (isTouchDevice || window.innerWidth <= 768) {
       if (stakingMenu.style.display === 'block') {
         stakingMenu.style.display = 'none';
       } else {
         stakingMenu.style.display = 'block';
       }
+    } else {
+      // Desktop click behavior - just show menu
+      showStakingMenu();
     }
   });
+  
+  // Add hover events only for non-touch devices with larger screens
+  if (!isTouchDevice && window.innerWidth > 768) {
+    stakingBtn.addEventListener('mouseenter', showStakingMenu);
+    stakingBtn.addEventListener('mouseleave', hideStakingMenu);
+    stakingMenu.addEventListener('mouseenter', showStakingMenu);
+    stakingMenu.addEventListener('mouseleave', hideStakingMenu);
+  }
+  
   // Hide dropdown when clicking outside
   document.addEventListener('click', function(e) {
     if (!stakingBtn.contains(e.target) && !stakingMenu.contains(e.target)) {
       stakingMenu.style.display = 'none';
     }
   });
-  // Close dropdown on link click (mobile)
+  
+  // Close dropdown on link click
   document.querySelectorAll('.staking-link').forEach(link => {
     link.addEventListener('click', function() {
       stakingMenu.style.display = 'none';
@@ -2325,6 +2353,10 @@ let tokenLockingMenuTimeout = null;
 if (tokenLockingBtn && tokenLockingMenu) {
   // Ensure dropdown is hidden on page load
   tokenLockingMenu.style.display = 'none';
+  
+  // Check if device supports touch (mobile/tablet)
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  
   // Desktop: hover, Mobile: click
   function showMenu() {
     clearTimeout(tokenLockingMenuTimeout);
@@ -2335,31 +2367,41 @@ if (tokenLockingBtn && tokenLockingMenu) {
       tokenLockingMenu.style.display = 'none';
     }, 180);
   }
-  // Desktop hover
-  if (window.innerWidth > 700) {
-    tokenLockingBtn.addEventListener('mouseenter', showMenu);
-    tokenLockingBtn.addEventListener('mouseleave', hideMenu);
-    tokenLockingMenu.addEventListener('mouseenter', showMenu);
-    tokenLockingMenu.addEventListener('mouseleave', hideMenu);
-  }
-  // Mobile click
+  
+  // Always add click functionality for mobile compatibility
   tokenLockingBtn.addEventListener('click', function(e) {
-    if (window.innerWidth <= 700) {
-      e.preventDefault();
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Always use click on mobile/touch devices or small screens
+    if (isTouchDevice || window.innerWidth <= 768) {
       if (tokenLockingMenu.style.display === 'block') {
         tokenLockingMenu.style.display = 'none';
       } else {
         tokenLockingMenu.style.display = 'block';
       }
+    } else {
+      // Desktop click behavior - just show menu
+      showMenu();
     }
   });
+  
+  // Add hover events only for non-touch devices with larger screens
+  if (!isTouchDevice && window.innerWidth > 768) {
+    tokenLockingBtn.addEventListener('mouseenter', showMenu);
+    tokenLockingBtn.addEventListener('mouseleave', hideMenu);
+    tokenLockingMenu.addEventListener('mouseenter', showMenu);
+    tokenLockingMenu.addEventListener('mouseleave', hideMenu);
+  }
+  
   // Hide dropdown when clicking outside
   document.addEventListener('click', function(e) {
     if (!tokenLockingBtn.contains(e.target) && !tokenLockingMenu.contains(e.target)) {
       tokenLockingMenu.style.display = 'none';
     }
   });
-  // Close dropdown on link click (mobile)
+  
+  // Close dropdown on link click
   document.querySelectorAll('.token-lock-link').forEach(link => {
     link.addEventListener('click', function() {
       tokenLockingMenu.style.display = 'none';
