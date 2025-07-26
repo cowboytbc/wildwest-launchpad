@@ -2071,38 +2071,54 @@
       }
     }
     
+    // Add both click AND touchstart for mobile compatibility
+    function addMobileEvents(trigger, menu, name) {
+      if (!trigger || !menu) return;
+      
+      // Desktop click
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(name + ' dropdown clicked');
+        toggleMenu(menu);
+      });
+      
+      // Mobile touch
+      trigger.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(name + ' dropdown touched');
+        toggleMenu(menu);
+      }, { passive: false });
+    }
+    
     // Launch Token dropdown
     if (launchDropdown && launchMenu) {
       const trigger = launchDropdown.querySelector('a');
-      trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Launch dropdown clicked');
-        toggleMenu(launchMenu);
-      });
+      addMobileEvents(trigger, launchMenu, 'Launch');
     }
     
     // Staking dropdown
     if (stakingDropdown && stakingMenu) {
       const trigger = stakingDropdown.querySelector('a');
-      trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Staking dropdown clicked');
-        toggleMenu(stakingMenu);
-      });
+      addMobileEvents(trigger, stakingMenu, 'Staking');
     }
     
     // Token Locking dropdown
     if (lockingDropdown && lockingMenu) {
       const trigger = lockingDropdown.querySelector('a');
-      trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Locking dropdown clicked');
-        toggleMenu(lockingMenu);
-      });
+      addMobileEvents(trigger, lockingMenu, 'Locking');
     }
     
     // Close when clicking outside
     document.addEventListener('click', function(e) {
+      if (!e.target.closest('.main-nav')) {
+        closeAll();
+      }
+    });
+    
+    // Close when touching outside on mobile
+    document.addEventListener('touchstart', function(e) {
       if (!e.target.closest('.main-nav')) {
         closeAll();
       }
