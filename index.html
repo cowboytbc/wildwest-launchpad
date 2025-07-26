@@ -3288,6 +3288,72 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('💡 Additional functions: fetchGitHubBanners() - Force fetch banners from GitHub');
   
+  // Direct banner test without dependencies
+  window.testBannerDirect = async function() {
+    console.log('🧪 Testing banner system directly...');
+    
+    try {
+      // Test direct GitHub API call
+      const topResponse = await fetch('https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/top');
+      const bottomResponse = await fetch('https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/bottom');
+      
+      if (topResponse.ok) {
+        const topFiles = await topResponse.json();
+        const topBanners = topFiles.filter(file => file.type === 'file' && file.name.endsWith('.jpg'));
+        console.log('✅ Found', topBanners.length, 'top banners');
+        
+        if (topBanners.length > 0) {
+          const banner = topBanners[0];
+          console.log('📷 Top banner:', banner.name);
+          console.log('🔗 Download URL:', banner.download_url);
+          
+          // Try to display the banner
+          const topAdContent = document.querySelector('.top-ad .ad-content');
+          if (topAdContent) {
+            topAdContent.innerHTML = `
+              <div style="width: 100%; height: 100%; background-image: url('${banner.download_url}'); background-size: cover; background-position: center; border-radius: 15px;">
+                <div style="position: absolute; bottom: 5px; right: 10px; background: rgba(0,0,0,0.7); color: #00eaff; padding: 2px 8px; border-radius: 4px; font-size: 0.7em;">
+                  Test Banner
+                </div>
+              </div>
+            `;
+            console.log('✅ Top banner displayed successfully');
+          }
+        }
+      }
+      
+      if (bottomResponse.ok) {
+        const bottomFiles = await bottomResponse.json();
+        const bottomBanners = bottomFiles.filter(file => file.type === 'file' && file.name.endsWith('.jpg'));
+        console.log('✅ Found', bottomBanners.length, 'bottom banners');
+        
+        if (bottomBanners.length > 0) {
+          const banner = bottomBanners[0];
+          console.log('📷 Bottom banner:', banner.name);
+          console.log('🔗 Download URL:', banner.download_url);
+          
+          // Try to display the banner
+          const bottomAdContent = document.querySelector('.bottom-ad .ad-content');
+          if (bottomAdContent) {
+            bottomAdContent.innerHTML = `
+              <div style="width: 100%; height: 100%; background-image: url('${banner.download_url}'); background-size: cover; background-position: center; border-radius: 15px;">
+                <div style="position: absolute; bottom: 5px; right: 10px; background: rgba(0,0,0,0.7); color: #00eaff; padding: 2px 8px; border-radius: 4px; font-size: 0.7em;">
+                  Test Banner
+                </div>
+              </div>
+            `;
+            console.log('✅ Bottom banner displayed successfully');
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Direct banner test failed:', error);
+    }
+  };
+  
+  console.log('🧪 Direct test function: testBannerDirect() - Test banners without dependencies');
+  
   // Test URL encoding/decoding for banners
   window.testUrlEncoding = function() {
     console.log('🧪 Testing URL encoding/decoding for banner filenames...');
