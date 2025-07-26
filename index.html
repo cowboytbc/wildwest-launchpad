@@ -2180,42 +2180,37 @@
   <script src="js/script.js"></script>
   
   <script>
-// Force hide dropdown menus immediately - CRITICAL FIX
+// Initialize dropdown menus properly
 (function() {
-  // Hide menus immediately, before DOM loads
-  function forceHideMenus() {
+  // Initialize menus when DOM is ready
+  function initializeMenus() {
     const menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
     menus.forEach(menuId => {
       const menu = document.getElementById(menuId);
       if (menu) {
         menu.style.display = 'none';
-        menu.style.visibility = 'hidden';
+        menu.style.visibility = 'visible'; // Ensure visibility is set to visible
       }
     });
   }
   
-  // Try to hide immediately
-  forceHideMenus();
-  
-  // Also hide on DOM ready
+  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', forceHideMenus);
+    document.addEventListener('DOMContentLoaded', initializeMenus);
   } else {
-    forceHideMenus();
+    initializeMenus();
   }
-  
-  // And hide again after a short delay to catch any delayed elements
-  setTimeout(forceHideMenus, 100);
 })();
 
-// Ensure dropdown menus are hidden on page load - IMMEDIATE FIX
+// Initialize dropdown menus on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
-  // Force hide all dropdown menus
+  // Initialize all dropdown menus
   const menus = ['launchTokenMenu', 'stakingMenu', 'tokenLockingMenu'];
   menus.forEach(menuId => {
     const menu = document.getElementById(menuId);
     if (menu) {
       menu.style.display = 'none';
+      menu.style.visibility = 'visible'; // Ensure menus are visible when shown
     }
   });
 });
@@ -2235,6 +2230,7 @@ if (launchTokenBtn && launchTokenMenu) {
   function showLaunchTokenMenu() {
     clearTimeout(launchTokenMenuTimeout);
     launchTokenMenu.style.display = 'block';
+    launchTokenMenu.style.visibility = 'visible';
   }
   function hideLaunchTokenMenu() {
     launchTokenMenuTimeout = setTimeout(() => {
@@ -2247,16 +2243,26 @@ if (launchTokenBtn && launchTokenMenu) {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('🔘 Launch Token dropdown clicked!', {
+      isTouchDevice,
+      windowWidth: window.innerWidth,
+      currentDisplay: launchTokenMenu.style.display
+    });
+    
     // Always use click on mobile/touch devices or small screens
     if (isTouchDevice || window.innerWidth <= 768) {
       if (launchTokenMenu.style.display === 'block') {
         launchTokenMenu.style.display = 'none';
+        console.log('📱 Mobile: Hiding launch token menu');
       } else {
         launchTokenMenu.style.display = 'block';
+        launchTokenMenu.style.visibility = 'visible'; // Ensure it's visible
+        console.log('📱 Mobile: Showing launch token menu');
       }
     } else {
       // Desktop click behavior - just show menu
       showLaunchTokenMenu();
+      console.log('🖥️ Desktop: Showing launch token menu');
     }
   });
   
@@ -2298,6 +2304,7 @@ if (stakingBtn && stakingMenu) {
   function showStakingMenu() {
     clearTimeout(stakingMenuTimeout);
     stakingMenu.style.display = 'block';
+    stakingMenu.style.visibility = 'visible';
   }
   function hideStakingMenu() {
     stakingMenuTimeout = setTimeout(() => {
@@ -2310,16 +2317,26 @@ if (stakingBtn && stakingMenu) {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('🔘 Staking dropdown clicked!', {
+      isTouchDevice,
+      windowWidth: window.innerWidth,
+      currentDisplay: stakingMenu.style.display
+    });
+    
     // Always use click on mobile/touch devices or small screens
     if (isTouchDevice || window.innerWidth <= 768) {
       if (stakingMenu.style.display === 'block') {
         stakingMenu.style.display = 'none';
+        console.log('📱 Mobile: Hiding staking menu');
       } else {
         stakingMenu.style.display = 'block';
+        stakingMenu.style.visibility = 'visible'; // Ensure it's visible
+        console.log('📱 Mobile: Showing staking menu');
       }
     } else {
       // Desktop click behavior - just show menu
       showStakingMenu();
+      console.log('🖥️ Desktop: Showing staking menu');
     }
   });
   
@@ -2361,6 +2378,7 @@ if (tokenLockingBtn && tokenLockingMenu) {
   function showMenu() {
     clearTimeout(tokenLockingMenuTimeout);
     tokenLockingMenu.style.display = 'block';
+    tokenLockingMenu.style.visibility = 'visible';
   }
   function hideMenu() {
     tokenLockingMenuTimeout = setTimeout(() => {
@@ -2373,16 +2391,26 @@ if (tokenLockingBtn && tokenLockingMenu) {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('🔘 Token Locking dropdown clicked!', {
+      isTouchDevice,
+      windowWidth: window.innerWidth,
+      currentDisplay: tokenLockingMenu.style.display
+    });
+    
     // Always use click on mobile/touch devices or small screens
     if (isTouchDevice || window.innerWidth <= 768) {
       if (tokenLockingMenu.style.display === 'block') {
         tokenLockingMenu.style.display = 'none';
+        console.log('📱 Mobile: Hiding token locking menu');
       } else {
         tokenLockingMenu.style.display = 'block';
+        tokenLockingMenu.style.visibility = 'visible'; // Ensure it's visible
+        console.log('📱 Mobile: Showing token locking menu');
       }
     } else {
       // Desktop click behavior - just show menu
       showMenu();
+      console.log('🖥️ Desktop: Showing token locking menu');
     }
   });
   
@@ -2949,6 +2977,33 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
   console.log('🎯 Index page: Using unified wallet connection system');
+  
+  // Add dropdown test function for mobile debugging
+  window.testDropdowns = function() {
+    console.log('🧪 Testing dropdown functionality...');
+    const dropdowns = [
+      { name: 'Launch Token', menu: document.getElementById('launchTokenMenu') },
+      { name: 'Staking', menu: document.getElementById('stakingMenu') },
+      { name: 'Token Locking', menu: document.getElementById('tokenLockingMenu') }
+    ];
+    
+    dropdowns.forEach(dropdown => {
+      console.log(`📋 ${dropdown.name}:`, {
+        exists: !!dropdown.menu,
+        display: dropdown.menu?.style.display || 'not set',
+        visibility: dropdown.menu?.style.visibility || 'not set',
+        computed: dropdown.menu ? window.getComputedStyle(dropdown.menu).display : 'N/A'
+      });
+    });
+    
+    console.log('🔧 Device Info:', {
+      isTouchDevice: ('ontouchstart' in window) || (navigator.maxTouchPoints > 0),
+      windowWidth: window.innerWidth,
+      userAgent: navigator.userAgent.substring(0, 50) + '...'
+    });
+  };
+  
+  console.log('💡 Test dropdowns with: testDropdowns()');
 });
   </script>
 
