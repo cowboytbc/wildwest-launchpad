@@ -1498,14 +1498,19 @@
             const token = new ethers.Contract(await lock.token(), [
               {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
               {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"}
-            ], provider);
+            ], ethersProvider);
             const [decimals, sym] = await Promise.all([
               token.decimals(),
               token.symbol()
             ]);
             formattedAmount = ethers.utils.formatUnits(amount, decimals);
             symbol = sym;
-          } catch {}
+          } catch (tokenErr) {
+            console.log('❌ Could not get token info:', tokenErr.message);
+            // Fallback to ETH formatting if token contract fails
+            formattedAmount = ethers.utils.formatEther(amount);
+            symbol = 'UNKNOWN';
+          }
 
           // Card container
           const li = document.createElement('li');
