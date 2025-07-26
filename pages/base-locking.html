@@ -1420,7 +1420,12 @@
       
       try {
         console.log('🏭 Creating factory contract...');
-        const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);
+        
+        // Create proper ethers provider from wallet provider
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
+        console.log('✅ Created ethers provider:', !!ethersProvider);
+        
+        const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, ethersProvider);
         
         // Get locks where user is creator
         console.log('📞 Calling getUserLocks for creator locks:', userAddress);
@@ -1454,7 +1459,7 @@
           console.log(`🔍 Processing lock ${allLockAddresses.indexOf(lockAddr) + 1}/${allLockAddresses.length}: ${lockAddr}`);
           
           try {
-            const lock = new ethers.Contract(lockAddr, LOCK_ABI, provider);
+            const lock = new ethers.Contract(lockAddr, LOCK_ABI, ethersProvider);
             const [name, amount, releaseTime, released, beneficiary] = await Promise.all([
               lock.lockName(),
               lock.amount(), 
@@ -1668,6 +1673,48 @@
         userLocksList.appendChild(li);
       }
     }
+
+    // Function to claim tokens from a lock
+    async function claimLock(lockAddress) {
+      if (!signer) {
+        alert('Please connect your wallet first!');
+        return;
+      }
+      
+      try {
+        console.log('🔓 Claiming lock:', lockAddress);
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
+        const lock = new ethers.Contract(lockAddress, LOCK_ABI, ethersProvider.getSigner());
+        
+        const tx = await lock.release();
+        console.log('📤 Claim transaction sent:', tx.hash);
+        
+        // Show status
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = 'Claiming tokens...';
+        statusDiv.style.color = '#ff8c00';
+        
+        await tx.wait();
+        
+        statusDiv.textContent = 'Tokens claimed successfully!';
+        statusDiv.style.color = '#00e676';
+        
+        // Refresh the locks list
+        setTimeout(() => {
+          loadUserLocks();
+          statusDiv.textContent = '';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('❌ Error claiming lock:', error);
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = 'Error claiming tokens: ' + error.message;
+        statusDiv.style.color = '#ff6b6b';
+      }
+    }
+
+    // Make claimLock globally available
+    window.claimLock = claimLock;
 
     document.getElementById('setSelfBeneficiary').onclick = function() {
       if (userAddress) {
