@@ -779,6 +779,13 @@
       background: none;
     }
     
+    /* Show dropdowns on hover */
+    .launch-token-dropdown:hover .launch-token-menu,
+    .staking-dropdown:hover .staking-menu,
+    .token-locking-dropdown:hover .token-locking-menu {
+      display: block !important;
+    }
+    
     .launch-token-menu a:hover,
     .staking-menu a:hover,
     .token-locking-menu a:hover {
@@ -788,6 +795,21 @@
     
     /* Mobile optimizations for dropdowns */
     @media (max-width: 768px) {
+      /* Center dropdowns on mobile and add backdrop */
+      .launch-token-dropdown:hover::before,
+      .staking-dropdown:hover::before,
+      .token-locking-dropdown:hover::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        backdrop-filter: blur(2px);
+      }
+      
       .launch-token-menu,
       .staking-menu,
       .token-locking-menu {
@@ -795,12 +817,15 @@
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-        min-width: 200px;
-        max-width: 300px;
+        min-width: 250px;
+        max-width: 320px;
+        width: 85vw;
         z-index: 9999;
         border: 2px solid rgba(0, 234, 255, 0.5);
         background: rgba(20, 24, 34, 0.98);
         backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
       }
       
       .launch-token-menu a,
