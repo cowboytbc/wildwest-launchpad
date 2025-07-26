@@ -3034,7 +3034,7 @@ async function updateBalance() {
     let addressToUse = null;
     if (window.wildWestWallet?.account) {
       addressToUse = window.wildWestWallet.account;
-    } else if (currentChain === 'base' && currentAddress) {
+    } else if (currentAddress && (currentChain === 'base' || currentChain === 'ethereum')) {
       addressToUse = currentAddress;
     } else if (window.ethereum?.selectedAddress) {
       addressToUse = window.ethereum.selectedAddress;
@@ -3052,7 +3052,9 @@ async function updateBalance() {
         currentChain,
         BASE_RPC: BASE_RPC,
         hasEthereum: !!window.ethereum,
-        hasRPCConfig: !!window.RPC_CONFIG
+        hasRPCConfig: !!window.RPC_CONFIG,
+        actualQuickNodeEndpoint: window.RPC_CONFIG?.getBaseEndpoint(),
+        productionConfigBase: window.PRODUCTION_CONFIG?.rpc?.base
       });
       
       let provider;
