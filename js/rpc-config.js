@@ -2,10 +2,15 @@
 // Update these with your preferred RPC endpoints
 
 const RPC_CONFIG = {
-  // Solana RPC endpoints - QuickNode only from GitHub Secrets
+  // Solana RPC endpoints - MUST use QuickNode from GitHub Secrets
   SOLANA: {
-    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com",
-    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || window.ENV_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com"
+    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com",
+    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com",
+    FALLBACKS: [
+      "https://rpc.ankr.com/solana",
+      "https://solana-api.projectserum.com",
+      "https://api.mainnet-beta.solana.com"
+    ]
   },
   
   // Base/Ethereum RPC endpoints - QuickNode only from GitHub Secrets  
@@ -41,6 +46,44 @@ const RPC_CONFIG = {
     console.log('🔍 Debug: PRODUCTION_CONFIG.rpc.solana:', window.PRODUCTION_CONFIG?.rpc?.solana);
     console.log('🔍 Debug: ENV_CONFIG.rpc.solana:', window.ENV_CONFIG?.rpc?.solana);
     return endpoint;
+  },
+  
+  // Get Solana endpoint with automatic fallback
+  getSolanaEndpointWithFallback: async function() {
+    const endpoints = [this.SOLANA.PRIMARY, ...this.SOLANA.FALLBACKS];
+    
+    for (let i = 0; i < endpoints.length; i++) {
+      const endpoint = endpoints[i];
+      try {
+        console.log(`🔄 Testing Solana RPC endpoint ${i + 1}/${endpoints.length}: ${endpoint.substring(0, 50)}...`);
+        
+        // Test the endpoint with a simple getVersion call
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getVersion'
+          }),
+          timeout: 5000
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.result) {
+            console.log(`✅ Solana RPC endpoint working: ${endpoint.substring(0, 50)}...`);
+            return endpoint;
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Solana RPC endpoint failed: ${endpoint.substring(0, 50)}... - ${error.message}`);
+        continue;
+      }
+    }
+    
+    console.error('❌ All Solana RPC endpoints failed, using primary anyway');
+    return this.SOLANA.PRIMARY;
   },
   
   getBaseEndpoint: function() {
