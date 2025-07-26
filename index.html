@@ -2498,8 +2498,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.bannerRotationManager) {
       window.bannerRotationManager.init().then(() => {
         console.log('✅ Banner rotation system initialized');
+        
+        // Show current banner state after initialization
+        setTimeout(() => {
+          const topBanner = window.BANNER_CONFIG.getCurrentBanner('top');
+          const bottomBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+          console.log('📊 Current Banner State After Init:');
+          console.log('🔝 Top Banner:', topBanner ? topBanner.projectName : 'Default "Advertise Here"');
+          console.log('⬇️ Bottom Banner:', bottomBanner ? bottomBanner.projectName : 'Default "Advertise Here"');
+          
+          // Check if banners are actually displayed
+          const topAdContent = document.querySelector('.top-ad .ad-content');
+          const bottomAdContent = document.querySelector('.bottom-ad .ad-content');
+          console.log('🖼️ Banner Display Status:');
+          console.log('🔝 Top ad content contains custom banner:', topAdContent?.innerHTML.includes('custom-banner'));
+          console.log('⬇️ Bottom ad content contains custom banner:', bottomAdContent?.innerHTML.includes('custom-banner'));
+        }, 1000);
       }).catch(error => {
         console.error('❌ Banner rotation system initialization failed:', error);
+        console.error('🔍 Error details:', error.message);
+        console.error('🔍 Error stack:', error.stack);
+        
         // Try to set up default banners as fallback
         console.log('🔄 Setting up fallback banners...');
         if (window.BANNER_CONFIG) {
@@ -3445,6 +3464,83 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   console.log('💡 URL testing: testUrlEncoding() - Test URL encoding/decoding for banners');
+  
+  // Manual banner system test function
+  window.testBannerSystemManual = async function() {
+    console.log('🧪 Manual Banner System Test...');
+    console.log('🔍 Step 1: Checking dependencies...');
+    console.log('  - window.BANNER_CONFIG exists:', !!window.BANNER_CONFIG);
+    console.log('  - window.bannerRotationManager exists:', !!window.bannerRotationManager);
+    
+    if (!window.BANNER_CONFIG || !window.bannerRotationManager) {
+      console.error('❌ Banner dependencies missing - cannot proceed');
+      return;
+    }
+    
+    console.log('🔍 Step 2: Testing GitHub API access...');
+    try {
+      const testUrl = 'https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/top';
+      console.log('📡 Testing URL:', testUrl);
+      
+      const response = await fetch(testUrl);
+      console.log('📊 API Response Status:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ API Response Success - Found files:', data.length);
+        if (data.length > 0) {
+          console.log('📄 Sample files:', data.slice(0, 3).map(f => f.name));
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ API Response Error:', errorText);
+      }
+    } catch (apiError) {
+      console.error('❌ API Request Failed:', apiError);
+    }
+    
+    console.log('🔍 Step 3: Testing banner config fetch...');
+    try {
+      const fetchResult = await window.BANNER_CONFIG.fetchBanners();
+      console.log('📊 fetchBanners() result:', fetchResult);
+      
+      const topBanners = window.BANNER_CONFIG.TOP_BANNERS;
+      const bottomBanners = window.BANNER_CONFIG.BOTTOM_BANNERS;
+      console.log('📊 Loaded banners:', { 
+        top: topBanners.length, 
+        bottom: bottomBanners.length 
+      });
+      
+      if (topBanners.length > 0) {
+        console.log('🔝 Top banners:', topBanners.map(b => b.projectName));
+      }
+      if (bottomBanners.length > 0) {
+        console.log('⬇️ Bottom banners:', bottomBanners.map(b => b.projectName));
+      }
+    } catch (fetchError) {
+      console.error('❌ Banner fetch failed:', fetchError);
+    }
+    
+    console.log('🔍 Step 4: Testing banner rotation manager...');
+    try {
+      if (!window.bannerRotationManager.isInitialized) {
+        console.log('🚀 Initializing banner rotation manager...');
+        await window.bannerRotationManager.init();
+        console.log('✅ Banner rotation manager initialized');
+      } else {
+        console.log('✅ Banner rotation manager already initialized');
+      }
+      
+      // Force update banners
+      window.bannerRotationManager.updateBanners();
+      console.log('🔄 Banners updated');
+      
+    } catch (managerError) {
+      console.error('❌ Banner rotation manager failed:', managerError);
+    }
+    
+    console.log('🏁 Manual banner system test complete');
+  };
   
   // Add a test function to create sample banners for demonstration
   window.createTestBanners = function() {
