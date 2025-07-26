@@ -2160,24 +2160,56 @@
         trigger.style.webkitUserSelect = 'none';
         trigger.style.webkitTapHighlightColor = 'rgba(0, 234, 255, 0.2)';
         
-        // Also add touchend event as fallback for mobile
+        // Also add touchend event as fallback for mobile (only for dropdown triggers)
         trigger.addEventListener('touchend', function(e) {
           console.log('👆 Touch end on:', dropdown.trigger);
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // Trigger the same logic as click
-          setTimeout(() => {
-            trigger.click();
-          }, 10);
+          // Only prevent default if this is the dropdown trigger, not navigation links
+          if (e.target === trigger) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Trigger the same logic as click
+            setTimeout(() => {
+              trigger.click();
+            }, 10);
+          }
         }, { passive: false });
       } else {
         console.warn('⚠️ Could not find elements for:', dropdown.trigger, dropdown.menu);
       }
     });
     
-    // Click outside to close dropdowns
+    // Ensure navigation links inside dropdowns work properly
+    document.querySelectorAll('.launch-token-menu a, .staking-menu a, .token-locking-menu a').forEach(function(link) {
+      console.log('🔗 Setting up navigation link:', link.href);
+      
+      link.addEventListener('click', function(e) {
+        console.log('🚀 Navigation link clicked:', this.href);
+        // Don't prevent default - allow normal navigation
+        // Just close the dropdown
+        closeAllDropdowns();
+        // Let the browser handle the navigation
+      });
+      
+      // Ensure touch events work for navigation links
+      link.addEventListener('touchend', function(e) {
+        console.log('👆 Touch on navigation link:', this.href);
+        // Don't prevent default for navigation links
+        closeAllDropdowns();
+      });
+    });
+    
+    // Click outside to close dropdowns, but allow navigation inside dropdowns
     document.addEventListener('click', function(e) {
+      // Check if click is on a dropdown menu link (allow navigation)
+      if (e.target.matches('.launch-token-menu a, .staking-menu a, .token-locking-menu a')) {
+        console.log('🔗 Navigation link clicked:', e.target.href);
+        // Allow default navigation behavior
+        closeAllDropdowns();
+        return;
+      }
+      
+      // Close dropdowns if clicking outside main nav
       if (!e.target.closest('.main-nav')) {
         closeAllDropdowns();
       }
