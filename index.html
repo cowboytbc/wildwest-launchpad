@@ -2056,10 +2056,11 @@
     </ul>
   </nav>
 
-  <!-- Enhanced mobile dropdown handler -->
+  <!-- Simplified mobile dropdown handler -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
     let activeBackdrop = null;
+    let dropdownTimeout = null;
     
     // Create backdrop element
     function createBackdrop() {
@@ -2106,16 +2107,14 @@
     
     // Close all dropdowns
     function closeAllDropdowns() {
-      dropdowns.forEach(function(dropdown) {
-        const menu = document.querySelector(dropdown.menu);
-        if (menu) {
-          menu.style.display = 'none';
-        }
+      const menus = document.querySelectorAll('.launch-token-menu, .staking-menu, .token-locking-menu');
+      menus.forEach(function(menu) {
+        menu.style.display = 'none';
       });
       removeBackdrop();
     }
     
-    // Mobile-friendly dropdown handling
+    // Simple dropdown handling
     const dropdowns = [
       { trigger: '.launch-token-dropdown > a', menu: '.launch-token-menu' },
       { trigger: '.staking-dropdown > a', menu: '.staking-menu' },
@@ -2129,11 +2128,17 @@
       if (trigger && menu) {
         console.log('✅ Setting up dropdown:', dropdown.trigger);
         
-        // Prevent default link behavior on mobile and desktop
+        // Single event handler for both desktop and mobile
         trigger.addEventListener('click', function(e) {
           console.log('🔥 Dropdown clicked:', dropdown.trigger);
           e.preventDefault();
           e.stopPropagation();
+          
+          // Clear any pending timeout
+          if (dropdownTimeout) {
+            clearTimeout(dropdownTimeout);
+            dropdownTimeout = null;
+          }
           
           // Check if this menu is already open
           const isOpen = menu.style.display === 'block';
@@ -2142,74 +2147,40 @@
           // Close all menus first
           closeAllDropdowns();
           
-          // If it wasn't open, open this one
+          // If it wasn't open, open this one after a small delay
           if (!isOpen) {
-            console.log('🚀 Opening dropdown menu');
-            // Create backdrop on mobile
-            if (window.innerWidth <= 768) {
-              console.log('📱 Mobile detected, creating backdrop');
-              createBackdrop();
-            }
-            menu.style.display = 'block';
+            dropdownTimeout = setTimeout(() => {
+              console.log('🚀 Opening dropdown menu');
+              // Create backdrop on mobile
+              if (window.innerWidth <= 768) {
+                console.log('📱 Mobile detected, creating backdrop');
+                createBackdrop();
+              }
+              menu.style.display = 'block';
+            }, 50);
           }
         });
         
-        // Add pointer events for better mobile interaction
+        // Add mobile-friendly styles
         trigger.style.cursor = 'pointer';
         trigger.style.userSelect = 'none';
         trigger.style.webkitUserSelect = 'none';
         trigger.style.webkitTapHighlightColor = 'rgba(0, 234, 255, 0.2)';
-        
-        // Also add touchend event as fallback for mobile (only for dropdown triggers)
-        trigger.addEventListener('touchend', function(e) {
-          console.log('👆 Touch end on:', dropdown.trigger);
-          // Only prevent default if this is the dropdown trigger, not navigation links
-          if (e.target === trigger) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Trigger the same logic as click
-            setTimeout(() => {
-              trigger.click();
-            }, 10);
-          }
-        }, { passive: false });
       } else {
         console.warn('⚠️ Could not find elements for:', dropdown.trigger, dropdown.menu);
       }
     });
     
-    // Ensure navigation links inside dropdowns work properly
-    document.querySelectorAll('.launch-token-menu a, .staking-menu a, .token-locking-menu a').forEach(function(link) {
-      console.log('🔗 Setting up navigation link:', link.href);
-      
-      link.addEventListener('click', function(e) {
-        console.log('🚀 Navigation link clicked:', this.href);
-        // Don't prevent default - allow normal navigation
-        // Just close the dropdown
-        closeAllDropdowns();
-        // Let the browser handle the navigation
-      });
-      
-      // Ensure touch events work for navigation links
-      link.addEventListener('touchend', function(e) {
-        console.log('👆 Touch on navigation link:', this.href);
-        // Don't prevent default for navigation links
-        closeAllDropdowns();
-      });
-    });
-    
-    // Click outside to close dropdowns, but allow navigation inside dropdowns
+    // Simple click outside handler
     document.addEventListener('click', function(e) {
-      // Check if click is on a dropdown menu link (allow navigation)
+      // Allow navigation links to work
       if (e.target.matches('.launch-token-menu a, .staking-menu a, .token-locking-menu a')) {
         console.log('🔗 Navigation link clicked:', e.target.href);
-        // Allow default navigation behavior
         closeAllDropdowns();
         return;
       }
       
-      // Close dropdowns if clicking outside main nav
+      // Close dropdowns if clicking outside
       if (!e.target.closest('.main-nav')) {
         closeAllDropdowns();
       }
@@ -2222,7 +2193,7 @@
       }
     });
     
-    console.log('✅ Enhanced mobile dropdown handlers active');
+    console.log('✅ Simplified dropdown handlers active');
   });
   </script>
 
