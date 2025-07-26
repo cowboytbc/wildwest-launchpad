@@ -203,6 +203,27 @@
             window.currentChain = 'base';
             window.currentProvider = wallet.provider;
             
+            // CRITICAL: Set the main script variables immediately
+            provider = wallet.provider;
+            userAddress = accounts[0];
+            window.provider = wallet.provider;
+            window.userAddress = accounts[0];
+            
+            console.log('🔧 Base Locking: FIXED - Set provider:', !!provider);
+            console.log('🔧 Base Locking: FIXED - Set userAddress:', userAddress);
+            
+            // Create signer from provider for ethers.js
+            if (window.ethers && wallet.provider) {
+              try {
+                const ethersProvider = new ethers.providers.Web3Provider(wallet.provider);
+                signer = ethersProvider.getSigner();
+                window.signer = signer;
+                console.log('✅ Base Locking: Signer created successfully');
+              } catch (error) {
+                console.error('❌ Base Locking: Error creating signer:', error);
+              }
+            }
+            
             // Update UI
             updateBaseLockingUI(accounts[0]);
             
@@ -233,20 +254,9 @@
         walletAddress.textContent = 'Connected: ' + shortAddress;
       }
       
-      // Set up global variables for locking functionality
-      window.provider = window.currentProvider;
-      window.userAddress = address;
-      
-      // Create signer from provider for ethers.js
-      if (window.ethers && window.currentProvider) {
-        try {
-          const ethersProvider = new ethers.providers.Web3Provider(window.currentProvider);
-          window.signer = ethersProvider.getSigner();
-          console.log('✅ Base Locking: Signer created successfully');
-        } catch (error) {
-          console.error('❌ Base Locking: Error creating signer:', error);
-        }
-      }
+      // Verify global variables are set (should already be set by connectSpecificWallet)
+      console.log('🔧 Base Locking: UI Update - provider available:', !!provider);
+      console.log('🔧 Base Locking: UI Update - userAddress:', userAddress);
       
       // Enable locking functionality
       document.querySelectorAll('.lock-input, .lock-button').forEach(el => {
