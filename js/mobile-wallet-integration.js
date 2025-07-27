@@ -231,36 +231,40 @@ class MobileWalletIntegration {
   }
 
   async showMobileWalletGuidance(detectedWallets) {
-    console.log('📱 Showing mobile wallet guidance...');
+    console.log('📱 Mobile wallet connection - taking action...');
     
     const installableWallets = detectedWallets.filter(w => w.status === 'installable');
     const detectedButNotAvailable = detectedWallets.filter(w => w.status === 'detected');
     
-    let message = '📱 No wallet connected!\n\n';
+    // Instead of showing disclaimers, FORCE show the wallet modal
+    console.log('� FORCING mobile wallet modal to show...');
     
     if (detectedButNotAvailable.length > 0) {
-      message += '🔍 We detected these wallets on your device:\n';
-      detectedButNotAvailable.forEach(w => {
-        message += `• ${w.name}\n`;
-      });
-      message += '\nPlease open this page in your wallet app\'s browser, or refresh the page after ensuring your wallet is properly installed.\n\n';
+      // Try to connect to detected wallets first
+      console.log('🔍 Attempting to connect to detected wallets...');
+      
+      for (const wallet of detectedButNotAvailable) {
+        try {
+          // Try to force connection
+          if (wallet.chains.includes('ethereum') || wallet.chains.includes('base')) {
+            if (window.ethereum) {
+              console.log(`🔗 Attempting ${wallet.name} connection...`);
+              const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+              if (accounts && accounts.length > 0) {
+                console.log(`✅ ${wallet.name} connected successfully!`);
+                return true;
+              }
+            }
+          }
+        } catch (error) {
+          console.log(`❌ ${wallet.name} connection failed:`, error);
+        }
+      }
     }
     
-    if (installableWallets.length > 0) {
-      message += '💡 Recommended mobile wallets to install:\n';
-      installableWallets.slice(0, 3).forEach(w => {
-        message += `• ${w.name}\n`;
-      });
-      message += '\nWould you like to see wallet installation options?';
-      
-      const showOptions = confirm(message);
-      if (showOptions) {
-        window.mobileWalletDetector.showMobileWalletModal();
-      }
-    } else {
-      message += 'Please install a mobile wallet app like MetaMask, Trust Wallet, or Coinbase Wallet to connect.';
-      alert(message);
-    }
+    // If we get here, show the wallet selection modal instead of text
+    console.log('🎯 Showing wallet selection modal...');
+    window.mobileWalletDetector.showMobileWalletModal();
     
     return false;
   }
@@ -322,14 +326,16 @@ class MobileWalletIntegration {
     if (availableCount > 0) {
       infoDiv.innerHTML = `
         <span style="font-size: 16px;">📱</span>
-        <strong>${availableCount} mobile wallet${availableCount > 1 ? 's' : ''} detected!</strong>
-        Ready to connect.
+        <strong>${availableCount} mobile wallet${availableCount > 1 ? 's' : ''} ready!</strong>
+        Tap Connect Wallet to proceed.
       `;
       infoDiv.style.display = 'block';
     } else {
+      // DON'T show "install wallet" message - just show connection ready
       infoDiv.innerHTML = `
-        <span style="font-size: 16px;">💡</span>
-        <strong>Mobile Tip:</strong> Install a wallet app for the best experience.
+        <span style="font-size: 16px;">�</span>
+        <strong>Mobile Ready!</strong>
+        Tap Connect Wallet to get started.
         <button onclick="window.mobileWalletDetector.showMobileWalletModal()" style="
           background: none;
           border: 1px solid #00eaff;

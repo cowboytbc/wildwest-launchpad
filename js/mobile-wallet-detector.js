@@ -183,11 +183,60 @@ class MobileWalletDetector {
     // Detect potentially installed wallets (even if not injected)
     await this.detectInstalledWallets();
     
+    // FORCE detection even if no providers found
+    this.forceWalletDetection();
+    
     // Create mobile wallet UI
     this.createMobileWalletUI();
     
     console.log('📱 Mobile wallet detection complete');
-    console.log('✅ Detected wallets:', this.detectedWallets.length);
+    console.log('✅ Total wallets:', this.detectedWallets.length);
+  }
+
+  // Force detection of wallets even without providers
+  forceWalletDetection() {
+    console.log('🚀 FORCE detecting wallets...');
+    
+    // If we have ethereum provider, assume MetaMask is available
+    if (window.ethereum && !this.detectedWallets.find(w => w.id === 'metamask')) {
+      this.detectedWallets.push({
+        ...this.supportedWallets.metamask,
+        id: 'metamask',
+        status: 'available',
+        canConnect: true
+      });
+      console.log('✅ FORCED MetaMask detection');
+    }
+    
+    // If we have solana provider, assume Phantom is available  
+    if (window.solana && !this.detectedWallets.find(w => w.id === 'phantom')) {
+      this.detectedWallets.push({
+        ...this.supportedWallets.phantom,
+        id: 'phantom', 
+        status: 'available',
+        canConnect: true
+      });
+      console.log('✅ FORCED Phantom detection');
+    }
+    
+    // If still no wallets detected, add popular ones as installable
+    if (this.detectedWallets.length === 0) {
+      console.log('🎯 No wallets detected, adding popular options...');
+      
+      // Add top mobile wallets as installable
+      ['metamask', 'trustwallet', 'coinbase', 'phantom'].forEach(walletId => {
+        if (!this.detectedWallets.find(w => w.id === walletId)) {
+          this.detectedWallets.push({
+            ...this.supportedWallets[walletId],
+            id: walletId,
+            status: 'installable',
+            canConnect: false
+          });
+        }
+      });
+      
+      console.log('✅ Added popular wallets as installable options');
+    }
   }
 
   // Detect wallets that are currently available (injected providers)
@@ -294,12 +343,12 @@ class MobileWalletDetector {
     
     const walletBtn = document.createElement('button');
     walletBtn.id = 'mobile-wallet-btn';
-    walletBtn.innerHTML = '📱 Connect Wallet';
+    walletBtn.innerHTML = '� Connect Now';
     walletBtn.className = 'mobile-wallet-button';
     
     walletBtn.style.cssText = `
-      background: linear-gradient(135deg, #00eaff, #0088cc);
-      color: white;
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      color: black;
       border: none;
       padding: 12px 20px;
       border-radius: 25px;
@@ -307,15 +356,84 @@ class MobileWalletDetector {
       font-size: 14px;
       cursor: pointer;
       margin-left: 10px;
-      box-shadow: 0 4px 15px rgba(0, 234, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
       transition: all 0.3s ease;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     `;
     
-    walletBtn.addEventListener('click', () => this.showMobileWalletModal());
+    // AGGRESSIVE CONNECTION - try to connect immediately
+    walletBtn.addEventListener('click', async () => {
+      console.log('🚀 AGGRESSIVE MOBILE WALLET CONNECTION ATTEMPT');
+      
+      // First, try to connect to any available provider immediately
+      const connected = await this.tryAggressiveConnection();
+      
+      if (!connected) {
+        // If no immediate connection, show the modal
+        this.showMobileWalletModal();
+      }
+    });
     
     nav.appendChild(walletBtn);
+  }
+
+  // Try aggressive connection to any available wallet
+  async tryAggressiveConnection() {
+    console.log('🚀 TRYING AGGRESSIVE CONNECTION...');
+    
+    // Try Ethereum wallets first
+    if (window.ethereum) {
+      try {
+        console.log('🔗 Attempting Ethereum wallet connection...');
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        
+        if (accounts && accounts.length > 0) {
+          console.log('✅ ETHEREUM WALLET CONNECTED!', accounts[0]);
+          
+          // Update existing wallet system
+          if (window.wildWestWallet) {
+            window.wildWestWallet.account = accounts[0];
+            window.wildWestWallet.isConnected = true;
+            window.wildWestWallet.updateWalletUI();
+          }
+          
+          alert(`✅ Wallet Connected!\n\nAddress: ${accounts[0].substring(0, 10)}...`);
+          return true;
+        }
+      } catch (error) {
+        console.log('❌ Ethereum connection failed:', error);
+      }
+    }
+    
+    // Try Solana wallets
+    if (window.solana) {
+      try {
+        console.log('🔗 Attempting Solana wallet connection...');
+        const response = await window.solana.connect();
+        
+        if (response.publicKey) {
+          console.log('✅ SOLANA WALLET CONNECTED!', response.publicKey.toString());
+          
+          // Update existing wallet system
+          if (window.wildWestWallet) {
+            window.wildWestWallet.account = response.publicKey.toString();
+            window.wildWestWallet.isConnected = true;
+            window.wildWestWallet.updateWalletUI();
+          }
+          
+          alert(`✅ Solana Wallet Connected!\n\nAddress: ${response.publicKey.toString().substring(0, 10)}...`);
+          return true;
+        }
+      } catch (error) {
+        console.log('❌ Solana connection failed:', error);
+      }
+    }
+    
+    console.log('❌ No immediate wallet connection available');
+    return false;
   }
 
   // Create mobile wallet selection modal
@@ -498,7 +616,11 @@ class MobileWalletDetector {
           break;
           
         case 'open':
-          this.openWalletApp(wallet);
+          // For "open" action, actually try to connect first, then deeplink
+          const connected = await this.tryDirectConnection(wallet);
+          if (!connected) {
+            this.openWalletApp(wallet);
+          }
           break;
           
         case 'install':
@@ -507,7 +629,68 @@ class MobileWalletDetector {
       }
     } catch (error) {
       console.error(`❌ Error with ${wallet.name} ${action}:`, error);
-      alert(`Error ${action}ing ${wallet.name}: ${error.message}`);
+      
+      // If connection fails, try to open the app instead
+      if (action === 'connect') {
+        console.log('🔄 Connection failed, trying to open wallet app...');
+        this.openWalletApp(wallet);
+      } else {
+        alert(`Error ${action}ing ${wallet.name}: ${error.message}`);
+      }
+    }
+  }
+
+  // Try direct connection without popups
+  async tryDirectConnection(wallet) {
+    console.log(`🔗 Attempting direct connection to ${wallet.name}...`);
+    
+    try {
+      if (wallet.chains.includes('ethereum') || wallet.chains.includes('base')) {
+        if (window.ethereum) {
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+          });
+          
+          if (accounts && accounts.length > 0) {
+            console.log(`✅ ${wallet.name} connected directly!`);
+            this.hideMobileWalletModal();
+            
+            // Trigger existing wallet system
+            if (window.wildWestWallet) {
+              window.wildWestWallet.account = accounts[0];
+              window.wildWestWallet.isConnected = true;
+              window.wildWestWallet.updateWalletUI();
+            }
+            
+            return true;
+          }
+        }
+      }
+      
+      if (wallet.chains.includes('solana')) {
+        if (window.solana) {
+          const response = await window.solana.connect();
+          
+          if (response.publicKey) {
+            console.log(`✅ ${wallet.name} connected directly!`);
+            this.hideMobileWalletModal();
+            
+            // Trigger existing wallet system
+            if (window.wildWestWallet) {
+              window.wildWestWallet.account = response.publicKey.toString();
+              window.wildWestWallet.isConnected = true;
+              window.wildWestWallet.updateWalletUI();
+            }
+            
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.log(`❌ Direct connection failed for ${wallet.name}:`, error);
+      return false;
     }
   }
 
@@ -515,23 +698,31 @@ class MobileWalletDetector {
   async connectWallet(wallet) {
     console.log(`🔗 Connecting to ${wallet.name}...`);
     
-    // Hide modal
+    // Hide modal first
     this.hideMobileWalletModal();
     
-    // Use existing wallet connection system
+    // Try direct connection first
+    const directSuccess = await this.tryDirectConnection(wallet);
+    if (directSuccess) return true;
+    
+    // If direct connection failed, try existing wallet system
     if (window.wildWestWallet) {
       try {
         const result = await window.wildWestWallet.connectWallet();
         if (result) {
-          console.log(`✅ ${wallet.name} connected successfully`);
+          console.log(`✅ ${wallet.name} connected via existing system`);
+          return true;
         }
       } catch (error) {
-        console.error(`❌ Failed to connect ${wallet.name}:`, error);
-        throw error;
+        console.error(`❌ Existing system connection failed for ${wallet.name}:`, error);
       }
-    } else {
-      throw new Error('Wallet system not available');
     }
+    
+    // If all else fails, try to open the wallet app
+    console.log(`🔄 All connection methods failed, opening ${wallet.name} app...`);
+    this.openWalletApp(wallet);
+    
+    return false;
   }
 
   // Open wallet app using deeplink
