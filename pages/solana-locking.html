@@ -245,79 +245,6 @@
       window.availableWallets = availableWallets;
     }
 
-    window.connectSpecificWallet = async function(network, walletIndex) {
-      console.log(`🔗 Solana Locking: Connecting to wallet ${walletIndex} on ${network} network`);
-      
-      try {
-        if (network === 'solana') {
-          const wallet = window.availableWallets.solana[walletIndex];
-          if (!wallet) {
-            throw new Error(`Wallet not found at index ${walletIndex}`);
-          }
-          
-          console.log(`📋 Solana Locking: Connecting to ${wallet.name}`);
-          
-          const response = await wallet.provider.connect();
-          console.log('✅ Connected to', wallet.name, ':', response);
-          
-          let publicKeyStr = null;
-          
-          // Handle different wallet response formats
-          if (response && response.publicKey) {
-            // Standard format (Phantom, etc.)
-            publicKeyStr = response.publicKey.toString ? response.publicKey.toString() : response.publicKey;
-          } else if (response === true && wallet.provider.publicKey) {
-            // Solflare format - connection returns true, publicKey is on provider
-            publicKeyStr = wallet.provider.publicKey.toString ? wallet.provider.publicKey.toString() : wallet.provider.publicKey;
-          } else if (wallet.provider.publicKey) {
-            // Some wallets store publicKey directly on provider
-            publicKeyStr = wallet.provider.publicKey.toString ? wallet.provider.publicKey.toString() : wallet.provider.publicKey;
-          }
-          
-          if (publicKeyStr) {
-            // Update global state for locking page
-            window.currentAddress = publicKeyStr;
-            window.currentChain = 'solana';
-            window.currentProvider = wallet.provider;
-            
-            // CRITICAL: Set the main script variables that the rest of the app expects
-            window.wallet = wallet.provider;
-            window.publicKey = publicKeyStr;
-            
-            // Set up Solana connection for transactions
-            if (typeof window.connection === 'undefined') {
-              try {
-                const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
-                window.connection = new solanaWeb3.Connection(endpoint);
-                console.log('🌐 Solana connection established:', endpoint);
-              } catch (error) {
-                console.error('❌ Failed to get QuickNode endpoint:', error);
-                throw error;
-              }
-            }
-            
-            console.log('🔧 Solana Locking: FIXED - Set wallet:', !!window.wallet);
-            console.log('🔧 Solana Locking: FIXED - Set publicKey:', window.publicKey);
-            
-            // Update UI
-            updateSolanaLockingUI(publicKeyStr);
-            
-            // Close modal
-            document.querySelector('[style*="position: fixed"]')?.remove();
-            
-            console.log(`✅ Solana Locking: ${wallet.name} connected successfully!`);
-          } else {
-            console.error('❌ No public key found in wallet response');
-            alert('Connected to ' + wallet.name + ' but could not retrieve wallet address. Please try again.');
-          }
-        }
-      } catch (error) {
-        const walletName = window.availableWallets.solana[walletIndex]?.name;
-        console.error(`❌ Solana Locking: ${walletName} connection failed:`, error);
-        alert(`Connection failed: ${error.message}`);
-      }
-    };
-
     function updateSolanaLockingUI(address) {
       const connectBtn = document.getElementById('connectWalletBtn');
       const walletAddress = document.getElementById('walletAddress');
@@ -394,9 +321,49 @@
           const newConnectBtn = document.getElementById('connectWalletBtn');
           
           newConnectBtn.onclick = async function() {
-            console.log('🔗 User clicked connect wallet button');
-            window.currentChain = 'solana';
-            await connectSpecificWallet('solana', 'auto-detect');
+            console.log('� USER CLICKED CONNECT - EMERGENCY WALLET RESTORE INITIATED');
+            
+            // STEP 1: EMERGENCY RESTORE WALLETS FROM HIDDEN STATE
+            if (window.__emergencyRestoreWallets) {
+              window.__emergencyRestoreWallets();
+              // Wait a moment for wallets to be restored
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } else {
+              console.error('❌ Emergency restore function not available!');
+            }
+            
+            // STEP 2: Use the centralized wallet system for Solana
+            try {
+              console.log('🟣 Using centralized wallet system for Solana connection...');
+              newConnectBtn.textContent = 'CONNECTING...';
+              newConnectBtn.disabled = true;
+              
+              // Use the centralized wallet system
+              const connected = await window.wildWestWallet.connectToSpecificChain('solana');
+              
+              if (connected && window.wildWestWallet.currentChain === 'solana') {
+                wallet = window.wildWestWallet.provider;
+                publicKey = window.wildWestWallet.account;
+                
+                console.log('✅ Connected via centralized system:', publicKey);
+                document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKey;
+                newConnectBtn.textContent = 'WALLET CONNECTED';
+                newConnectBtn.disabled = false;
+                
+                // Update UI
+                loadUserLocks();
+                loadLockCreationFee();
+                
+                console.log('🎉 Solana wallet connected successfully');
+              } else {
+                throw new Error('Failed to connect to Solana network');
+              }
+            } catch (error) {
+              console.error('❌ Connection failed:', error);
+              newConnectBtn.textContent = 'CONNECTION FAILED';
+              newConnectBtn.disabled = false;
+              alert('Failed to connect wallet: ' + error.message);
+            }
           };
         }
       } else {
@@ -415,7 +382,6 @@
     
     // Make functions globally accessible
     window.showChainSelectionModal = showChainSelectionModal;
-    window.setupSolanaLockingWallet = setupSolanaLockingWallet;
   </script>
   <!-- Essential Solana Web3.js (always loaded) -->
   <script src="https://unpkg.com/@solana/web3.js@1.93.2/lib/index.iife.js"></script>
