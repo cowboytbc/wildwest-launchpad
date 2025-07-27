@@ -793,24 +793,26 @@
       color: #ffffff;
     }
     
-    /* Dropdown button styling */
+    /* Dropdown button styling - match nav links exactly */
     .dropdown-btn {
-      background: none;
-      border: none;
-      color: #00eaff;
-      font-family: inherit;
-      font-size: inherit;
-      font-weight: inherit;
-      cursor: pointer;
-      padding: 0.5em 1em;
-      text-align: center;
-      display: block;
-      width: 100%;
+      background: none !important;
+      border: none !important;
+      color: #00eaff !important;
+      font-family: inherit !important;
+      font-size: inherit !important;
+      font-weight: inherit !important;
+      cursor: pointer !important;
+      padding: 0.5em 1em !important;
+      text-align: center !important;
+      display: block !important;
+      width: 100% !important;
+      text-decoration: none !important;
+      transition: all 0.3s ease !important;
     }
     
     .dropdown-btn:hover {
-      color: #ffffff;
-      background: rgba(0, 234, 255, 0.1);
+      color: #ffffff !important;
+      background: rgba(0, 234, 255, 0.1) !important;
     }
     
     /* Mobile optimizations for dropdowns */
@@ -2061,75 +2063,115 @@
     </ul>
   </nav>
 
-  <!-- Simple working mobile dropdown -->
+  <!-- DEBUG: Ultra-aggressive mobile dropdown -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Setting up simple dropdowns');
+    console.log('🚀 STARTING DROPDOWN SETUP');
     
-    // Get all dropdown elements
+    // Get all dropdown elements with debugging
     const launchDropdown = document.querySelector('.launch-token-dropdown');
     const stakingDropdown = document.querySelector('.staking-dropdown');
     const lockingDropdown = document.querySelector('.token-locking-dropdown');
+    
+    console.log('📋 Dropdowns found:', !!launchDropdown, !!stakingDropdown, !!lockingDropdown);
     
     const launchMenu = document.querySelector('.launch-token-menu');
     const stakingMenu = document.querySelector('.staking-menu');
     const lockingMenu = document.querySelector('.token-locking-menu');
     
+    console.log('📋 Menus found:', !!launchMenu, !!stakingMenu, !!lockingMenu);
+    
     // Close all menus
     function closeAll() {
+      console.log('🔒 Closing all menus');
       if (launchMenu) launchMenu.style.display = 'none';
       if (stakingMenu) stakingMenu.style.display = 'none';
       if (lockingMenu) lockingMenu.style.display = 'none';
     }
     
     // Toggle menu function
-    function toggleMenu(menu) {
+    function toggleMenu(menu, name) {
+      console.log('🔄 Toggle menu called for:', name);
       const isOpen = menu.style.display === 'block';
+      console.log('📊 Current state:', isOpen ? 'OPEN' : 'CLOSED');
       closeAll();
       if (!isOpen) {
+        console.log('🎯 OPENING MENU:', name);
         menu.style.display = 'block';
+        console.log('✅ Menu display set to block');
       }
     }
     
-    // Add both click AND touchstart for mobile compatibility
-    function addMobileEvents(trigger, menu, name) {
-      if (!trigger || !menu) return;
+    // Multiple event types for maximum compatibility
+    function addAllEvents(trigger, menu, name) {
+      if (!trigger || !menu) {
+        console.error('❌ Missing elements for', name);
+        return;
+      }
       
-      // Single click event (buttons handle mobile better)
+      console.log('🎯 Adding events for:', name);
+      
+      // Click
       trigger.addEventListener('click', function(e) {
+        console.log('🖱️ CLICK EVENT:', name);
         e.preventDefault();
         e.stopPropagation();
-        console.log(name + ' dropdown clicked');
-        toggleMenu(menu);
+        toggleMenu(menu, name);
+      });
+      
+      // Touchstart
+      trigger.addEventListener('touchstart', function(e) {
+        console.log('👆 TOUCHSTART EVENT:', name);
+        e.preventDefault();
+        e.stopPropagation();
+        toggleMenu(menu, name);
+      }, { passive: false });
+      
+      // Touchend
+      trigger.addEventListener('touchend', function(e) {
+        console.log('🔥 TOUCHEND EVENT:', name);
+        e.preventDefault();
+        e.stopPropagation();
+      }, { passive: false });
+      
+      // Mousedown
+      trigger.addEventListener('mousedown', function(e) {
+        console.log('⬇️ MOUSEDOWN EVENT:', name);
+        e.preventDefault();
+        e.stopPropagation();
+        toggleMenu(menu, name);
       });
     }
     
-    // Launch Token dropdown
+    // Setup all dropdowns
     if (launchDropdown && launchMenu) {
       const trigger = launchDropdown.querySelector('.dropdown-btn');
-      addMobileEvents(trigger, launchMenu, 'Launch');
+      console.log('🎯 Launch trigger found:', !!trigger);
+      addAllEvents(trigger, launchMenu, 'LAUNCH');
     }
     
-    // Staking dropdown
     if (stakingDropdown && stakingMenu) {
       const trigger = stakingDropdown.querySelector('.dropdown-btn');
-      addMobileEvents(trigger, stakingMenu, 'Staking');
+      console.log('🎯 Staking trigger found:', !!trigger);
+      addAllEvents(trigger, stakingMenu, 'STAKING');
     }
     
-    // Token Locking dropdown
     if (lockingDropdown && lockingMenu) {
       const trigger = lockingDropdown.querySelector('.dropdown-btn');
-      addMobileEvents(trigger, lockingMenu, 'Locking');
+      console.log('🎯 Locking trigger found:', !!trigger);
+      addAllEvents(trigger, lockingMenu, 'LOCKING');
     }
     
     // Close when clicking outside
     document.addEventListener('click', function(e) {
+      console.log('🌍 Document click, target:', e.target.tagName);
       if (!e.target.closest('.main-nav')) {
+        console.log('🔒 Closing from outside click');
         closeAll();
       }
     });
     
-    console.log('✅ Simple dropdowns ready');
+    console.log('✅ ALL DROPDOWN EVENTS READY');
   });
   </script>
 
