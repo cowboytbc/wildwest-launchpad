@@ -4725,8 +4725,36 @@ window.forceLoadProductionConfig = async function() {
   }
 };
 
-console.log('💡 Token Furnace Debug functions available:');
+// Development QuickNode override function
+window.useQuickNodeForDev = function() {
+  console.log('� Setting up QuickNode endpoints for development testing...');
+  
+  // Temporarily inject QuickNode endpoints for development
+  window.PRODUCTION_CONFIG = {
+    rpc: {
+      solana: 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ac83d6b4ecf2a8fa8d0a6894210ede33b1b7495/',
+      base: 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/d9b8b93b1b8b7cc6b8993c4ef5c6e7a70a6e9ad8/'
+    },
+    source: 'development-override'
+  };
+  
+  console.log('✅ QuickNode endpoints injected for development:', window.PRODUCTION_CONFIG);
+  
+  // Reinitialize RPC endpoints
+  initializeRPCEndpoints();
+  
+  console.log('💡 Now try your token operations - they will use QuickNode endpoints!');
+  
+  // Update balance if there's a token address
+  const tokenAddress = document.getElementById('tokenAddress')?.value;
+  if (tokenAddress) {
+    updateBalance();
+  }
+};
+
+console.log('�💡 Token Furnace Debug functions available:');
 console.log('• forceLoadProductionConfig() - Force reload config from deployed site');
+console.log('• useQuickNodeForDev() - Use QuickNode endpoints in development mode');
     </script>
 
     <!-- Copyright Footer -->
