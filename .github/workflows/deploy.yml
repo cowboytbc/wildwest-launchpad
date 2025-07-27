@@ -39,33 +39,61 @@ jobs:
           echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
           echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
           
+          # Debug: Check if secrets are empty or null
+          if [ -z "$SOLANA_RPC_ENDPOINT" ]; then
+            echo "❌ CRITICAL: SOLANA_RPC_ENDPOINT is empty or undefined!"
+            echo "❌ This indicates the GitHub Secret is not properly configured"
+            echo "❌ Please check repository settings > Secrets and variables > Actions"
+          else
+            echo "✅ SOLANA_RPC_ENDPOINT is available"
+          fi
+          
+          if [ -z "$BASE_RPC_ENDPOINT" ]; then
+            echo "❌ CRITICAL: BASE_RPC_ENDPOINT is empty or undefined!"
+            echo "❌ This indicates the GitHub Secret is not properly configured"
+          else
+            echo "✅ BASE_RPC_ENDPOINT is available"
+          fi
+          
           # Ensure js directory exists
           mkdir -p js
           
-          # Overwrite production config file with secret injection
-          echo "🔄 Overwriting existing production-config.js with GitHub Secrets..."
-          echo "// Production configuration injected from GitHub Secrets" > js/production-config.js
-          echo "(function() {" >> js/production-config.js
-          echo "  'use strict';" >> js/production-config.js
-          echo "  " >> js/production-config.js
-          echo "  if (window.PRODUCTION_CONFIG) {" >> js/production-config.js
-          echo "    console.log('🔐 Production config already loaded');" >> js/production-config.js
-          echo "    return;" >> js/production-config.js
-          echo "  }" >> js/production-config.js
-          echo "  " >> js/production-config.js
-          echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
-          echo "    rpc: {" >> js/production-config.js
-          echo "      solana: '${SOLANA_RPC_ENDPOINT}'," >> js/production-config.js
-          echo "      base: '${BASE_RPC_ENDPOINT}'" >> js/production-config.js
-          echo "    }," >> js/production-config.js
-          echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
-          echo "    source: 'github-actions'" >> js/production-config.js
-          echo "  };" >> js/production-config.js
-          echo "  " >> js/production-config.js
-          echo "  console.log('🔐 QuickNode endpoints loaded from GitHub Secrets');" >> js/production-config.js
-          echo "  console.log('📊 Solana endpoint:', window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED (' + window.PRODUCTION_CONFIG.rpc.solana.substring(0, 30) + '...)' : 'MISSING');" >> js/production-config.js
-          echo "  console.log('📊 Base endpoint:', window.PRODUCTION_CONFIG.rpc.base ? 'LOADED (' + window.PRODUCTION_CONFIG.rpc.base.substring(0, 30) + '...)' : 'MISSING');" >> js/production-config.js
-          echo "})();" >> js/production-config.js
+          # Check if we have valid endpoints before writing config
+          if [ -n "$SOLANA_RPC_ENDPOINT" ] && [ -n "$BASE_RPC_ENDPOINT" ]; then
+            echo "✅ Both endpoints available, creating production config with GitHub Secrets..."
+            
+            # Overwrite production config file with secret injection
+            echo "🔄 Overwriting existing production-config.js with GitHub Secrets..."
+            echo "// Production configuration injected from GitHub Secrets" > js/production-config.js
+            echo "(function() {" >> js/production-config.js
+            echo "  'use strict';" >> js/production-config.js
+            echo "  " >> js/production-config.js
+            echo "  if (window.PRODUCTION_CONFIG) {" >> js/production-config.js
+            echo "    console.log('🔐 Production config already loaded');" >> js/production-config.js
+            echo "    return;" >> js/production-config.js
+            echo "  }" >> js/production-config.js
+            echo "  " >> js/production-config.js
+            echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
+            echo "    rpc: {" >> js/production-config.js
+            echo "      solana: '${SOLANA_RPC_ENDPOINT}'," >> js/production-config.js
+            echo "      base: '${BASE_RPC_ENDPOINT}'" >> js/production-config.js
+            echo "    }," >> js/production-config.js
+            echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
+            echo "    source: 'github-actions'" >> js/production-config.js
+            echo "  };" >> js/production-config.js
+            echo "  " >> js/production-config.js
+            echo "  console.log('🔐 QuickNode endpoints loaded from GitHub Secrets');" >> js/production-config.js
+            echo "  console.log('📊 Solana endpoint:', window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED (' + window.PRODUCTION_CONFIG.rpc.solana.substring(0, 30) + '...)' : 'MISSING');" >> js/production-config.js
+            echo "  console.log('📊 Base endpoint:', window.PRODUCTION_CONFIG.rpc.base ? 'LOADED (' + window.PRODUCTION_CONFIG.rpc.base.substring(0, 30) + '...)' : 'MISSING');" >> js/production-config.js
+            echo "})();" >> js/production-config.js
+            
+            echo "✅ Production config updated with QuickNode secrets"
+          else
+            echo "⚠️ Some endpoints missing, keeping placeholder config for debugging..."
+            echo "⚠️ SOLANA_RPC_ENDPOINT available: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'YES' || echo 'NO')"
+            echo "⚠️ BASE_RPC_ENDPOINT available: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'YES' || echo 'NO')"
+            echo "⚠️ Production config will use fallback placeholder"
+          fi
           
           echo "✅ Production config updated with QuickNode secrets"
           echo "📄 Generated production-config.js:"
