@@ -4,11 +4,12 @@
 const RPC_CONFIG = {
   // Solana RPC endpoints - MUST use QuickNode from GitHub Secrets
   SOLANA: {
-    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com",
-    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || "https://api.mainnet-beta.solana.com",
+    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana || "https://rpc.ankr.com/solana",
+    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana || "https://rpc.ankr.com/solana",
     FALLBACKS: [
       "https://rpc.ankr.com/solana",
-      "https://solana-api.projectserum.com",
+      "https://solana.public-rpc.com",
+      "https://solana-mainnet.g.alchemy.com/v2/demo",
       "https://api.mainnet-beta.solana.com"
     ]
   },
@@ -41,11 +42,11 @@ const RPC_CONFIG = {
 
   // Helper functions to get endpoints
   getSolanaEndpoint: function() {
-    const endpoint = this.SOLANA.PRIMARY;
-    console.log('🔍 Debug: getSolanaEndpoint() returning:', endpoint);
-    console.log('🔍 Debug: PRODUCTION_CONFIG.rpc.solana:', window.PRODUCTION_CONFIG?.rpc?.solana);
-    console.log('🔍 Debug: ENV_CONFIG.rpc.solana:', window.ENV_CONFIG?.rpc?.solana);
-    return endpoint;
+    // Use the fallback system for production
+    return this.getSolanaEndpointWithFallback().catch(() => {
+      console.warn('⚠️ Fallback endpoint selection failed, using primary');
+      return this.SOLANA.PRIMARY;
+    });
   },
   
   // Get Solana endpoint with automatic fallback

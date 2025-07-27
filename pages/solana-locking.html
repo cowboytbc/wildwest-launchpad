@@ -5,49 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solana SPL Token Lock</title>
   
-  <!-- CRITICAL: Block auto-connection BEFORE any wallet scripts load -->
+  <!-- DISABLED: Wallet blocking system for debugging -->
   <script>
-    // NUCLEAR META-LEVEL BLOCKING: Prevent wallet injection at the deepest level
-    console.log('🚫 NUCLEAR META-LEVEL WALLET BLOCKING INITIATED');
+    // WALLET BLOCKING DISABLED TO FIX 403 ERRORS AND CONNECTION ISSUES
+    console.log('✅ Wallet blocking system disabled for debugging Solana locks');
     
-    // Block at the Object.defineProperty level
-    const originalDefineProperty = Object.defineProperty;
-    const blockedWalletProps = ['solana', 'phantom', 'solflare', 'backpack', 'nightly', 'slope', 'torus'];
+    // Simple flag to track connection state
+    window.__walletAutoConnectDisabled = true;
     
-    Object.defineProperty = function(obj, prop, descriptor) {
-      if (obj === window && blockedWalletProps.includes(prop)) {
-        console.log(`🚫 INTERCEPTED wallet injection: ${prop}`);
-        // Hide the wallet but store it
-        window[`__hidden_${prop}`] = descriptor.value || descriptor.get?.();
-        return obj; // Prevent actual assignment
-      }
-      return originalDefineProperty.call(this, obj, prop, descriptor);
+    // Function to enable wallet connections when user clicks connect
+    window.__enableWalletConnection = function() {
+      console.log('✅ Wallet connections enabled by user action');
+      window.__walletAutoConnectDisabled = false;
     };
     
-    // Block direct assignment with getters/setters
-    blockedWalletProps.forEach(prop => {
-      Object.defineProperty(window, prop, {
-        get() {
-          console.log(`🚫 BLOCKED read access to: ${prop}`);
-          return { isBlocked: true, connect: () => Promise.reject('Wallet blocked') };
-        },
-        set(value) {
-          console.log(`🚫 BLOCKED write access to: ${prop}, storing as hidden`);
-          window[`__hidden_${prop}`] = value;
-        },
-        configurable: true
-      });
-    });
-    
-    // EMERGENCY RESTORE FUNCTION
-    window.__emergencyRestoreWallets = function() {
-      console.log('🚨 EMERGENCY WALLET RESTORE INITIATED');
-      blockedWalletProps.forEach(prop => {
-        if (window[`__hidden_${prop}`]) {
-          delete window[prop]; // Remove blocker
-          window[prop] = window[`__hidden_${prop}`]; // Restore wallet
-          console.log(`🚨 EMERGENCY RESTORED: ${prop}`);
-        }
+    console.log('✅ NUCLEAR META-LEVEL BLOCKING DISABLED - Testing mode');
+  </script>
       });
     };
     
@@ -58,8 +31,6 @@
   
   <!-- Console Filter - Universal console control -->
   <script src="../js/console-filter.js"></script>
-  <!-- Core wallet dependencies -->
-  <script src="../js/wallet.js"></script>
   <!-- Core wallet dependencies -->
   <script src="../js/wallet.js"></script>
   <!-- Mobile Wallet Integration - Clean mobile experience -->
@@ -73,6 +44,8 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="../js/production-config.js"></script>
+  <!-- Development Configuration (Local testing when secrets unavailable) -->
+  <script src="../js/dev-config.js"></script>
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
@@ -90,8 +63,6 @@
   
   <!-- Multi-wallet management -->
   <script src="../js/multi-wallet-manager.js"></script>
-  <!-- Custom wallet integration -->
-  <script src="../js/wallet.js"></script>
   <!-- Token Furnace Style Wallet Modal System for Solana -->
   <script>
     // Token Furnace Style Wallet Modal Implementation for Solana Locking
@@ -1067,46 +1038,22 @@
       console.log('🚫 ALL WALLETS BLOCKED - No auto-connection possible');
     }
     
-    // UNBLOCK wallets when user explicitly requests connection
-    function unblockAllWallets() {
-      console.log('✅ UNBLOCKING ALL WALLETS for user-requested connection...');
-      
-      Object.keys(originalWalletObjects).forEach(prop => {
-        window[prop] = originalWalletObjects[prop];
-        console.log(`✅ RESTORED wallet property: ${prop}`);
-      });
-      
-      console.log('✅ ALL WALLETS UNBLOCKED');
+    // DISABLED: Wallet blocking system
+    function blockAllWallets() {
+      console.log('⚠️ Wallet blocking disabled for debugging');
+      return;
     }
     
-    // Block immediately when page loads
-    blockAllWallets();
+    function unblockAllWallets() {
+      console.log('✅ Wallets already unblocked (blocking disabled)');
+      return;
+    }
     
-    // Set up a watcher to block any wallets that load after page load
-    const walletBlocker = setInterval(() => {
-      const walletProperties = ['solana', 'phantom', 'solflare', 'backpack', 'nightly', 'blocto', 'torus', 'sollet', 'slope', 'ledger', 'coin98', 'okxwallet', 'bitget', 'xdefi'];
-      
-      walletProperties.forEach(prop => {
-        if (window[prop] && !window[prop].isBlocked && !originalWalletObjects[prop]) {
-          console.log(`🚫 LATE-LOADING WALLET DETECTED AND BLOCKED: ${prop}`);
-          originalWalletObjects[prop] = window[prop];
-          window[prop] = {
-            isBlocked: true,
-            originalWallet: originalWalletObjects[prop],
-            connect: () => {
-              throw new Error(`Wallet ${prop} is blocked. Use the connect button to enable.`);
-            }
-          };
-        }
-      });
-    }, 100); // Check every 100ms for new wallets
-    
-    // Make unblock function globally available
+    // Make functions globally available (no-ops)
     window.unblockWallets = unblockAllWallets;
     window.blockWallets = blockAllWallets;
     
-    console.log('🚫 EXTREME WALLET BLOCKING SYSTEM ACTIVE');
-    console.log('💡 Use unblockWallets() to restore wallet access');
+    console.log('✅ EXTREME WALLET BLOCKING DISABLED - Testing mode');
     
     // --- SOLANA PROGRAM ADDRESS (replace with your deployed program address) ---
     const PROGRAM_ID = new solanaWeb3.PublicKey("8AqhFyokcMouAf9rruTdnDxVmnNyvn5f4Gf71FJDLXyV");
