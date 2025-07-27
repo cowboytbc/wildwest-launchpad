@@ -64,14 +64,13 @@ const RPC_CONFIG = {
 
   // Helper functions to get endpoints
   getSolanaEndpoint: async function() {
-    // Only use QuickNode from GitHub Secrets (production)
+    // ONLY use QuickNode from GitHub Secrets
     if (window.PRODUCTION_CONFIG?.rpc?.solana) {
       console.log('🔐 Using QuickNode Solana endpoint from GitHub Secrets');
       return window.PRODUCTION_CONFIG.rpc.solana;
     }
     
-    console.error('❌ No Solana RPC endpoint available - GitHub Secrets required');
-    throw new Error('Solana RPC endpoint not configured');
+    throw new Error('QuickNode Solana endpoint not available - GitHub Secrets required');
   },
   
   // Get Solana endpoint with automatic fallback (only used when QuickNode unavailable)
@@ -113,14 +112,13 @@ const RPC_CONFIG = {
   },
   
   getBaseEndpoint: function() {
-    // Only use QuickNode from GitHub Secrets (production)
+    // ONLY use QuickNode from GitHub Secrets
     if (window.PRODUCTION_CONFIG?.rpc?.base) {
       console.log('🔐 Using QuickNode Base endpoint from GitHub Secrets');
       return window.PRODUCTION_CONFIG.rpc.base;
     }
     
-    console.error('❌ No Base RPC endpoint available - GitHub Secrets required');
-    throw new Error('Base RPC endpoint not configured');
+    throw new Error('QuickNode Base endpoint not available - GitHub Secrets required');
   },
   
   // QuickNode API helpers
