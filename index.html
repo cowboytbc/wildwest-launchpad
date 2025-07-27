@@ -2197,15 +2197,13 @@
           console.log('� Launch clicked');
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
           
-          // Force show with timeout
-          setTimeout(() => {
-            const launchMenu = document.getElementById('launch-menu');
-            launchMenu.classList.add('show');
-            launchMenu.style.display = 'block';
-            launchMenu.style.visibility = 'visible';
-            launchMenu.style.opacity = '1';
-            console.log('✅ Launch menu forced open');
-          }, 10);
+          // Immediate show without timeout to prevent CSS flash
+          const launchMenu = document.getElementById('launch-menu');
+          launchMenu.classList.add('show');
+          launchMenu.style.display = 'block';
+          launchMenu.style.visibility = 'visible';
+          launchMenu.style.opacity = '1';
+          console.log('✅ Launch menu opened immediately');
           
           return false;
         " class="dropdown-trigger">Launch Token ▼</a>
@@ -2234,15 +2232,13 @@
           console.log('� Staking clicked');
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
           
-          // Force show with timeout
-          setTimeout(() => {
-            const stakingMenu = document.getElementById('staking-menu');
-            stakingMenu.classList.add('show');
-            stakingMenu.style.display = 'block';
-            stakingMenu.style.visibility = 'visible';
-            stakingMenu.style.opacity = '1';
-            console.log('✅ Staking menu forced open');
-          }, 10);
+          // Immediate show without timeout to prevent CSS flash
+          const stakingMenu = document.getElementById('staking-menu');
+          stakingMenu.classList.add('show');
+          stakingMenu.style.display = 'block';
+          stakingMenu.style.visibility = 'visible';
+          stakingMenu.style.opacity = '1';
+          console.log('✅ Staking menu opened immediately');
           
           return false;
         " class="dropdown-trigger">Staking ▼</a>
