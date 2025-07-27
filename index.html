@@ -2113,15 +2113,21 @@
       <li class="launch-token-dropdown">
         <a href="javascript:void(0)" onclick="
           event.stopPropagation();
-          console.log('🔽 Launch clicked');
-          console.log('📱 Mobile check:', window.innerWidth <= 768);
-          console.log('📱 Touch device:', 'ontouchstart' in window);
+          event.preventDefault();
+          console.log('� Launch clicked');
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-          const launchMenu = document.getElementById('launch-menu');
-          launchMenu.classList.add('show');
-          console.log('✅ Launch menu should be visible now');
-          console.log('📊 Menu classes:', launchMenu.className);
-          console.log('📊 Menu display style:', window.getComputedStyle(launchMenu).display);
+          
+          // Force show with timeout
+          setTimeout(() => {
+            const launchMenu = document.getElementById('launch-menu');
+            launchMenu.classList.add('show');
+            launchMenu.style.display = 'block';
+            launchMenu.style.visibility = 'visible';
+            launchMenu.style.opacity = '1';
+            console.log('✅ Launch menu forced open');
+          }, 10);
+          
+          return false;
         " class="dropdown-trigger">Launch Token ▼</a>
         <ul class="launch-token-menu dropdown-menu" id="launch-menu" onclick="event.stopPropagation();">
           <li><a href="pages/base-launch.html" onclick="
@@ -2144,15 +2150,21 @@
       <li class="staking-dropdown">
         <a href="javascript:void(0)" onclick="
           event.stopPropagation();
-          console.log('🔽 Staking clicked');
-          console.log('📱 Mobile check:', window.innerWidth <= 768);
-          console.log('📱 Touch device:', 'ontouchstart' in window);
+          event.preventDefault();
+          console.log('� Staking clicked');
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-          const stakingMenu = document.getElementById('staking-menu');
-          stakingMenu.classList.add('show');
-          console.log('✅ Staking menu should be visible now');
-          console.log('📊 Menu classes:', stakingMenu.className);
-          console.log('📊 Menu display style:', window.getComputedStyle(stakingMenu).display);
+          
+          // Force show with timeout
+          setTimeout(() => {
+            const stakingMenu = document.getElementById('staking-menu');
+            stakingMenu.classList.add('show');
+            stakingMenu.style.display = 'block';
+            stakingMenu.style.visibility = 'visible';
+            stakingMenu.style.opacity = '1';
+            console.log('✅ Staking menu forced open');
+          }, 10);
+          
+          return false;
         " class="dropdown-trigger">Staking ▼</a>
         <ul class="staking-menu dropdown-menu" id="staking-menu" onclick="event.stopPropagation();">
           <li><a href="pages/base-staking.html" onclick="
