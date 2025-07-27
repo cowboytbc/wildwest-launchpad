@@ -263,8 +263,9 @@ class MobileWalletIntegration {
   }
 
   showWalletBrowserGuidance() {
-    // Use the unified function to ensure consistency across all pages
-    window.showUnifiedWalletBrowserGuidance();
+    // Disabled - wallet guidance now only shown in legal disclaimer
+    console.log('📱 Wallet browser guidance disabled - handled by legal disclaimer only');
+    return;
   }
 
   enhanceConnectButton() {
@@ -335,17 +336,11 @@ document.addEventListener('visibilitychange', function() {
 console.log('🔗 Mobile Wallet Integration loaded');
 
 // GLOBAL UNIFIED WALLET BROWSER GUIDANCE FUNCTION
-// This ensures all pages show the same modal regardless of which wallet system is used
+// DISABLED: Wallet browser guidance is now only shown in legal disclaimer
 window.showUnifiedWalletBrowserGuidance = function() {
-  // Prevent duplicate modals
-  if (document.querySelector('.unified-wallet-browser-modal')) {
-    return;
-  }
-  
-  console.log('📱 Showing unified wallet browser guidance modal');
-  
-  // Create the enhanced modal
-  const modal = document.createElement('div');
+  console.log('📱 Wallet browser guidance disabled - handled by legal disclaimer only');
+  return;
+};
   modal.className = 'unified-wallet-browser-modal';
   modal.style.cssText = `
     position: fixed;
@@ -511,40 +506,31 @@ window.showUnifiedWalletBrowserGuidance = function() {
   
   document.body.appendChild(modal);
   
-  // Auto-close after 12 seconds with graceful fade out
-  setTimeout(() => {
-    if (modal.parentNode) {
-      modal.style.animation = 'unifiedModalFadeOut 0.3s ease-in forwards';
-      modal.querySelector('div').style.animation = 'unifiedModalSlideOut 0.3s ease-in forwards';
-      setTimeout(() => modal.remove(), 300);
-    }
-  }, 12000);
-};
+;
 
-// Override all existing wallet guidance functions to use the unified one
+// Override all existing wallet guidance functions to use the unified one (DISABLED)
 setTimeout(() => {
-  // Override wallet.js function if it exists
+  // All wallet guidance functions disabled - only shown in legal disclaimer
   if (window.walletManager && typeof window.walletManager.showWalletInstallationGuide === 'function') {
-    const originalFunc = window.walletManager.showWalletInstallationGuide;
     window.walletManager.showWalletInstallationGuide = function() {
-      window.showUnifiedWalletBrowserGuidance();
+      console.log('🔄 Wallet guidance disabled - handled by legal disclaimer only');
     };
-    console.log('🔄 Overrode walletManager.showWalletInstallationGuide');
+    console.log('🔄 Disabled walletManager.showWalletInstallationGuide');
   }
   
   // Override any global functions
   if (typeof window.showWalletInstallationGuide === 'function') {
     window.showWalletInstallationGuide = function() {
-      window.showUnifiedWalletBrowserGuidance();
+      console.log('🔄 Wallet guidance disabled - handled by legal disclaimer only');
     };
-    console.log('🔄 Overrode global showWalletInstallationGuide');
+    console.log('🔄 Disabled global showWalletInstallationGuide');
   }
   
   // Also override the class method
   if (window.mobileWalletIntegration && typeof window.mobileWalletIntegration.showWalletBrowserGuidance === 'function') {
     window.mobileWalletIntegration.showWalletBrowserGuidance = function() {
-      window.showUnifiedWalletBrowserGuidance();
+      console.log('🔄 Wallet guidance disabled - handled by legal disclaimer only');
     };
-    console.log('🔄 Overrode mobileWalletIntegration.showWalletBrowserGuidance');
+    console.log('🔄 Disabled mobileWalletIntegration.showWalletBrowserGuidance');
   }
 }, 1000);
