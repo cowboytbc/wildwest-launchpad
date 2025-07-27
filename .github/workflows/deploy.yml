@@ -1,8 +1,8 @@
-name: Deploy Wild West Launchpad
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -15,36 +15,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
-      - name: Inject QuickNode secrets
+      - name: Inject GitHub Secrets
         env:
           SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
           BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
-          echo "🔧 Injecting QuickNode secrets into production config..."
-          
-          # Ensure js directory exists
           mkdir -p js
-          
-          # Create production config with proper variable expansion
           cat > js/production-config.js << EOF
-          // Production configuration injected from GitHub Secrets
           (function() {
             'use strict';
-            
-            if (window.PRODUCTION_CONFIG) {
-              console.log('🔐 Production config already loaded');
-              return;
-            }
             
             window.PRODUCTION_CONFIG = {
               rpc: {
@@ -55,17 +44,16 @@ jobs:
               source: 'github-actions'
             };
             
-            console.log('🔐 QuickNode endpoints loaded from GitHub Secrets');
+            window.RPC_CONFIG = {
+              getSolanaEndpoint: function() { return window.PRODUCTION_CONFIG.rpc.solana; },
+              getBaseEndpoint: function() { return window.PRODUCTION_CONFIG.rpc.base; }
+            };
           })();
           EOF
-          
-          echo "✅ Production config created with GitHub Secrets"
-          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-          
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

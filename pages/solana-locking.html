@@ -1209,52 +1209,39 @@
     let publicKey = null;
     let connection = null;
 
-    // Initialize connection using centralized config - QuickNode ONLY
+    // Initialize connection using centralized config with fallback
     async function initializeConnection() {
       console.log('🔧 INITIALIZING SOLANA CONNECTION...');
-      console.log('🔍 Debug: window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
-      console.log('🔍 Debug: PRODUCTION_CONFIG.rpc:', window.PRODUCTION_CONFIG?.rpc);
-      console.log('🔍 Debug: window.RPC_CONFIG exists:', !!window.RPC_CONFIG);
       
-      // Additional debugging for deployment issue
-      console.log('🔍 Debug: Current URL:', window.location.href);
-      console.log('🔍 Debug: Is production domain:', window.location.hostname === 'wildwestlaunch.xyz');
+      let endpoint;
       
-      if (!window.RPC_CONFIG) {
-        throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+      // Try QuickNode from GitHub Secrets first
+      if (window.RPC_CONFIG) {
+        try {
+          endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+          console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
+        } catch (error) {
+          console.log('⚠️ QuickNode not available, using fallback');
+          endpoint = null;
+        }
+      }
+      
+      // Fallback to public RPC if QuickNode fails
+      if (!endpoint) {
+        endpoint = 'https://api.mainnet-beta.solana.com';
+        console.log('� Using fallback Solana RPC:', endpoint);
       }
       
       try {
-        // Use QuickNode endpoint from GitHub Secrets ONLY
-        const quicknodeEndpoint = await window.RPC_CONFIG.getSolanaEndpoint();
-        console.log('🔍 QuickNode endpoint from GitHub Secrets:', quicknodeEndpoint);
-        
-        connection = new solanaWeb3.Connection(quicknodeEndpoint);
-        console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
-        console.log('🔗 Endpoint URL:', quicknodeEndpoint.substring(0, 50) + '...');
+        connection = new solanaWeb3.Connection(endpoint);
+        console.log('� Endpoint URL:', endpoint.substring(0, 50) + '...');
         
         // Test connection
         await connection.getVersion();
-        console.log('✅ QuickNode endpoint verified working');
+        console.log('✅ Solana endpoint verified working');
       } catch (error) {
-        console.error('❌ QuickNode endpoint failed:', error.message);
-        
-        // Enhanced debugging for deployment issues
-        if (error.message.includes('GitHub Secrets')) {
-          console.log('🔍 Attempting to debug production config loading...');
-          
-          try {
-            const response = await fetch('/js/production-config.js?t=' + Date.now());
-            console.log('🔍 Production config fetch status:', response.status);
-            const configText = await response.text();
-            console.log('🔍 Production config content length:', configText.length);
-            console.log('🔍 Production config preview:', configText.substring(0, 200) + '...');
-          } catch (fetchError) {
-            console.error('🔍 Failed to fetch production config:', fetchError.message);
-          }
-        }
-        
-        throw new Error('QuickNode Solana endpoint required - GitHub Secrets not available');
+        console.error('❌ Solana endpoint failed:', error.message);
+        throw new Error('Failed to connect to Solana network');
       }
     }
 
