@@ -1482,9 +1482,15 @@ async function initializeRPCEndpoints() {
       console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
     } else {
       console.warn('⚠️ RPC_CONFIG not available, using fallback endpoints');
+      // Better fallback endpoints that should work
+      SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+      BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
+    // Ensure we have working fallbacks
+    SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+    BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
   }
 }
 

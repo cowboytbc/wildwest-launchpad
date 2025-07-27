@@ -7,10 +7,9 @@ const RPC_CONFIG = {
     get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     FALLBACKS: [
-      "https://solana-mainnet.rpc.extrnode.com", // Known working CORS-friendly endpoint
-      "https://solana-mainnet.phantom.app",      // Phantom's public RPC
-      "https://rpc.helius.xyz/?api-key=public",  // Helius public endpoint
-      "https://mainnet.helius-rpc.com/?api-key=public-key" // Alternative Helius
+      "https://api.mainnet-beta.solana.com", // Official Solana RPC (should work)
+      "https://solana-api.projectserum.com", // Serum project endpoint
+      "https://api.metaplex.solana.com",     // Metaplex endpoint
     ]
   },
   
@@ -20,8 +19,8 @@ const RPC_CONFIG = {
     get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.base; },
     FALLBACKS: [
       "https://mainnet.base.org",
-      "https://base-mainnet.g.alchemy.com/v2/demo",
-      "https://base.gateway.tenderly.co"
+      "https://base.blockpi.network/v1/rpc/public",
+      "https://base-mainnet.public.blastapi.io"
     ]
   },
   
