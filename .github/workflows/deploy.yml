@@ -39,7 +39,11 @@ jobs:
           echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
           echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
           
-          # Write production config file with secret injection
+          # Ensure js directory exists
+          mkdir -p js
+          
+          # Overwrite production config file with secret injection
+          echo "🔄 Overwriting existing production-config.js with GitHub Secrets..."
           echo "// Production configuration injected from GitHub Secrets" > js/production-config.js
           echo "(function() {" >> js/production-config.js
           echo "  'use strict';" >> js/production-config.js
@@ -66,6 +70,16 @@ jobs:
           echo "✅ Production config updated with QuickNode secrets"
           echo "📄 Generated production-config.js:"
           cat js/production-config.js
+          
+          # Verify file exists and has content
+          if [ -f "js/production-config.js" ]; then
+            echo "✅ production-config.js file exists"
+            echo "📊 File size: $(wc -c < js/production-config.js) bytes"
+            echo "📊 File permissions: $(ls -la js/production-config.js)"
+          else
+            echo "❌ production-config.js file NOT found!"
+            exit 1
+          fi
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

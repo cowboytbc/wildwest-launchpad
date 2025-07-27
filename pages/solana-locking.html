@@ -1951,11 +1951,18 @@
       console.log('  Current domain:', window.location.hostname);
       console.log('  Is production:', window.location.hostname === 'wildwestlaunch.xyz');
       
-      if (window.PRODUCTION_CONFIG?.rpc) {
-        console.log('  Solana endpoint available:', !!window.PRODUCTION_CONFIG.rpc.solana);
-        console.log('  Base endpoint available:', !!window.PRODUCTION_CONFIG.rpc.base);
-        if (window.PRODUCTION_CONFIG.rpc.solana) {
-          console.log('  Solana endpoint preview:', window.PRODUCTION_CONFIG.rpc.solana.substring(0, 30) + '...');
+      if (window.PRODUCTION_CONFIG) {
+        console.log('  Config source:', window.PRODUCTION_CONFIG.source);
+        console.log('  Injected at:', window.PRODUCTION_CONFIG.injectedAt);
+        if (window.PRODUCTION_CONFIG.rpc) {
+          console.log('  Solana endpoint available:', !!window.PRODUCTION_CONFIG.rpc.solana);
+          console.log('  Base endpoint available:', !!window.PRODUCTION_CONFIG.rpc.base);
+          if (window.PRODUCTION_CONFIG.rpc.solana) {
+            console.log('  Solana endpoint preview:', window.PRODUCTION_CONFIG.rpc.solana.substring(0, 30) + '...');
+          }
+          if (window.PRODUCTION_CONFIG.rpc.base) {
+            console.log('  Base endpoint preview:', window.PRODUCTION_CONFIG.rpc.base.substring(0, 30) + '...');
+          }
         }
       }
       
@@ -1963,7 +1970,9 @@
         hasProductionConfig: !!window.PRODUCTION_CONFIG,
         hasRPCConfig: !!window.RPC_CONFIG,
         isDomain: window.location.hostname,
-        isProduction: window.location.hostname === 'wildwestlaunch.xyz'
+        isProduction: window.location.hostname === 'wildwestlaunch.xyz',
+        configSource: window.PRODUCTION_CONFIG?.source,
+        hasEndpoints: !!(window.PRODUCTION_CONFIG?.rpc?.solana && window.PRODUCTION_CONFIG?.rpc?.base)
       };
     };
 
