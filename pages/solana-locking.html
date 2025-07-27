@@ -1250,11 +1250,21 @@
 
     // Initialize connection using centralized config (synchronous like before)
     function initializeConnection() {
+      console.log('🔧 INITIALIZING SOLANA CONNECTION...');
+      console.log('🔍 Debug: window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
+      console.log('🔍 Debug: PRODUCTION_CONFIG.rpc:', window.PRODUCTION_CONFIG?.rpc);
+      console.log('🔍 Debug: window.RPC_CONFIG exists:', !!window.RPC_CONFIG);
+      console.log('🔍 Debug: RPC_CONFIG.SOLANA.QUICKNODE:', window.RPC_CONFIG?.SOLANA?.QUICKNODE);
+      
       if (window.RPC_CONFIG) {
-        // Use direct QuickNode access like Base page does
-        if (window.RPC_CONFIG.SOLANA.QUICKNODE) {
-          connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.QUICKNODE);
+        // Check for QuickNode endpoint from GitHub Secrets
+        const quicknodeEndpoint = window.RPC_CONFIG.SOLANA.QUICKNODE;
+        console.log('🔍 QuickNode endpoint check:', quicknodeEndpoint);
+        
+        if (quicknodeEndpoint) {
+          connection = new solanaWeb3.Connection(quicknodeEndpoint);
           console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
+          console.log('🔗 Endpoint URL:', quicknodeEndpoint.substring(0, 50) + '...');
           
           // Test connection in background without blocking
           connection.getVersion().then(() => {
@@ -1269,11 +1279,13 @@
             }
           });
         } else {
+          console.log('⚠️ QuickNode endpoint not available from GitHub Secrets');
           // Skip broken Ankr endpoint, use working Alchemy directly
           connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-          console.log('⚠️ Using working Alchemy endpoint (Ankr known to be broken)');
+          console.log('⚠️ Using working Alchemy endpoint (QuickNode not loaded)');
         }
       } else {
+        console.log('⚠️ RPC_CONFIG not available');
         // Fallback to Alchemy endpoint (better than broken api.mainnet-beta.solana.com)
         connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
         console.log('⚠️ Using Alchemy fallback RPC endpoint');

@@ -4,8 +4,8 @@
 const RPC_CONFIG = {
   // Solana RPC endpoints - MUST use QuickNode from GitHub Secrets
   SOLANA: {
-    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana,
-    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana,
+    get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
+    get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     FALLBACKS: [
       "https://solana-mainnet.g.alchemy.com/v2/demo",  // Working endpoint first
       "https://api.mainnet-beta.solana.com",
@@ -16,8 +16,8 @@ const RPC_CONFIG = {
   
   // Base/Ethereum RPC endpoints - QuickNode only from GitHub Secrets  
   BASE: {
-    PRIMARY: window.PRODUCTION_CONFIG?.rpc?.base,
-    QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.base,
+    get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.base; },
+    get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.base; },
     FALLBACKS: [
       "https://mainnet.base.org",
       "https://base-mainnet.g.alchemy.com/v2/demo",
