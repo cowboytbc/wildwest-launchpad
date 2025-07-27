@@ -765,6 +765,11 @@
       margin-top: 2px;
     }
     
+    /* Mobile dropdown show class - overrides display: none !important */
+    .mobile-dropdown-show {
+      display: block !important;
+    }
+    
     .launch-token-menu a,
     .staking-menu a,
     .token-locking-menu a {
@@ -2051,16 +2056,22 @@
     const allMenuIds = ['launch-menu', 'staking-menu', 'locking-menu'];
     const allMenuClasses = ['.launch-token-menu', '.staking-menu', '.token-locking-menu'];
     
-    // Close by ID first
+    // Close by ID first - remove active class
     allMenuIds.forEach(function(menuId) {
       const menu = document.getElementById(menuId);
-      if (menu) menu.style.display = 'none';
+      if (menu) {
+        menu.classList.remove('mobile-dropdown-show');
+        menu.style.display = 'none';
+      }
     });
     
-    // Close by class as backup
+    // Close by class as backup - remove active class
     allMenuClasses.forEach(function(menuClass) {
       const menu = document.querySelector(menuClass);
-      if (menu) menu.style.display = 'none';
+      if (menu) {
+        menu.classList.remove('mobile-dropdown-show');
+        menu.style.display = 'none';
+      }
     });
     
     // Open the requested menu - try ID first
@@ -2084,6 +2095,7 @@
     // Try ID first
     let targetMenu = document.getElementById(targetMenuId);
     if (targetMenu) {
+      targetMenu.classList.add('mobile-dropdown-show');
       targetMenu.style.display = 'block';
       console.log('✅ Opened menu by ID:', name);
       return;
@@ -2092,6 +2104,7 @@
     // Try class selector
     targetMenu = document.querySelector(targetMenuClass);
     if (targetMenu) {
+      targetMenu.classList.add('mobile-dropdown-show');
       targetMenu.style.display = 'block';
       console.log('✅ Opened menu by class:', name);
       return;
@@ -2108,12 +2121,18 @@
       // Close by both ID and class
       ['launch-menu', 'staking-menu', 'locking-menu'].forEach(function(menuId) {
         const menu = document.getElementById(menuId);
-        if (menu) menu.style.display = 'none';
+        if (menu) {
+          menu.classList.remove('mobile-dropdown-show');
+          menu.style.display = 'none';
+        }
       });
       
       ['.launch-token-menu', '.staking-menu', '.token-locking-menu'].forEach(function(menuClass) {
         const menu = document.querySelector(menuClass);
-        if (menu) menu.style.display = 'none';
+        if (menu) {
+          menu.classList.remove('mobile-dropdown-show');
+          menu.style.display = 'none';
+        }
       });
     }
   });
