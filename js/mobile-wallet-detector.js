@@ -503,7 +503,7 @@ class MobileWalletDetector {
     if (availableWallets.length > 0) {
       html += `
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #00ff88; font-size: 16px; margin: 0 0 15px 0;">✅ Ready to Connect</h3>
+          <h3 style="color: #00ff88; font-size: 16px; margin: 0 0 15px 0;"></h3>
       `;
       
       availableWallets.forEach(wallet => {
@@ -531,7 +531,7 @@ class MobileWalletDetector {
     if (installableWallets.length > 0) {
       html += `
         <div style="margin-bottom: 20px;">
-          <h3 style="color: #888; font-size: 16px; margin: 0 0 15px 0;">📥 Available to Install</h3>
+          <h3 style="color: #888; font-size: 16px; margin: 0 0 15px 0;"></h3>
       `;
       
       installableWallets.slice(0, 4).forEach(wallet => { // Show top 4
@@ -567,8 +567,8 @@ class MobileWalletDetector {
   generateWalletButton(wallet, action) {
     const actionTexts = {
       connect: 'Connect',
-      open: 'Open App',
-      install: 'Install'
+      open: 'Connect',
+      install: 'Connect'
     };
     
     const actionColors = {
