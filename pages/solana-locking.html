@@ -1911,6 +1911,29 @@
       }
     };
 
+    // Function to refresh Solana connection with QuickNode endpoints
+    window.refreshSolanaConnection = async function() {
+      console.log('🔄 Refreshing Solana connection with QuickNode endpoints...');
+      try {
+        if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaEndpoint) {
+          const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+          window.connection = new solanaWeb3.Connection(endpoint);
+          console.log('✅ Solana connection refreshed with endpoint:', endpoint);
+          
+          // Test the connection
+          const version = await window.connection.getVersion();
+          console.log('✅ Connection test successful:', version);
+          return endpoint;
+        } else {
+          console.error('❌ RPC_CONFIG not available');
+          return null;
+        }
+      } catch (error) {
+        console.error('❌ Failed to refresh Solana connection:', error);
+        return null;
+      }
+    };
+
     // NUCLEAR OPTION: Function to completely reset and force fresh wallet approval
     window.nukeWalletConnection = function() {
       console.log('💥 NUCLEAR WALLET RESET - Clearing ALL wallet state...');
@@ -1982,6 +2005,7 @@
     console.log('💡 Solana Debug functions available:');
     console.log('• debugSolanaWalletSystem() - Check wallet system status');
     console.log('• testSolanaConnection() - Manually test wallet connection');
+    console.log('• refreshSolanaConnection() - Refresh connection with QuickNode endpoints');
     console.log('• nukeWalletConnection() - NUCLEAR OPTION: Clear all wallet state and refresh page');
     console.log('• testWalletBlocking() - Test if wallets are properly blocked');
     console.log('• unblockWallets() - Manually unblock wallets');
