@@ -24,9 +24,8 @@
       });
     };
     
-    // MAXIMUM SECURITY: Block wallet auto-connection immediately
-    window.WALLET_AUTO_CONNECTION_BLOCKED = true;
-    console.log('🚫 NUCLEAR META-LEVEL BLOCKING ACTIVE - ZERO wallet access possible');
+    // Wallet blocking system disabled for debugging
+    console.log('✅ NUCLEAR META-LEVEL BLOCKING DISABLED - Testing mode');
   </script>
   
   <!-- Console Filter - Universal console control -->
@@ -56,9 +55,9 @@
   <script>
     window.SOLANA_LOCKING_HANDLES_WALLET_BUTTON = true;
     
-    // AGGRESSIVE ANTI-AUTO-CONNECTION: Block all wallet property access until user clicks connect
-    window.WALLET_AUTO_CONNECTION_BLOCKED = true;
-    console.log('🚫 Solana locking page: Wallet auto-connection globally blocked until user interaction');
+    // Wallet auto-connection blocking disabled for debugging
+    window.WALLET_AUTO_CONNECTION_BLOCKED = false;
+    console.log('✅ Solana locking page: Wallet auto-connection blocking disabled for testing');
   </script>
   
   <!-- Multi-wallet management -->
@@ -1193,10 +1192,10 @@
       }
     }
 
-    // Universal Solana wallet detection (SECURITY: Respects auto-connection blocking)
+    // Universal Solana wallet detection (BLOCKING DISABLED FOR DEBUGGING)
     function getAvailableSolanaWallets() {
-      // SECURITY: Respect auto-connection blocking flag
-      if (window.WALLET_AUTO_CONNECTION_BLOCKED) {
+      // Auto-connection blocking disabled for testing
+      if (false) { // Disabled: window.WALLET_AUTO_CONNECTION_BLOCKED
         console.log('🚫 Solana wallet detection blocked - auto-connection prevention active');
         return [];
       }
@@ -1364,9 +1363,8 @@
           async function connectToSelectedSolanaWallet(selectedWallet) {
             console.log('🟣 Connecting to selected Solana wallet:', selectedWallet.name);
             
-            // UNBLOCK wallet access since user explicitly requested connection
-            window.WALLET_AUTO_CONNECTION_BLOCKED = false;
-            console.log('✅ Solana locking: Wallet auto-connection block lifted by user action');
+            // Wallet blocking disabled for testing
+            console.log('✅ Solana locking: Wallet connection enabled (blocking disabled)');
             
             newConnectBtn.textContent = 'CONNECTING...';
             newConnectBtn.disabled = true;
@@ -1454,13 +1452,12 @@
               newConnectBtn.textContent = 'CONNECT SOLANA WALLET';
               newConnectBtn.disabled = false;
               
-              // Re-block auto-connection on error
-              window.WALLET_AUTO_CONNECTION_BLOCKED = true;
+              // Wallet blocking disabled - no re-blocking on error
               
               alert('Failed to connect to ' + selectedWallet.name + ': ' + error.message);
             }
           }
-          console.log('✅ Solana connect button configured with anti-auto-connection safeguards');
+          console.log('✅ Solana connect button configured (wallet blocking disabled for testing)');
         } else {
           console.error('❌ Connect button not found');
         }
