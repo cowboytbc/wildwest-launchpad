@@ -86,6 +86,18 @@ class MobileWalletIntegration {
   async handleMobileWalletConnection(walletType, originalConnect) {
     console.log('📱 Handling mobile wallet connection...');
     
+    // First try standard connection (works in wallet browsers)
+    try {
+      console.log('🔗 Attempting standard wallet connection...');
+      const result = await originalConnect(walletType);
+      if (result) {
+        console.log('✅ Standard connection successful!');
+        return result;
+      }
+    } catch (error) {
+      console.log('⚠️ Standard connection failed, trying mobile detection...');
+    }
+    
     // Check if any mobile wallets are detected
     const detectedWallets = window.mobileWalletDetector.getDetectedWallets();
     const availableWallets = detectedWallets.filter(w => w.status === 'available');
@@ -237,11 +249,8 @@ class MobileWalletIntegration {
     const installableWallets = detectedWallets.filter(w => w.status === 'installable');
     const detectedButNotAvailable = detectedWallets.filter(w => w.status === 'detected');
     
-    // Instead of showing disclaimers, FORCE show the wallet modal
-    console.log('� FORCING mobile wallet modal to show...');
-    
+    // First, try to connect with detected wallets
     if (detectedButNotAvailable.length > 0) {
-      // Try to connect to detected wallets first
       console.log('🔍 Attempting to connect to detected wallets...');
       
       for (const wallet of detectedButNotAvailable) {
@@ -263,11 +272,64 @@ class MobileWalletIntegration {
       }
     }
     
-    // If we get here, show the wallet selection modal instead of text
-    console.log('🎯 Showing wallet selection modal...');
-    window.mobileWalletDetector.showMobileWalletModal();
+    // If no wallets work, show clean guidance to use wallet browser
+    this.showWalletBrowserGuidance();
     
     return false;
+  }
+
+  showWalletBrowserGuidance() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.9);
+      z-index: 999999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    `;
+    
+    modal.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 3px solid #00eaff;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 350px;
+        width: 85%;
+        text-align: center;
+        font-family: 'Orbitron', Arial, sans-serif;
+        box-shadow: 0 0 50px rgba(0, 234, 255, 0.5);
+        color: white;
+      ">
+        <h3 style="color: #00eaff; margin: 0 0 20px 0; font-size: 18px;">
+          Open in Wallet Browser
+        </h3>
+        <p style="margin: 0 0 25px 0; color: #ccc; font-size: 14px; line-height: 1.4;">
+          Open this website in your wallet app's browser for the best experience.
+        </p>
+        <button onclick="this.parentElement.parentElement.remove()" style="
+          width: 100%;
+          padding: 12px;
+          background: #00eaff;
+          color: #000;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: bold;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
+        ">Got it</button>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
   }
 
   enhanceConnectButton() {
