@@ -39,7 +39,7 @@ class MobileWalletDetector {
       // Ethereum/Base Wallets
       metamask: {
         name: 'MetaMask',
-        icon: '🦊',
+        icon: '',
         chains: ['ethereum', 'base'],
         detection: {
           window: 'ethereum',
@@ -58,7 +58,7 @@ class MobileWalletDetector {
       
       trustwallet: {
         name: 'Trust Wallet',
-        icon: '🛡️',
+        icon: '',
         chains: ['ethereum', 'base', 'solana'],
         detection: {
           window: 'ethereum',
@@ -77,7 +77,7 @@ class MobileWalletDetector {
       
       coinbase: {
         name: 'Coinbase Wallet',
-        icon: '🔷',
+        icon: '',
         chains: ['ethereum', 'base'],
         detection: {
           window: 'ethereum',
@@ -96,7 +96,7 @@ class MobileWalletDetector {
       
       rainbow: {
         name: 'Rainbow',
-        icon: '🌈',
+        icon: '',
         chains: ['ethereum', 'base'],
         detection: {
           window: 'ethereum',
@@ -116,7 +116,7 @@ class MobileWalletDetector {
       // Solana Wallets
       phantom: {
         name: 'Phantom',
-        icon: '👻',
+        icon: '',
         chains: ['solana'],
         detection: {
           window: 'solana',
@@ -135,7 +135,7 @@ class MobileWalletDetector {
       
       solflare: {
         name: 'Solflare',
-        icon: '🌟',
+        icon: '',
         chains: ['solana'],
         detection: {
           window: 'solflare',
@@ -154,7 +154,7 @@ class MobileWalletDetector {
 
       backpack: {
         name: 'Backpack',
-        icon: '🎒',
+        icon: '',
         chains: ['solana'],
         detection: {
           window: 'backpack',
@@ -343,7 +343,7 @@ class MobileWalletDetector {
     
     const walletBtn = document.createElement('button');
     walletBtn.id = 'mobile-wallet-btn';
-    walletBtn.innerHTML = '� Connect Now';
+    walletBtn.innerHTML = 'Connect Wallet';
     walletBtn.className = 'mobile-wallet-button';
     
     walletBtn.style.cssText = `
@@ -494,7 +494,7 @@ class MobileWalletDetector {
     
     let html = `
       <div style="text-align: center; margin-bottom: 25px;">
-        <h2 style="color: #00eaff; margin: 0 0 10px 0; font-size: 24px;">📱 Connect Mobile Wallet</h2>
+        <h2 style="color: #00eaff; margin: 0 0 10px 0; font-size: 24px;">Connect Wallet</h2>
         <p style="color: #ccc; margin: 0; font-size: 14px;">Choose your preferred wallet to connect</p>
       </div>
     `;
@@ -595,7 +595,6 @@ class MobileWalletDetector {
         -webkit-tap-highlight-color: transparent;
         transition: all 0.3s ease;
       ">
-        <span style="font-size: 20px; margin-right: 10px;">${wallet.icon}</span>
         <span>${wallet.name}</span>
         <span style="float: right; font-size: 14px; opacity: 0.8;">${actionTexts[action]}</span>
       </button>

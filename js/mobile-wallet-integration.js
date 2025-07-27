@@ -289,16 +289,15 @@ class MobileWalletIntegration {
     
     // Update button text for mobile
     if (connectBtn.textContent.includes('Connect')) {
-      connectBtn.innerHTML = '📱 Connect Mobile Wallet';
+      connectBtn.innerHTML = 'Connect Wallet';
     }
     
     console.log('✅ Connect button enhanced for mobile');
   }
 
   addMobileWalletGuidance() {
-    if (!this.isMobile) return;
-    
-    console.log('📱 Adding mobile wallet guidance...');
+    // DISABLED - No mobile guidance messages for clean UI
+    return;
     
     // Add mobile wallet info to the page
     const walletSection = document.querySelector('.wallet-section') || document.querySelector('nav');
