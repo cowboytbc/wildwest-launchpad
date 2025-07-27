@@ -77,32 +77,38 @@ class WildWestWallet {
     console.log('🔍 DEBUG: window.phantom exists:', !!window.phantom);
     console.log('🔍 DEBUG: window.phantom.solana:', !!window.phantom?.solana);
     
-    // Priority 1: Phantom (excellent mobile support)
-    if (window.solana?.isPhantom) {
+    // Priority 1: Phantom (excellent mobile support) - check both normal and hidden
+    if (window.solana?.isPhantom || window.__hidden_phantom?.isPhantom) {
+      const phantomProvider = window.solana?.isPhantom ? window.solana : window.__hidden_phantom;
+      console.log('👻 Phantom detected via window.solana:', !!window.solana?.isPhantom ? 'normal' : 'hidden');
       wallets.push({
         name: 'Phantom',
-        provider: window.solana,
+        provider: phantomProvider,
         icon: '👻',
         mobile: true,
         deeplink: 'phantom://browse/' + encodeURIComponent(window.location.href)
       });
     }
     // Also check window.phantom.solana for Phantom
-    else if (window.phantom?.solana?.isPhantom) {
+    else if (window.phantom?.solana?.isPhantom || window.__hidden_phantom?.solana?.isPhantom) {
+      const phantomProvider = window.phantom?.solana?.isPhantom ? window.phantom.solana : window.__hidden_phantom?.solana;
+      console.log('👻 Phantom detected via window.phantom.solana:', !!window.phantom?.solana?.isPhantom ? 'normal' : 'hidden');
       wallets.push({
         name: 'Phantom',
-        provider: window.phantom.solana,
+        provider: phantomProvider,
         icon: '👻',
         mobile: true,
         deeplink: 'phantom://browse/' + encodeURIComponent(window.location.href)
       });
     }
     
-    // Priority 2: Solflare (mobile support)
-    if (window.solflare && !wallets.find(w => w.name === 'Solflare')) {
+    // Priority 2: Solflare (mobile support) - check both normal and hidden
+    if ((window.solflare || window.__hidden_solflare) && !wallets.find(w => w.name === 'Solflare')) {
+      const solflareProvider = window.solflare || window.__hidden_solflare;
+      console.log('🌟 Solflare detected:', !!window.solflare ? 'normal' : 'hidden');
       wallets.push({
         name: 'Solflare',
-        provider: window.solflare,
+        provider: solflareProvider,
         icon: '🌟',
         mobile: true,
         deeplink: 'solflare://v1/browse/' + encodeURIComponent(window.location.href)
@@ -119,31 +125,37 @@ class WildWestWallet {
       });
     }
     
-    // Priority 4: Slope (mobile support)
-    if ((window.solana?.isSlope || window.slope) && !wallets.find(w => w.name === 'Slope')) {
+    // Priority 4: Slope (mobile support) - check both normal and hidden
+    if ((window.solana?.isSlope || window.slope || window.__hidden_slope || window.__hidden_solana?.isSlope) && !wallets.find(w => w.name === 'Slope')) {
+      const slopeProvider = window.slope || window.__hidden_slope || (window.solana?.isSlope ? window.solana : window.__hidden_solana);
+      console.log('📈 Slope detected:', !!(window.slope || window.solana?.isSlope) ? 'normal' : 'hidden');
       wallets.push({
         name: 'Slope',
-        provider: window.slope || window.solana,
+        provider: slopeProvider,
         icon: '📈',
         mobile: true
       });
     }
     
-    // Priority 5: Backpack (mobile support)
-    if (window.backpack && !wallets.find(w => w.name === 'Backpack')) {
+    // Priority 5: Backpack (mobile support) - check both normal and hidden
+    if ((window.backpack || window.__hidden_backpack) && !wallets.find(w => w.name === 'Backpack')) {
+      const backpackProvider = window.backpack || window.__hidden_backpack;
+      console.log('🎒 Backpack detected:', !!window.backpack ? 'normal' : 'hidden');
       wallets.push({
         name: 'Backpack',
-        provider: window.backpack,
+        provider: backpackProvider,
         icon: '🎒',
         mobile: true
       });
     }
     
-    // Priority 6: Generic Solana wallet
-    if (window.solana && !wallets.find(w => w.provider === window.solana)) {
+    // Priority 6: Generic Solana wallet - check both normal and hidden
+    if ((window.solana || window.__hidden_solana) && !wallets.find(w => w.provider === (window.solana || window.__hidden_solana))) {
+      const solanaProvider = window.solana || window.__hidden_solana;
+      console.log('🟣 Generic Solana wallet detected:', !!window.solana ? 'normal' : 'hidden');
       wallets.push({
         name: 'Solana Wallet',
-        provider: window.solana,
+        provider: solanaProvider,
         icon: '🟣',
         mobile: true
       });

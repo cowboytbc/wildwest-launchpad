@@ -263,60 +263,9 @@ class MobileWalletIntegration {
   }
 
   showWalletBrowserGuidance() {
-    console.log('🚨 SHOWING MODAL NOW!');
-    const modal = document.createElement('div');
-    modal.id = 'debug-modal-test';
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(255,0,0,0.9);
-      z-index: 999999999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(5px);
-    `;
-    
-    modal.innerHTML = `
-      <div style="
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 3px solid #00eaff;
-        border-radius: 20px;
-        padding: 30px;
-        max-width: 350px;
-        width: 85%;
-        text-align: center;
-        font-family: 'Orbitron', Arial, sans-serif;
-        box-shadow: 0 0 50px rgba(0, 234, 255, 0.5);
-        color: white;
-      ">
-        <h3 style="color: #00eaff; margin: 0 0 20px 0; font-size: 18px;">
-          🚨 DEBUG: Modal Working!
-        </h3>
-        <p style="margin: 0 0 25px 0; color: #ccc; font-size: 14px; line-height: 1.4;">
-          If you see this, the modal system is working! Open this website in your wallet app's browser for the best experience.
-        </p>
-        <button onclick="this.parentElement.parentElement.remove()" style="
-          width: 100%;
-          padding: 12px;
-          background: #00eaff;
-          color: #000;
-          border: none;
-          border-radius: 10px;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: bold;
-          touch-action: manipulation;
-          -webkit-tap-highlight-color: transparent;
-        ">Got it</button>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    console.log('✅ Modal added to DOM, element:', modal);
+    console.log('� Mobile wallet guidance - debug modal disabled');
+    // Debug modal removed for production
+    return;
   }
 
   enhanceConnectButton() {

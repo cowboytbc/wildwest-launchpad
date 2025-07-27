@@ -70,12 +70,19 @@
   <script>
     // Token Furnace Style Wallet Modal Implementation
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 DOM loaded, setting up token furnace style wallet');
-      setupIndexWallet();
+      console.log('🚀 DOM loaded, deferring wallet setup to avoid conflicts');
+      // Removed early setupIndexWallet() call to prevent dropdown conflicts
     });
 
-    function showChainSelectionModal() {
-      console.log('🚀 showChainSelectionModal called!');
+    function showDirectWalletModal() {
+      console.log('🚀 showDirectWalletModal called!');
+      
+      // Remove any existing modal first
+      const existingModal = document.getElementById('chainSelectionModal');
+      if (existingModal) {
+        existingModal.remove();
+        console.log('🧹 Removed existing modal');
+      }
       
       // Detect available wallets
       const availableWallets = {
@@ -139,6 +146,7 @@
       
       // Create modal with consistent styling
       const modal = document.createElement('div');
+      modal.id = 'chainSelectionModal'; // Add unique ID for reliable targeting
       modal.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
@@ -273,8 +281,19 @@
       const cancelBtn = modal.querySelector('.cancel-modal-btn');
       
       function closeModal() {
-        modal.remove();
+        console.log('🚪 Closing chain selection modal');
+        if (modal && modal.parentNode) {
+          modal.remove();
+        }
+        // Fallback cleanup - remove any lingering modals
+        const existingModal = document.getElementById('chainSelectionModal');
+        if (existingModal) {
+          existingModal.remove();
+        }
       }
+      
+      // Store reference for external access
+      window.closeChainSelectionModal = closeModal;
       
       if (closeBtn) {
         closeBtn.addEventListener('click', closeModal);
@@ -341,8 +360,14 @@
             
             updateWalletDisplay();
             
-            // Close modal
-            document.querySelector('[style*="position: fixed"]').remove();
+            // Close modal reliably
+            if (window.closeChainSelectionModal) {
+              window.closeChainSelectionModal();
+            } else {
+              // Fallback
+              const modal = document.getElementById('chainSelectionModal');
+              if (modal) modal.remove();
+            }
             
             console.log(`✅ ${wallet.name} connected successfully!`);
           }
@@ -366,8 +391,14 @@
           
           updateWalletDisplay();
           
-          // Close modal
-          document.querySelector('[style*="position: fixed"]').remove();
+          // Close modal reliably
+          if (window.closeChainSelectionModal) {
+            window.closeChainSelectionModal();
+          } else {
+            // Fallback
+            const modal = document.getElementById('chainSelectionModal');
+            if (modal) modal.remove();
+          }
           
           console.log(`✅ ${wallet.name} connected successfully!`);
         }
@@ -418,7 +449,7 @@
     let currentSolanaProvider = null;
 
     // Make functions globally accessible
-    window.showChainSelectionModal = showChainSelectionModal;
+    window.showDirectWalletModal = showDirectWalletModal;
     window.setupIndexWallet = setupIndexWallet;
   </script>
   <!-- GitHub Actions Uploader (core functionality) -->
@@ -653,7 +684,11 @@
     .arcade-emoji {
       font-size: 2.1em;
       filter: drop-shadow(0 0 8px #00fff7) drop-shadow(0 0 16px #00eaff) drop-shadow(0 0 2px #fff);
-      text-shadow: 0 0 12px #00fff7, 0 0 6px #00eaff, 0 0 1px #fff;
+      text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 12px #00fff7, 
+        0 0 6px #00eaff, 
+        0 0 1px #fff;
       animation: neonShine 2.5s infinite alternate, neonPulse 1.7s infinite alternate;
       user-select: none;
       vertical-align: middle;
@@ -668,7 +703,11 @@
       color: #00eaff;
       margin-top: -0.2em;
       text-align: center;
-      text-shadow: 0 0 8px #00fff7, 0 0 2px #00eaff, 0 0 1px #fff;
+      text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.9),
+        0 0 8px #00fff7, 
+        0 0 2px #00eaff, 
+        0 0 1px #fff;
       filter: drop-shadow(0 0 4px #00eaff);
       background: linear-gradient(90deg, #00eaff 0%, #00fff7 100%);
       -webkit-background-clip: text;
@@ -799,6 +838,7 @@
     .staking-menu,
     .token-locking-menu {
       display: none !important;
+      visibility: hidden !important; /* Double safety - ensure these old menus never show */
       position: absolute;
       left: 0;
       top: 100%;
@@ -831,12 +871,14 @@
       background: none;
     }
     
-    /* Show dropdowns on hover */
+    /* DISABLED: Show dropdowns on hover - now using click-based modal system */
+    /* 
     .launch-token-dropdown:hover .launch-token-menu,
     .staking-dropdown:hover .staking-menu,
     .token-locking-dropdown:hover .token-locking-menu {
       display: block !important;
     }
+    */
     
     .launch-token-menu a:hover,
     .staking-menu a:hover,
@@ -847,12 +889,14 @@
     
     /* Mobile optimizations for dropdowns */
     @media (max-width: 768px) {
-      /* Disable all hover effects on mobile */
+      /* DISABLED: Hover effects already disabled above - now using click-based modal system */
+      /*
       .launch-token-dropdown:hover .launch-token-menu,
       .staking-dropdown:hover .staking-menu,
       .token-locking-dropdown:hover .token-locking-menu {
         display: none !important;
       }
+      */
       
       /* Simple mobile dropdown display */
       .launch-token-menu,
@@ -1210,11 +1254,14 @@
     /* UNIVERSAL PROJECT GRID LAYOUT - FORCE ALL GRIDS TO BE IDENTICAL */
     .project-grid,
     .all-projects-grid {
-      display: flex !important;
-      flex-wrap: wrap !important;
-      justify-content: center !important;
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      justify-items: center !important;
       gap: 2rem !important;
       margin-bottom: 3rem !important;
+      max-width: 1200px !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
     }
 
     .project-slot {
@@ -1269,6 +1316,30 @@
         padding: 0;
       }
       
+      /* UNIFIED: Make explore section grid match trending section exactly */
+      .all-projects-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        max-width: 350px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        margin-bottom: 8rem !important; /* Keep extra bottom spacing for load more button */
+      }
+      
+      /* FORCE both grids to be identical */
+      .project-grid,
+      .all-projects-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        max-width: 350px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+      }
+
       .project-slot,
       .all-projects-grid .project-slot,
       .project-grid .project-slot,
@@ -1302,8 +1373,20 @@
         margin: 0 auto 3rem auto;
       }
       
+      /* MATCH trending section container width */
+      .explore-container {
+        max-width: 400px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+      }
+      
       .trending-section {
         padding: 2rem 1rem;
+      }
+      
+      /* FORCE explore section to match trending section padding exactly */
+      .explore-section {
+        padding: 2rem 1rem !important;
       }
       
       .trending-container {
@@ -1440,53 +1523,6 @@
       background: rgba(0, 234, 255, 0.25);
       transform: translateY(-2px) scale(1.02);
       box-shadow: 0 6px 20px rgba(0, 234, 255, 0.3);
-    }
-    
-    .all-projects-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-      margin-bottom: 3rem;
-    }
-    
-    /* Add extra spacing on mobile between cards and load more button */
-    @media (max-width: 768px) {
-      .all-projects-grid {
-        margin-bottom: 8rem !important; /* Increased significantly for mobile spacing */
-        gap: 1.5rem !important; /* Reduced gap between cards */
-      }
-      
-      /* Force smaller cards on medium mobile screens too */
-      .all-projects-grid .project-slot {
-        width: 280px !important;
-        min-width: 280px !important;
-        max-width: 280px !important;
-        padding: 1.2rem !important;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .all-projects-grid {
-        margin-bottom: 8rem !important; /* Increased even more to ensure spacing */
-        gap: 1rem !important; /* Further reduced gap between cards */
-        padding: 0 1rem !important; /* Add side padding */
-      }
-      
-      /* Make explore cards fit better on small mobile screens - MORE SPECIFIC */
-      .explore-section .all-projects-grid .project-slot,
-      .all-projects-grid .project-slot {
-        width: 280px !important;
-        min-width: 280px !important;
-        max-width: 280px !important;
-        padding: 1rem !important;
-        box-sizing: border-box !important;
-      }
-      
-      /* Ensure pagination container has extra spacing too */
-      .pagination-container {
-        margin-top: 3rem !important;
-      }
     }
     
     .all-projects-grid .project-slot {
@@ -1639,6 +1675,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        margin-top: 3rem !important; /* Add spacing from cards above on mobile */
       }
     
     /* DESKTOP OVERRIDE - ENSURE 300PX CARDS ON DESKTOP */
@@ -1857,6 +1894,11 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
+      }
+      
+      /* Extra spacing for load more button on small mobile */
+      .pagination-container {
+        margin-top: 4rem !important; /* Even more spacing on small screens */
       }
     }
     
@@ -2160,7 +2202,6 @@
           return false;
         " class="dropdown-trigger">Launch Token ▼</a>
         <ul class="launch-token-menu dropdown-menu" id="launch-menu" onclick="event.stopPropagation();">
-          <button class="mobile-close-btn" onclick="hideAllDropdowns()">✕</button>
           <li><a href="pages/base-launch.html" onclick="
             event.stopPropagation();
             console.log('🔗 Base launch clicked - navigating to pages/base-launch.html');
@@ -2198,7 +2239,6 @@
           return false;
         " class="dropdown-trigger">Staking ▼</a>
         <ul class="staking-menu dropdown-menu" id="staking-menu" onclick="event.stopPropagation();">
-          <button class="mobile-close-btn" onclick="hideAllDropdowns()">✕</button>
           <li><a href="pages/base-staking.html" onclick="
             event.stopPropagation();
             console.log('🔗 Base staking clicked - navigating to pages/base-staking.html');
@@ -2223,7 +2263,6 @@
           document.getElementById('locking-menu').classList.add('show');
         " class="dropdown-trigger">Token Locking ▼</a>
         <ul class="token-locking-menu dropdown-menu" id="locking-menu" onclick="event.stopPropagation();">
-          <button class="mobile-close-btn" onclick="hideAllDropdowns()">✕</button>
           <li><a href="pages/base-locking.html" onclick="
             event.stopPropagation();
             console.log('🔗 Base locking clicked - navigating to pages/base-locking.html');
@@ -2610,25 +2649,46 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('   - window.wildWestWallet exists:', !!window.wildWestWallet);
   console.log('   - window.unifiedWalletConnection exists:', !!window.unifiedWalletConnection);
   
-  // Give unified system a moment to initialize if needed
+  // DISABLE unified wallet system for index page - we use direct wallet modal
+  if (window.unifiedWalletConnection) {
+    console.log('🚫 Disabling unified wallet system to prevent dual modals');
+    window.unifiedWalletConnection = null;
+  }
+  
+  // Give unified system a moment to initialize if needed, then disable it
   setTimeout(() => {
     console.log('🔄 Index page: Rechecking unified system after delay...');
     console.log('   - window.unifiedWalletConnection exists:', !!window.unifiedWalletConnection);
     console.log('   - wildWestWallet.connectWallet is unified:', 
       window.wildWestWallet?.connectWallet?.toString?.().includes('unifiedConnect'));
     
+    // DISABLE unified system to prevent network selection modal
     if (window.unifiedWalletConnection) {
-      console.log('✅ Index page: Unified wallet system is active and ready');
+      console.log('🚫 Disabling unified wallet system after delay to prevent dual modals');
+      window.unifiedWalletConnection = null;
     } else {
-      console.warn('⚠️ Index page: Unified wallet system not found after delay');
+      console.log('✅ Index page: Unified wallet system already disabled or not found');
     }
     
     // Test if button click works with unified system
     const connectBtn = document.getElementById('connectWalletBtn');
     if (connectBtn) {
-      console.log('🔘 Index page: Connect button found, click handler should route through unified system');
+      console.log('🔘 Index page: Connect button found, using direct wallet modal only');
     }
   }, 500);
+  
+  // Override any unified wallet system calls to prevent network selection modal
+  window.addEventListener('load', () => {
+    if (window.wildWestWallet && window.wildWestWallet.connectWallet) {
+      const originalConnectWallet = window.wildWestWallet.connectWallet;
+      window.wildWestWallet.connectWallet = function(chain) {
+        console.log('🚫 Intercepted connectWallet call, using direct modal instead');
+        showDirectWalletModal();
+        return Promise.resolve();
+      };
+      console.log('✅ Overrode wildWestWallet.connectWallet to use direct modal');
+    }
+  });
   
   // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
   console.log('🎯 Index page: Using unified wallet connection system');
@@ -2856,10 +2916,10 @@ document.addEventListener('DOMContentLoaded', function() {
           walletDropdownMenu.style.display = 
             walletDropdownMenu.style.display === 'none' || !walletDropdownMenu.style.display ? 'flex' : 'none';
         } else {
-          // Show token furnace style wallet selection modal
+          // Show direct wallet selection modal (bypasses network selection)
           try {
             console.log('🔗 Showing wallet selection modal - USER APPROVAL REQUIRED...');
-            showChainSelectionModal();
+            showDirectWalletModal();
           } catch (error) {
             console.error('❌ Wallet connection failed:', error);
           }
