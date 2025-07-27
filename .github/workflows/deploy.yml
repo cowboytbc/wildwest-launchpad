@@ -35,8 +35,8 @@ jobs:
           # Ensure js directory exists
           mkdir -p js
           
-          # Inject secrets into production config
-          cat > js/production-config.js << 'EOF'
+          # Create production config with proper variable expansion
+          cat > js/production-config.js << EOF
           // Production configuration injected from GitHub Secrets
           (function() {
             'use strict';
@@ -48,8 +48,8 @@ jobs:
             
             window.PRODUCTION_CONFIG = {
               rpc: {
-                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
-                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
+                solana: '${SOLANA_RPC_ENDPOINT}',
+                base: '${BASE_RPC_ENDPOINT}'
               },
               injectedAt: new Date().toISOString(),
               source: 'github-actions'
