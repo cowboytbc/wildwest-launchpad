@@ -20,31 +20,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+        
       - name: Inject GitHub Secrets
-        env:
-          SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
-          BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
-          echo "Secrets check:"
-          echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
-          echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
-          
-          if [ -z "$SOLANA_RPC_ENDPOINT" ] || [ -z "$BASE_RPC_ENDPOINT" ]; then
-            echo "ERROR: Secrets not available!"
-            exit 1
-          fi
-          
+          echo "Creating production config with secrets..."
           mkdir -p js
-          cat > js/production-config.js << EOF
+          
+          cat > js/production-config.js << 'EOF'
           (function() {
             'use strict';
             
             window.PRODUCTION_CONFIG = {
               rpc: {
-                solana: '${SOLANA_RPC_ENDPOINT}',
-                base: '${BASE_RPC_ENDPOINT}'
+                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
+                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
               },
               injectedAt: new Date().toISOString(),
               source: 'github-actions'
@@ -57,11 +46,16 @@ jobs:
           })();
           EOF
           
-          echo "Production config created successfully"
+          echo "Production config created"
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+          
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
