@@ -26,12 +26,14 @@
   padding: 0;
 }
 
-/* SHOW ON HOVER */
+/* SHOW ON HOVER - DISABLED for click-based dropdowns */
+/*
 .launch-token-dropdown:hover .launch-token-menu,
 .staking-dropdown:hover .staking-menu,
 .token-locking-dropdown:hover .token-locking-menu {
   display: block !important;
 }
+*/
 
 /* JAVASCRIPT SHOW CLASS - OVERRIDE EVERYTHING */
 .dropdown-menu.show {
