@@ -1610,6 +1610,20 @@ function detectTokenType(address) {
 async function handleEvmTokenBurn(tokenAddress, amount) {
   console.log('🔵 Handling EVM token burn...');
   
+  // Check if we already have a connected Base/EVM wallet
+  if (currentChain === 'base' && currentAddress && window.wildWestWallet?.account) {
+    console.log('✅ Using already connected Base wallet:', currentAddress);
+    // Create wallet object from current state
+    const connectedWallet = {
+      name: 'MetaMask',
+      icon: '🦊',
+      provider: window.ethereum,
+      type: 'evm'
+    };
+    await connectAndBurnEvm(connectedWallet, tokenAddress, amount);
+    return;
+  }
+  
   // Detect all available EVM wallets
   const availableEvmWallets = detectAvailableEvmWallets();
   console.log('🔍 Available EVM wallets:', availableEvmWallets);
@@ -1633,6 +1647,20 @@ async function handleEvmTokenBurn(tokenAddress, amount) {
 
 async function handleSolanaTokenBurn(tokenAddress, amount) {
   console.log('🟣 Handling Solana token burn...');
+  
+  // Check if we already have a connected Solana wallet
+  if (currentChain === 'solana' && currentAddress && currentSolanaProvider) {
+    console.log('✅ Using already connected Solana wallet:', currentAddress);
+    // Create wallet object from current state
+    const connectedWallet = {
+      name: currentSolanaProvider.isPhantom ? 'Phantom' : 'Solflare',
+      icon: currentSolanaProvider.isPhantom ? '👻' : '☀️',
+      provider: currentSolanaProvider,
+      type: 'solana'
+    };
+    await connectAndBurnSolana(connectedWallet, tokenAddress, amount);
+    return;
+  }
   
   // Detect all available Solana wallets
   const availableSolanaWallets = detectAvailableSolanaWallets();
