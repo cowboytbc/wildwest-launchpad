@@ -3914,6 +3914,18 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 NUCLEAR DROPDOWN OVERRIDE STARTING...');
     
+    // Debug: Check what elements exist
+    console.log('🔍 All elements with dropdown classes:');
+    document.querySelectorAll('.launch-token-dropdown').forEach(el => console.log('  Launch dropdown:', el));
+    document.querySelectorAll('.staking-dropdown').forEach(el => console.log('  Staking dropdown:', el));
+    document.querySelectorAll('.token-locking-dropdown').forEach(el => console.log('  Locking dropdown:', el));
+    
+    console.log('🔍 All dropdown triggers:');
+    document.querySelectorAll('.dropdown-trigger').forEach(el => console.log('  Trigger:', el.textContent.trim()));
+    
+    console.log('🔍 All dropdown menus:');
+    document.querySelectorAll('.dropdown-menu').forEach(el => console.log('  Menu:', el.id));
+    
     // COMPLETELY REPLACE all dropdown triggers with clean versions
     const launchTrigger = document.querySelector('.launch-token-dropdown .dropdown-trigger');
     const stakingTrigger = document.querySelector('.staking-dropdown .dropdown-trigger');
@@ -3926,6 +3938,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     if (launchTrigger) {
+      console.log('🔧 Setting up Launch trigger');
       launchTrigger.href = '#';
       launchTrigger.onclick = null;
       launchTrigger.removeAttribute('onclick');
@@ -3942,6 +3955,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Open launch menu
         const menu = document.getElementById('launch-menu');
+        console.log('🔍 Launch menu element:', menu);
         if (menu) {
           menu.classList.add('show');
           menu.style.display = 'block';
@@ -3949,11 +3963,17 @@ document.addEventListener('DOMContentLoaded', function() {
           menu.style.opacity = '1';
           menu.style.pointerEvents = 'auto';
           console.log('✅ NUCLEAR: Launch menu opened');
+        } else {
+          console.error('❌ Launch menu not found!');
         }
       });
+      console.log('✅ Launch trigger setup complete');
+    } else {
+      console.error('❌ Launch trigger not found!');
     }
     
     if (stakingTrigger) {
+      console.log('🔧 Setting up Staking trigger');
       stakingTrigger.href = '#';
       stakingTrigger.onclick = null;
       stakingTrigger.removeAttribute('onclick');
@@ -3970,6 +3990,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Open staking menu
         const menu = document.getElementById('staking-menu');
+        console.log('🔍 Staking menu element:', menu);
         if (menu) {
           menu.classList.add('show');
           menu.style.display = 'block';
@@ -3977,11 +3998,17 @@ document.addEventListener('DOMContentLoaded', function() {
           menu.style.opacity = '1';
           menu.style.pointerEvents = 'auto';
           console.log('✅ NUCLEAR: Staking menu opened');
+        } else {
+          console.error('❌ Staking menu not found!');
         }
       });
+      console.log('✅ Staking trigger setup complete');
+    } else {
+      console.error('❌ Staking trigger not found!');
     }
     
     if (lockingTrigger) {
+      console.log('🔧 Setting up Locking trigger');
       lockingTrigger.href = '#';
       lockingTrigger.onclick = null;
       lockingTrigger.removeAttribute('onclick');
@@ -3998,6 +4025,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Open locking menu
         const menu = document.getElementById('locking-menu');
+        console.log('🔍 Locking menu element:', menu);
         if (menu) {
           menu.classList.add('show');
           menu.style.display = 'block';
@@ -4005,8 +4033,13 @@ document.addEventListener('DOMContentLoaded', function() {
           menu.style.opacity = '1';
           menu.style.pointerEvents = 'auto';
           console.log('✅ NUCLEAR: Locking menu opened');
+        } else {
+          console.error('❌ Locking menu not found!');
         }
       });
+      console.log('✅ Locking trigger setup complete');
+    } else {
+      console.error('❌ Locking trigger not found!');
     }
     
     console.log('✅ NUCLEAR DROPDOWN OVERRIDE COMPLETE');
