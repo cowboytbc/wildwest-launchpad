@@ -2048,40 +2048,71 @@
     console.log('🔽 Toggling dropdown:', name);
     
     // Close all menus first
-    const allMenus = ['launch-menu', 'staking-menu', 'locking-menu'];
-    allMenus.forEach(function(menuId) {
+    const allMenuIds = ['launch-menu', 'staking-menu', 'locking-menu'];
+    const allMenuClasses = ['.launch-token-menu', '.staking-menu', '.token-locking-menu'];
+    
+    // Close by ID first
+    allMenuIds.forEach(function(menuId) {
       const menu = document.getElementById(menuId);
       if (menu) menu.style.display = 'none';
     });
     
-    // Open the requested menu - fix the ID lookup
+    // Close by class as backup
+    allMenuClasses.forEach(function(menuClass) {
+      const menu = document.querySelector(menuClass);
+      if (menu) menu.style.display = 'none';
+    });
+    
+    // Open the requested menu - try ID first
     let targetMenuId;
-    if (name === 'launch') targetMenuId = 'launch-menu';
-    else if (name === 'staking') targetMenuId = 'staking-menu';  
-    else if (name === 'locking') targetMenuId = 'locking-menu';
+    let targetMenuClass;
+    
+    if (name === 'launch') {
+      targetMenuId = 'launch-menu';
+      targetMenuClass = '.launch-token-menu';
+    } else if (name === 'staking') {
+      targetMenuId = 'staking-menu';
+      targetMenuClass = '.staking-menu';
+    } else if (name === 'locking') {
+      targetMenuId = 'locking-menu';
+      targetMenuClass = '.token-locking-menu';
+    }
     
     console.log('🎯 Looking for menu ID:', targetMenuId);
-    const targetMenu = document.getElementById(targetMenuId);
+    console.log('🎯 Backup class:', targetMenuClass);
+    
+    // Try ID first
+    let targetMenu = document.getElementById(targetMenuId);
     if (targetMenu) {
       targetMenu.style.display = 'block';
-      console.log('✅ Opened menu:', name);
-    } else {
-      console.error('❌ Menu not found:', targetMenuId);
-      // Try backup selectors
-      const backupMenu = document.querySelector('.' + name + '-token-menu, .' + name + '-menu');
-      if (backupMenu) {
-        backupMenu.style.display = 'block';
-        console.log('✅ Opened menu via backup selector:', name);
-      }
+      console.log('✅ Opened menu by ID:', name);
+      return;
     }
+    
+    // Try class selector
+    targetMenu = document.querySelector(targetMenuClass);
+    if (targetMenu) {
+      targetMenu.style.display = 'block';
+      console.log('✅ Opened menu by class:', name);
+      return;
+    }
+    
+    console.error('❌ Menu not found by ID or class:', name);
+    console.log('🔍 Available elements with IDs:', document.querySelectorAll('[id*="menu"]'));
+    console.log('🔍 Available elements with menu classes:', document.querySelectorAll('[class*="menu"]'));
   }
   
   // Close menus when clicking outside
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.main-nav')) {
-      const allMenus = ['launch-menu', 'staking-menu', 'locking-menu'];
-      allMenus.forEach(function(menuId) {
+      // Close by both ID and class
+      ['launch-menu', 'staking-menu', 'locking-menu'].forEach(function(menuId) {
         const menu = document.getElementById(menuId);
+        if (menu) menu.style.display = 'none';
+      });
+      
+      ['.launch-token-menu', '.staking-menu', '.token-locking-menu'].forEach(function(menuClass) {
+        const menu = document.querySelector(menuClass);
         if (menu) menu.style.display = 'none';
       });
     }
