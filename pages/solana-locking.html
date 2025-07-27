@@ -1961,6 +1961,53 @@
       }
     };
 
+    // ULTIMATE CACHE-BUSTING: Check GitHub Secrets status directly
+    window.checkGitHubSecretsStatus = async function() {
+      console.log('🔍 CHECKING GITHUB SECRETS DEPLOYMENT STATUS...');
+      
+      try {
+        // Try multiple URLs with different cache-busting strategies
+        const urls = [
+          'https://wildwestlaunch.xyz/js/production-config.js',
+          'https://wildwestlaunch.xyz/js/production-config.js?no-cache=true',
+          'https://wildwestlaunch.xyz/js/production-config.js?v=' + Date.now(),
+          'https://wildwestlaunch.xyz/js/production-config.js?bust=' + Math.random()
+        ];
+        
+        for (const url of urls) {
+          console.log(`🔗 Testing URL: ${url}`);
+          
+          const response = await fetch(url, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          const content = await response.text();
+          console.log(`📏 Length: ${content.length}`);
+          
+          if (content.includes('injected from GitHub Secrets')) {
+            console.log(`✅ FOUND GitHub Secrets version at: ${url}`);
+            console.log(`📄 Preview: ${content.substring(0, 200)}...`);
+            return { found: true, url, content };
+          } else if (content.includes('fallback-placeholder')) {
+            console.log(`⚠️ Found placeholder at: ${url}`);
+          } else {
+            console.log(`❓ Unknown content at: ${url}`);
+          }
+        }
+        
+        console.log('❌ No GitHub Secrets version found in any URL');
+        return { found: false };
+        
+      } catch (error) {
+        console.error('❌ Error checking GitHub Secrets status:', error);
+        return { found: false, error: error.message };
+      }
+    };
+
     // Function to manually inject QuickNode endpoints (temporary fix)
     window.manuallyInjectEndpoints = function() {
       console.log('🔧 MANUAL ENDPOINT INJECTION - Please provide your QuickNode endpoints');
