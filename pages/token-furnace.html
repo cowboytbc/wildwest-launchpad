@@ -1845,7 +1845,7 @@ function showEvmWalletSelectionModal(wallets, tokenAddress, amount) {
         align-items: center;
       ">
         <div>
-          <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">🔵 Select EVM Wallet</h3>
+          <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Select EVM Wallet</h3>
           <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">Choose your wallet for Base network</p>
         </div>
         <button class="close-modal" style="
@@ -1959,7 +1959,7 @@ function showSolanaWalletSelectionModal(wallets, tokenAddress, amount) {
         align-items: center;
       ">
         <div>
-          <h3 style="margin: 0; color: #9945ff; font-size: 1.25rem;">🟣 Select Solana Wallet</h3>
+          <h3 style="margin: 0; color: #9945ff; font-size: 1.25rem;">Select Solana Wallet</h3>
           <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">Choose your wallet for Solana network</p>
         </div>
         <button class="close-modal" style="
@@ -2539,7 +2539,7 @@ function showChainSelectionModal() {
         justify-content: space-between;
         align-items: center;
       ">
-        <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Select Chain</h3>
+        <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Connect Wallet</h3>
         <button class="close-modal" style="
           background: none;
           border: none;
@@ -2561,17 +2561,30 @@ function showChainSelectionModal() {
           display: flex;
           align-items: center;
           padding: 1rem;
-          background: rgba(0, 234, 255, 0.05);
-          border: 1px solid rgba(0, 234, 255, 0.2);
+          background: rgba(0, 122, 255, 0.1);
+          border: 1px solid rgba(0, 122, 255, 0.3);
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.2s;
           color: white;
           text-decoration: none;
         ">
-          <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🔵</div>
+          <div style="
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #0052FF, #00D4FF);
+            border-radius: 8px;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+          ">B</div>
           <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
-            <span style="font-weight: 600;">BASE</span>
+            <span style="font-weight: 600; font-size: 1.1rem;">BASE NETWORK</span>
+            <span style="font-size: 0.85rem; color: #888; margin-top: 2px;">Connect to Base Mainnet</span>
           </div>
           <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
         </button>
@@ -2579,17 +2592,30 @@ function showChainSelectionModal() {
           display: flex;
           align-items: center;
           padding: 1rem;
-          background: rgba(0, 234, 255, 0.05);
-          border: 1px solid rgba(0, 234, 255, 0.2);
+          background: rgba(156, 39, 176, 0.1);
+          border: 1px solid rgba(156, 39, 176, 0.3);
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.2s;
           color: white;
           text-decoration: none;
         ">
-          <div style="font-size: 1.5rem; margin-right: 1rem; min-width: 2rem;">🟣</div>
+          <div style="
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #9C27B0, #E91E63);
+            border-radius: 8px;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+          ">S</div>
           <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
-            <span style="font-weight: 600;">SOLANA</span>
+            <span style="font-weight: 600; font-size: 1.1rem;">SOLANA NETWORK</span>
+            <span style="font-size: 0.85rem; color: #888; margin-top: 2px;">Connect to Solana Mainnet</span>
           </div>
           <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
         </button>
@@ -2693,15 +2719,27 @@ function showChainSelectionModal() {
     });
     
     btn.addEventListener('mouseenter', () => {
-      btn.style.background = 'rgba(0, 234, 255, 0.1)';
-      btn.style.borderColor = '#00eaff';
+      if (btn.dataset.chain === 'base') {
+        btn.style.background = 'rgba(0, 122, 255, 0.2)';
+        btn.style.borderColor = 'rgba(0, 122, 255, 0.5)';
+      } else {
+        btn.style.background = 'rgba(156, 39, 176, 0.2)';
+        btn.style.borderColor = 'rgba(156, 39, 176, 0.5)';
+      }
       btn.style.transform = 'translateY(-1px)';
+      btn.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
     });
     
     btn.addEventListener('mouseleave', () => {
-      btn.style.background = 'rgba(0, 234, 255, 0.05)';
-      btn.style.borderColor = 'rgba(0, 234, 255, 0.2)';
+      if (btn.dataset.chain === 'base') {
+        btn.style.background = 'rgba(0, 122, 255, 0.1)';
+        btn.style.borderColor = 'rgba(0, 122, 255, 0.3)';
+      } else {
+        btn.style.background = 'rgba(156, 39, 176, 0.1)';
+        btn.style.borderColor = 'rgba(156, 39, 176, 0.3)';
+      }
       btn.style.transform = 'translateY(0)';
+      btn.style.boxShadow = 'none';
     });
   });
   
