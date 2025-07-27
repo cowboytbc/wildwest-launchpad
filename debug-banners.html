@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banner Debug Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: white; }
+    .ad-banner { width: 100%; height: 100px; margin: 20px 0; background: #16213e; border: 2px solid #00eaff; }
+    .ad-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .console-output { background: #000; color: #0f0; padding: 10px; font-family: monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Banner System Debug</h1>
+  
+  <!-- Top Banner -->
+  <div class="ad-banner top-ad">
+    <div class="ad-content">
+      <span class="ad-text">ADVERTISE HERE</span>
+    </div>
+  </div>
+  
+  <!-- Bottom Banner -->
+  <div class="ad-banner bottom-ad">
+    <div class="ad-content">
+      <span class="ad-text">ADVERTISE HERE</span>
+    </div>
+  </div>
+  
+  <div class="console-output" id="console-output"></div>
+  
+  <button onclick="testBannerSystem()">Test Banner System</button>
+  <button onclick="testGitHubConnection()">Test GitHub Connection</button>
+  <button onclick="testMonetizedRotation()">Test Monetized Rotation</button>
+  <button onclick="simulateCustomerBanner()">Simulate Customer Banner</button>
+  <button onclick="clearOutput()">Clear Output</button>
+
+  <script>
+    // Capture console output
+    const output = document.getElementById('console-output');
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      output.textContent += '✅ ' + args.join(' ') + '\n';
+    };
+    
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      output.textContent += '❌ ' + args.join(' ') + '\n';
+    };
+    
+    function clearOutput() {
+      output.textContent = '';
+    }
+    
+    function testGitHubConnection() {
+      console.log('Testing GitHub API connection...');
+      
+      // Test GitHub API directly
+      fetch('https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/top')
+        .then(response => {
+          console.log('GitHub API response status:', response.status);
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('GitHub API request failed: ' + response.status);
+          }
+        })
+        .then(data => {
+          console.log('GitHub API success! Found', data.length, 'top banner files');
+          data.forEach(file => {
+            console.log('- File:', file.name, 'Size:', file.size);
+          });
+        })
+        .catch(error => {
+          console.error('GitHub API failed:', error.message);
+        });
+        
+      // Test bottom banners too
+      fetch('https://api.github.com/repos/cowboytbc/wildwest-banner-storage/contents/banners/bottom')
+        .then(response => {
+          console.log('Bottom banners GitHub API status:', response.status);
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('GitHub API request failed: ' + response.status);
+          }
+        })
+        .then(data => {
+          console.log('GitHub API success! Found', data.length, 'bottom banner files');
+          data.forEach(file => {
+            console.log('- File:', file.name, 'Size:', file.size);
+          });
+        })
+        .catch(error => {
+          console.error('GitHub API failed:', error.message);
+        });
+    }
+    
+    function testBannerSystem() {
+      console.log('Testing banner system initialization...');
+      
+      // Check if banner scripts are loaded
+      if (typeof BANNER_CONFIG === 'undefined') {
+        console.error('BANNER_CONFIG not loaded! Loading banner-config.js...');
+        loadBannerConfig();
+      } else {
+        console.log('BANNER_CONFIG is available');
+        testBannerConfig();
+      }
+    }
+    
+    function loadBannerConfig() {
+      const script1 = document.createElement('script');
+      script1.src = 'js/banner-config.js';
+      script1.onload = function() {
+        console.log('banner-config.js loaded');
+        
+        const script2 = document.createElement('script');
+        script2.src = 'js/banner-rotation.js';
+        script2.onload = function() {
+          console.log('banner-rotation.js loaded');
+          setTimeout(testBannerConfig, 100);
+        };
+        script2.onerror = function() {
+          console.error('Failed to load banner-rotation.js');
+        };
+        document.head.appendChild(script2);
+      };
+      script1.onerror = function() {
+        console.error('Failed to load banner-config.js');
+      };
+      document.head.appendChild(script1);
+    }
+    
+    function testBannerConfig() {
+      console.log('Testing BANNER_CONFIG...');
+      
+      if (window.BANNER_CONFIG) {
+        console.log('✅ BANNER_CONFIG found');
+        console.log('API endpoints:', window.BANNER_CONFIG.API_CONFIG);
+        console.log('Pricing:', window.BANNER_CONFIG.PRICING);
+        
+        // Test banner fetching
+        console.log('Testing banner fetch...');
+        window.BANNER_CONFIG.fetchBanners()
+          .then(() => {
+            console.log('✅ Banner fetch successful');
+            console.log('Top banners:', window.BANNER_CONFIG.TOP_BANNERS.length);
+            console.log('Bottom banners:', window.BANNER_CONFIG.BOTTOM_BANNERS.length);
+            
+            // Test getting current banners
+            const topBanner = window.BANNER_CONFIG.getCurrentBanner('top');
+            const bottomBanner = window.BANNER_CONFIG.getCurrentBanner('bottom');
+            
+            console.log('Current top banner:', topBanner);
+            console.log('Current bottom banner:', bottomBanner);
+            
+            // Test banner rotation manager
+            if (window.bannerRotationManager) {
+              console.log('✅ Banner rotation manager found');
+              window.bannerRotationManager.updateBanners();
+              console.log('✅ Banner display updated');
+            } else {
+              console.error('❌ Banner rotation manager not found');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Banner fetch failed:', error);
+          });
+      } else {
+        console.error('❌ BANNER_CONFIG still not available');
+      }
+    }
+    
+    // Test the actual monetized banner rotation system
+    function testMonetizedRotation() {
+      console.log('🏦 Testing monetized banner rotation system...');
+      
+      if (!window.BANNER_CONFIG) {
+        console.error('❌ BANNER_CONFIG not loaded - loading first...');
+        loadBannerConfig();
+        return;
+      }
+      
+      // Test pricing configuration
+      console.log('💰 Pricing Configuration:');
+      console.log('- Top Banner: $' + window.BANNER_CONFIG.PRICING.TOP_BANNER + '/day');
+      console.log('- Bottom Banner: $' + window.BANNER_CONFIG.PRICING.BOTTOM_BANNER + '/day');
+      console.log('- Max projects per slot:', window.BANNER_CONFIG.PRICING.MAX_PROJECTS_PER_SLOT);
+      console.log('- Rotation interval:', window.BANNER_CONFIG.PRICING.ROTATION_INTERVAL / 1000 / 60 + ' minutes');
+      
+      // Test active banner retrieval (paid customers only)
+      const activeBanners = {
+        top: window.BANNER_CONFIG.getActiveBanners('top'),
+        bottom: window.BANNER_CONFIG.getActiveBanners('bottom')
+      };
+      
+      console.log('📊 Active Customer Banners:');
+      console.log('- Top active banners:', activeBanners.top.length);
+      console.log('- Bottom active banners:', activeBanners.bottom.length);
+      
+      // Show details of active banners
+      activeBanners.top.forEach((banner, index) => {
+        console.log(`🔝 Top Banner ${index + 1}:`, {
+          project: banner.projectName,
+          expired: banner.endDate ? new Date(banner.endDate) < new Date() : false,
+          linkUrl: banner.linkUrl,
+          isDefault: banner.isDefault
+        });
+      });
+      
+      activeBanners.bottom.forEach((banner, index) => {
+        console.log(`⬇️ Bottom Banner ${index + 1}:`, {
+          project: banner.projectName,
+          expired: banner.endDate ? new Date(banner.endDate) < new Date() : false,
+          linkUrl: banner.linkUrl,
+          isDefault: banner.isDefault
+        });
+      });
+      
+      // Test current rotation selection
+      const currentTop = window.BANNER_CONFIG.getCurrentBanner('top');
+      const currentBottom = window.BANNER_CONFIG.getCurrentBanner('bottom');
+      
+      console.log('🎯 Currently Displayed:');
+      console.log('- Top:', currentTop.projectName || 'Default', currentTop.isDefault ? '(Free)' : '(Paid)');
+      console.log('- Bottom:', currentBottom.projectName || 'Default', currentBottom.isDefault ? '(Free)' : '(Paid)');
+      
+      // Test banner rotation manager stats
+      if (window.bannerRotationManager) {
+        const stats = window.bannerRotationManager.getStats();
+        console.log('💼 Revenue Statistics:');
+        console.log('- Daily potential revenue: $' + stats.revenue.dailyPotential);
+        console.log('- Available top slots:', stats.topBanners.available + '/' + window.BANNER_CONFIG.PRICING.MAX_PROJECTS_PER_SLOT);
+        console.log('- Available bottom slots:', stats.bottomBanners.available + '/' + window.BANNER_CONFIG.PRICING.MAX_PROJECTS_PER_SLOT);
+      }
+    }
+    
+    // Simulate a customer banner payment and activation
+    function simulateCustomerBanner() {
+      console.log('🎬 Simulating customer banner creation...');
+      
+      if (!window.BANNER_CONFIG) {
+        console.error('❌ BANNER_CONFIG not loaded');
+        return;
+      }
+      
+      // Create a test customer banner (simulate what happens after payment)
+      const testCustomerBanner = {
+        id: 'test_' + Date.now(),
+        projectName: 'Test Customer Project',
+        imageUrl: 'https://via.placeholder.com/728x90/00eaff/ffffff?text=PAID+CUSTOMER+BANNER',
+        linkUrl: 'https://example-customer-project.com',
+        position: 'top',
+        isDefault: false,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        duration: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+        active: true
+      };
+      
+      console.log('🏗️ Creating test customer banner:', testCustomerBanner);
+      
+      // Add to cache (simulate what happens after payment processing)
+      if (window.BANNER_CONFIG._bannerCache) {
+        window.BANNER_CONFIG._bannerCache.top.unshift(testCustomerBanner);
+        console.log('✅ Added test banner to cache');
+        
+        // Force rotation update
+        if (window.bannerRotationManager) {
+          window.bannerRotationManager.updateBanners();
+          console.log('🔄 Banner rotation updated');
+          
+          // Display the banner in our test area
+          const topAdContent = document.querySelector('.top-ad .ad-content');
+          if (topAdContent) {
+            topAdContent.innerHTML = `
+              <div style="width: 100%; height: 100%; background-image: url('${testCustomerBanner.imageUrl}'); background-size: cover; background-position: center; border-radius: 15px; position: relative; cursor: pointer;">
+                <div style="position: absolute; bottom: 5px; right: 10px; background: rgba(0,0,0,0.7); color: #00eaff; padding: 2px 8px; border-radius: 4px; font-size: 0.7em;">
+                  ${testCustomerBanner.projectName} (PAID)
+                </div>
+              </div>
+            `;
+            
+            // Add click handler for customer banner
+            topAdContent.onclick = () => {
+              console.log('🖱️ Customer banner clicked! Redirecting to:', testCustomerBanner.linkUrl);
+              window.open(testCustomerBanner.linkUrl, '_blank');
+            };
+            
+            console.log('✅ Customer banner displayed with click tracking');
+          }
+        }
+      }
+    }
+    setTimeout(testBannerSystem, 1000);
+  </script>
+</body>
+</html>

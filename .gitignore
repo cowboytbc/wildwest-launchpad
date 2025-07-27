@@ -1,0 +1,37 @@
+# Environment and configuration files
+.env
+.env.local
+.env.production
+.env.secure
+config.js
+config-production.js
+
+# Secure token files (NEVER commit)
+admin-token-setup.js
+github-token.txt
+service-credentials.json
+
+# Development token injection (NEVER commit)
+dev-token-inject.js
+
+# Mobile wallet bridge is safe to commit (no secrets)
+# js/mobile-wallet-bridge.js - ALLOWED
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
