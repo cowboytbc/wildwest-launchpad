@@ -15,6 +15,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test repository-level secrets
+        env:
+          SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+          BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+        run: |
+          echo "🧪 TESTING REPOSITORY-LEVEL SECRETS:"
+          echo "SOLANA_RPC_ENDPOINT present: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
+          echo "BASE_RPC_ENDPOINT present: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
+          echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
+          echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
+
   build-and-deploy:
     environment:
       name: github-pages
