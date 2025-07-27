@@ -895,7 +895,9 @@ class WildWestWallet {
 
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
-    // Check if user is on mobile
+    // DISABLED - Too aggressive, only show in specific "No Wallets Detected" cards
+    console.log('🚫 Wallet installation guide disabled - use targeted disclaimers instead');
+    return;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (!isMobile) {
