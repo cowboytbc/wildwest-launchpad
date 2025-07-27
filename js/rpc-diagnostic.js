@@ -22,18 +22,24 @@
   console.log('\n🌐 RPC CONFIG STATUS:');
   if (window.RPC_CONFIG) {
     console.log('✅ RPC_CONFIG loaded');
-    const solanaEndpoint = window.RPC_CONFIG.getSolanaEndpoint();
+    // Get endpoints (handle async for Solana)
     const baseEndpoint = window.RPC_CONFIG.getBaseEndpoint();
-    console.log('🟣 Solana endpoint:', solanaEndpoint);
-    console.log('🔵 Base endpoint:', baseEndpoint);
+    console.log('� Base endpoint:', baseEndpoint);
     
-    // Check if using fallback endpoints
-    if (solanaEndpoint.includes('api.mainnet-beta.solana.com')) {
-      console.log('⚠️ Using fallback Solana endpoint (not QuickNode)');
-    }
-    if (baseEndpoint.includes('mainnet.base.org')) {
-      console.log('⚠️ Using fallback Base endpoint (not QuickNode)');
-    }
+    // Handle Solana endpoint async
+    window.RPC_CONFIG.getSolanaEndpoint().then(solanaEndpoint => {
+      console.log('� Solana endpoint:', solanaEndpoint);
+      
+      // Check if using fallback endpoints
+      if (solanaEndpoint && solanaEndpoint.includes('api.mainnet-beta.solana.com')) {
+        console.log('⚠️ Using fallback Solana endpoint (not QuickNode)');
+      }
+      if (baseEndpoint && baseEndpoint.includes('mainnet.base.org')) {
+        console.log('⚠️ Using fallback Base endpoint (not QuickNode)');
+      }
+    }).catch(error => {
+      console.error('❌ Failed to get Solana endpoint:', error);
+    });
   } else {
     console.log('❌ RPC_CONFIG not loaded');
   }

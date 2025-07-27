@@ -51,18 +51,6 @@
       });
     };
     
-    // FUNCTION TO RESTORE WALLETS FOR CONNECTION (called when user clicks connect)
-    window.__restoreWalletsForConnection = function() {
-      console.log('🔓 RESTORING wallets for user-initiated connection...');
-      blockedWalletProps.forEach(prop => {
-        if (window[`__hidden_${prop}`]) {
-          delete window[prop]; // Remove blocker
-          window[prop] = window[`__hidden_${prop}`]; // Restore wallet
-          console.log(`🔓 RESTORED for connection: ${prop}`);
-        }
-      });
-    };
-    
     // MAXIMUM SECURITY: Block wallet auto-connection immediately
     window.WALLET_AUTO_CONNECTION_BLOCKED = true;
     console.log('🚫 NUCLEAR META-LEVEL BLOCKING ACTIVE - ZERO wallet access possible');
@@ -72,23 +60,17 @@
   <script src="../js/console-filter.js"></script>
   <!-- Core wallet dependencies -->
   <script src="../js/wallet.js"></script>
+  <!-- Core wallet dependencies -->
+  <script src="../js/wallet.js"></script>
   <!-- Mobile Wallet Integration - Clean mobile experience -->
   <script src="../js/mobile-wallet-detector.js"></script>
   <script src="../js/mobile-wallet-integration.js"></script>
-  <!-- Legal Disclaimer & Mobile Guidance -->
-  <script src="../js/legal-disclaimer.js"></script>
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="icon" type="image/png" href="../images/locked.png">
   <!-- Ethers.js for EVM wallet support -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- Solana Web3.js -->
-  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
-  <!-- SPL Token -->
-  <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.js"></script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="../js/production-config.js"></script>
-  <!-- Development Configuration (Local testing when secrets unavailable) -->
-  <script src="../js/dev-config.js"></script>
   <script src="../js/rpc-config.js"></script>
   <script src="../js/lock-fee-config.js"></script>
   <script src="../js/fee-calculator.js"></script>
@@ -106,6 +88,8 @@
   
   <!-- Multi-wallet management -->
   <script src="../js/multi-wallet-manager.js"></script>
+  <!-- Custom wallet integration -->
+  <script src="../js/wallet.js"></script>
   <!-- Token Furnace Style Wallet Modal System for Solana -->
   <script>
     // Token Furnace Style Wallet Modal Implementation for Solana Locking
@@ -161,16 +145,16 @@
       let walletOptionsHTML = '';
       
       if (availableWallets.solana.length > 0) {
-        walletOptionsHTML += '<h4 style="color: #9945ff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Solana Network</h4>';
+        walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Solana Network</h4>';
         availableWallets.solana.forEach((wallet, index) => {
           walletOptionsHTML += `
             <button onclick="connectSpecificWallet('solana', ${index})" style="
               display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
               background: linear-gradient(135deg, #9945ff, #7c3aed);
-              color: white; border: 1px solid rgba(153, 69, 255, 0.3); border-radius: 8px;
+              color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
               cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
               transition: all 0.3s ease; text-align: center;
-            " onmouseover="this.style.background='linear-gradient(135deg, #a855f7, #9945ff)'; this.style.borderColor='#9945ff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #9945ff, #7c3aed)'; this.style.borderColor='rgba(153, 69, 255, 0.3)'; this.style.transform='translateY(0)'">
+            " onmouseover="this.style.background='linear-gradient(135deg, #a855f7, #9945ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #9945ff, #7c3aed)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
               Connect ${wallet.name}
             </button>
           `;
@@ -181,8 +165,8 @@
             <h4 style="color: #ff6b6b; margin-bottom: 1rem;">No Solana Wallets Detected</h4>
             <p style="margin-bottom: 1rem; color: #c0c0c0;">Please install a Solana wallet:</p>
             <div style="text-align: left;">
-              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://phantom.app" target="_blank" style="color: #9945ff;">Phantom</a> (Solana)</p>
-              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://solflare.com" target="_blank" style="color: #9945ff;">Solflare</a> (Solana)</p>
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://phantom.app" target="_blank" style="color: #00eaff;">Phantom</a> (Solana)</p>
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://solflare.com" target="_blank" style="color: #00eaff;">Solflare</a> (Solana)</p>
             </div>
           </div>
         `;
@@ -191,9 +175,9 @@
       modal.innerHTML = `
         <div style="
           background: linear-gradient(135deg, #1a1a2e, #16213e);
-          border: 2px solid #9945ff;
+          border: 2px solid #00eaff;
           border-radius: 16px;
-          box-shadow: 0 0 30px rgba(153, 69, 255, 0.3);
+          box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
           max-width: 400px;
           width: 90vw;
           max-height: 80vh;
@@ -202,14 +186,14 @@
         ">
           <div style="
             padding: 1.5rem;
-            border-bottom: 1px solid rgba(153, 69, 255, 0.2);
+            border-bottom: 1px solid rgba(0, 234, 255, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
           ">
-            <h3 style="margin: 0; color: #9945ff; font-size: 1.25rem;">Connect Solana Wallet</h3>
+            <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem;">Connect Solana Wallet</h3>
             <button class="close-modal-btn" style="
-              background: none; border: none; color: #9945ff; font-size: 1.5rem;
+              background: none; border: none; color: #00eaff; font-size: 1.5rem;
               cursor: pointer; padding: 0; width: 30px; height: 30px;
               display: flex; align-items: center; justify-content: center;
               border-radius: 50%; transition: background-color 0.2s;
@@ -220,7 +204,7 @@
             <button class="cancel-modal-btn" style="
               display: block; width: 100%; margin-top: 1rem; padding: 10px;
               background: rgba(102, 102, 102, 0.8); color: white;
-              border: 1px solid rgba(153, 69, 255, 0.2); border-radius: 8px;
+              border: 1px solid rgba(0, 234, 255, 0.2); border-radius: 8px;
               cursor: pointer; font-family: 'Orbitron', sans-serif;
             ">Cancel</button>
           </div>
@@ -258,62 +242,20 @@
           console.log(`📋 Solana Locking: Connecting to ${wallet.name}`);
           
           const response = await wallet.provider.connect();
-          console.log('✅ Connected to', wallet.name, ':', response);
           
-          let publicKeyStr = null;
-          
-          // Handle different wallet response formats
           if (response && response.publicKey) {
-            // Standard format (Phantom, etc.)
-            publicKeyStr = response.publicKey.toString ? response.publicKey.toString() : response.publicKey;
-          } else if (response === true && wallet.provider.publicKey) {
-            // Solflare format - connection returns true, publicKey is on provider
-            publicKeyStr = wallet.provider.publicKey.toString ? wallet.provider.publicKey.toString() : wallet.provider.publicKey;
-          } else if (wallet.provider.publicKey) {
-            // Some wallets store publicKey directly on provider
-            publicKeyStr = wallet.provider.publicKey.toString ? wallet.provider.publicKey.toString() : wallet.provider.publicKey;
-          }
-          
-          if (publicKeyStr) {
             // Update global state for locking page
-            window.currentAddress = publicKeyStr;
+            window.currentAddress = response.publicKey.toString();
             window.currentChain = 'solana';
             window.currentProvider = wallet.provider;
             
-            // CRITICAL: Set the main script variables that the rest of the app expects
-            window.wallet = wallet.provider;
-            window.publicKey = publicKeyStr;
-            
-            // Set up Solana connection for transactions
-            if (typeof window.connection === 'undefined') {
-              try {
-                if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaEndpoint) {
-                  const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
-                  window.connection = new solanaWeb3.Connection(endpoint);
-                  console.log('🌐 Solana connection established:', endpoint);
-                } else {
-                  console.warn('⚠️ No RPC_CONFIG available, using fallback');
-                  window.connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-                }
-              } catch (error) {
-                console.warn('⚠️ RPC config error, using fallback Solana connection:', error.message);
-                window.connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-              }
-            }
-            
-            console.log('🔧 Solana Locking: FIXED - Set wallet:', !!window.wallet);
-            console.log('🔧 Solana Locking: FIXED - Set publicKey:', window.publicKey);
-            
             // Update UI
-            updateSolanaLockingUI(publicKeyStr);
+            updateSolanaLockingUI(response.publicKey.toString());
             
             // Close modal
-            document.querySelector('[style*="position: fixed"]')?.remove();
+            document.querySelector('[style*="position: fixed"]').remove();
             
             console.log(`✅ Solana Locking: ${wallet.name} connected successfully!`);
-          } else {
-            console.error('❌ No public key found in wallet response');
-            alert('Connected to ' + wallet.name + ' but could not retrieve wallet address. Please try again.');
           }
         }
       } catch (error) {
@@ -337,9 +279,10 @@
         walletAddress.textContent = 'Connected: ' + shortAddress;
       }
       
-      // Verify global variables are set (should already be set by connectSpecificWallet)
-      console.log('🔧 Solana Locking: UI Update - wallet available:', !!window.wallet);
-      console.log('🔧 Solana Locking: UI Update - publicKey:', window.publicKey);
+      // Set up global variables for locking functionality
+      window.provider = window.currentProvider;
+      window.userAddress = address;
+      window.solanaProvider = window.currentProvider;
       
       // Enable locking functionality
       document.querySelectorAll('.lock-input, .lock-button').forEach(el => {
@@ -352,11 +295,6 @@
       }
       if (typeof loadLockCreationFee === 'function') {
         loadLockCreationFee();
-      }
-      
-      // Fetch token info if there's a token address
-      if (typeof fetchTokenInfo === 'function') {
-        fetchTokenInfo();
       }
       
       console.log('✅ Solana Locking: UI updated and functionality enabled');
@@ -380,38 +318,6 @@
       
       console.log('✅ Solana Locking: Wallet setup complete');
     }
-
-    function waitForWalletSystem() {
-      console.log('🔍 Waiting for wallet system... wildWestWallet exists:', !!window.wildWestWallet);
-      
-      if (window.wildWestWallet) {
-        console.log('✅ Wallet system loaded, setting up Solana connect button (no auto-connection)');
-        
-        // SECURITY: Do not check existing connections - let user choose to connect
-        // Always start with disconnected state for security
-        document.getElementById('connectWalletBtn').textContent = 'CONNECT SOLANA WALLET';
-        
-        const connectBtn = document.getElementById('connectWalletBtn');
-        if (connectBtn) {
-          // Clear any existing event listeners to prevent dual modal conflict
-          connectBtn.onclick = null;
-          connectBtn.replaceWith(connectBtn.cloneNode(true));
-          const newConnectBtn = document.getElementById('connectWalletBtn');
-          
-          newConnectBtn.onclick = async function() {
-            console.log('🔗 User clicked connect wallet button');
-            window.currentChain = 'solana';
-            await connectSpecificWallet('solana', 'auto-detect');
-          };
-        }
-      } else {
-        console.log('⏳ Wallet system not ready, waiting...');
-        setTimeout(waitForWalletSystem, 100);
-      }
-    }
-    
-    // Initialize safe wallet system (no auto-connection)
-    waitForWalletSystem();
 
     // Global variables
     window.currentAddress = null;
@@ -1251,19 +1157,12 @@
     // Initialize connection using centralized config
     function initializeConnection() {
       if (window.RPC_CONFIG) {
-        // Use direct QuickNode access like Base page does - no async needed
-        if (window.RPC_CONFIG.SOLANA.QUICKNODE) {
-          connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.QUICKNODE);
-          console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
-        } else {
-          // Direct fallback like Base page - no async testing
-          connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
-          console.log('⚠️ QuickNode Solana endpoint not available, using fallback:', window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
-        }
+        connection = window.RPC_CONFIG.getSolanaConnection();
+        console.log('✅ Using centralized RPC config:', window.RPC_CONFIG.getSolanaEndpoint());
       } else {
         // Fallback to hardcoded endpoint if config not loaded
-        connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-        console.log('⚠️ Using hardcoded fallback RPC endpoint');
+        connection = new solanaWeb3.Connection(window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com');
+        console.log('⚠️ Using fallback RPC endpoint');
       }
     }
 
