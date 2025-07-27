@@ -6,20 +6,76 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Generate Production Config
+        run: |
+          cat > js/production-config.js << 'EOF'
+          // PRODUCTION CONFIG - QuickNode endpoints active
+          (function() {
+            'use strict';
+            
+            if (window.PRODUCTION_CONFIG) {
+              console.log('🔐 Production config already loaded');
+              return;
+            }
+            
+            // QuickNode endpoints - high performance RPC
+            window.PRODUCTION_CONFIG = {
+              rpc: {
+                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
+                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
+              },
+              injectedAt: new Date().toISOString(),
+              source: 'github-secrets-injection'
+            };
+            
+            window.RPC_CONFIG = {
+              getSolanaEndpoint: function() {
+                if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.solana) {
+                  throw new Error('CRITICAL: QuickNode Solana endpoint not available.');
+                }
+                return window.PRODUCTION_CONFIG.rpc.solana;
+              },
+              getBaseEndpoint: function() {
+                if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.base) {
+                  throw new Error('CRITICAL: QuickNode Base endpoint not available.');
+                }
+                return window.PRODUCTION_CONFIG.rpc.base;
+              }
+            };
+            
+            console.log('🚀 QuickNode production config loaded successfully');
+            console.log('⚡ High-performance RPC endpoints active');
+          })();
+          EOF
+          echo "Generated production config with secrets"
+          cat js/production-config.js
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          force_orphan: true
+          path: '.'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
