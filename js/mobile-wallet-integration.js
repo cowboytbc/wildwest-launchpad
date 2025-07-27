@@ -244,37 +244,8 @@ class MobileWalletIntegration {
   }
 
   async showMobileWalletGuidance(detectedWallets) {
-    console.log('📱 Mobile wallet connection - taking action...');
-    
-    const installableWallets = detectedWallets.filter(w => w.status === 'installable');
-    const detectedButNotAvailable = detectedWallets.filter(w => w.status === 'detected');
-    
-    // First, try to connect with detected wallets
-    if (detectedButNotAvailable.length > 0) {
-      console.log('🔍 Attempting to connect to detected wallets...');
-      
-      for (const wallet of detectedButNotAvailable) {
-        try {
-          // Try to force connection
-          if (wallet.chains.includes('ethereum') || wallet.chains.includes('base')) {
-            if (window.ethereum) {
-              console.log(`🔗 Attempting ${wallet.name} connection...`);
-              const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-              if (accounts && accounts.length > 0) {
-                console.log(`✅ ${wallet.name} connected successfully!`);
-                return true;
-              }
-            }
-          }
-        } catch (error) {
-          console.log(`❌ ${wallet.name} connection failed:`, error);
-        }
-      }
-    }
-    
-    // If no wallets work, show clean guidance to use wallet browser
+    // Only show clean modal if no wallet is detected
     this.showWalletBrowserGuidance();
-    
     return false;
   }
 
@@ -359,31 +330,8 @@ class MobileWalletIntegration {
   }
 
   addMobileWalletGuidance() {
-    // DISABLED - No mobile guidance messages for clean UI
-    return;
-    
-    // Add mobile wallet info to the page
-    const walletSection = document.querySelector('.wallet-section') || document.querySelector('nav');
-    if (!walletSection) return;
-    
-    // Check if guidance already exists
-    if (document.getElementById('mobile-wallet-info')) return;
-    
-    const infoDiv = document.createElement('div');
-    infoDiv.id = 'mobile-wallet-info';
-    infoDiv.style.cssText = `
-      background: rgba(0, 234, 255, 0.1);
-      border: 1px solid rgba(0, 234, 255, 0.3);
-      border-radius: 8px;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 12px;
-      color: #00eaff;
-      display: none;
-    `;
-    
-    // All disclaimer content removed for clean UI
-    console.log('✅ Mobile wallet guidance disabled for clean UI');
+    // No mobile guidance or download prompts ever shown
+    // This function intentionally left blank for clean UI
   }
 
   // Utility function to refresh mobile wallet status
