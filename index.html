@@ -841,8 +841,9 @@
     .launch-token-menu,
     .staking-menu,
     .token-locking-menu {
-      display: none !important;
-      visibility: hidden !important; /* Double safety - ensure these old menus never show */
+      /* Removed !important to allow modal system to override */
+      display: none;
+      visibility: hidden;
       position: absolute;
       left: 0;
       top: 100%;
@@ -1014,6 +1015,8 @@
     
     .dropdown-menu.show {
       display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
       pointer-events: auto !important;
     }
     
