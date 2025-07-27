@@ -1258,19 +1258,104 @@
       }
     }
 
+    // AGGRESSIVE CONFIG LOADING: Force load correct production config if fallback detected
+    async function ensureCorrectConfig() {
+      // Check if we have the fallback placeholder
+      if (window.PRODUCTION_CONFIG && window.PRODUCTION_CONFIG.source === 'fallback-placeholder') {
+        console.log('🔍 Detected fallback placeholder, force loading correct config...');
+        
+        try {
+          // Multiple aggressive cache-busting attempts
+          const cachebusters = [
+            `?force=${Date.now()}`,
+            `?v=${Date.now()}&r=${Math.random()}`,
+            `?bust=${Date.now()}&t=${Math.random().toString(36)}`,
+            `?reload=${Date.now()}&f=true`
+          ];
+          
+          for (const cachebuster of cachebusters) {
+            try {
+              const response = await fetch(`/js/production-config.js${cachebuster}`, {
+                cache: 'no-store',
+                headers: {
+                  'Cache-Control': 'no-cache, no-store, must-revalidate',
+                  'Pragma': 'no-cache',
+                  'Expires': '0'
+                }
+              });
+              
+              const content = await response.text();
+              console.log(`📄 Attempt with ${cachebuster}: ${content.length} bytes`);
+              
+              // Check if this is the GitHub Secrets version
+              if (content.includes('github-actions') && content.length > 800) {
+                console.log('✅ Found GitHub Actions config! Applying...');
+                
+                // Clear old config
+                delete window.PRODUCTION_CONFIG;
+                delete window.RPC_CONFIG;
+                
+                // Execute fresh config
+                eval(content);
+                
+                // Recreate RPC config if needed
+                if (!window.RPC_CONFIG && window.PRODUCTION_CONFIG) {
+                  window.RPC_CONFIG = {
+                    getSolanaEndpoint: () => window.PRODUCTION_CONFIG.rpc.solana,
+                    getBaseEndpoint: () => window.PRODUCTION_CONFIG.rpc.base
+                  };
+                }
+                
+                console.log('✅ Production config successfully updated!');
+                return true;
+              }
+            } catch (err) {
+              console.log(`⚠️ Cache-buster ${cachebuster} failed:`, err.message);
+            }
+          }
+          
+          console.log('⚠️ All cache-busting attempts failed, using fallback');
+          return false;
+        } catch (error) {
+          console.error('❌ Failed to force load config:', error);
+          return false;
+        }
+      }
+      
+      return true; // Config is already correct
+    }
+
     // Wait for config to load, then initialize connection
     async function waitForRPCConfig() {
       if (window.RPC_CONFIG) {
+        // First ensure we have the correct config
+        const configOk = await ensureCorrectConfig();
+        
         try {
           await initializeConnection();
           console.log('✅ Solana connection initialized successfully');
         } catch (error) {
           console.error('❌ Failed to initialize Solana connection:', error.message);
-          // Show user-friendly error
-          const errorMsg = error.message.includes('GitHub Secrets') ? 
-            'Connection requires premium endpoints. Please check deployment configuration.' :
-            'Failed to connect to Solana network. Please try again.';
-          alert(errorMsg);
+          
+          // If connection failed due to GitHub Secrets, try one more aggressive reload
+          if (error.message.includes('GitHub Secrets') && configOk) {
+            console.log('🔄 Attempting one final config reload...');
+            await ensureCorrectConfig();
+            try {
+              await initializeConnection();
+              console.log('✅ Solana connection successful on retry!');
+            } catch (retryError) {
+              console.error('❌ Retry failed:', retryError.message);
+              const errorMsg = 'Unable to load QuickNode endpoints. Please refresh the page.';
+              alert(errorMsg);
+            }
+          } else {
+            // Show user-friendly error
+            const errorMsg = error.message.includes('GitHub Secrets') ? 
+              'Connection requires premium endpoints. Please refresh the page.' :
+              'Failed to connect to Solana network. Please try again.';
+            alert(errorMsg);
+          }
         }
       } else {
         setTimeout(waitForRPCConfig, 100);
