@@ -9,6 +9,18 @@
   <script src="js/env-config.js"></script>
   <!-- Enhanced Mobile Wallet Support -->
   <script src="js/mobile-wallet-bridge.js"></script>
+  <!-- Mobile Wallet Detection & Connection -->
+  <script src="js/mobile-wallet-detector.js"></script>
+  <!-- Mobile Wallet Integration -->
+  <script src="js/mobile-wallet-integration.js"></script>
+  <!-- Mobile Wallet Debug Tools (localhost only) -->
+  <script>
+    if (window.location.hostname === 'localhost' || window.location.search.includes('debug=mobile')) {
+      const script = document.createElement('script');
+      script.src = 'js/mobile-wallet-debug.js';
+      document.head.appendChild(script);
+    }
+  </script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="js/production-config.js"></script>
   <!-- RPC Configuration -->
