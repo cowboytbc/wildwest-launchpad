@@ -8,7 +8,6 @@
   <!-- DISABLED: Wallet blocking system for debugging -->
   <script>
     // WALLET BLOCKING DISABLED TO FIX 403 ERRORS AND CONNECTION ISSUES
-    console.log('✅ Wallet blocking system disabled for debugging Solana locks');
     
     // Simple flag to track connection state
     window.__walletAutoConnectDisabled = true;
@@ -18,14 +17,9 @@
       console.log('✅ Wallet connections enabled by user action');
       window.__walletAutoConnectDisabled = false;
     };
-    
-    console.log('✅ NUCLEAR META-LEVEL BLOCKING DISABLED - Testing mode');
   </script>
       });
     };
-    
-    // Wallet blocking system disabled for debugging
-    console.log('✅ NUCLEAR META-LEVEL BLOCKING DISABLED - Testing mode');
   </script>
   
   <!-- Console Filter - Universal console control -->
@@ -57,7 +51,6 @@
     
     // Wallet auto-connection blocking disabled for debugging
     window.WALLET_AUTO_CONNECTION_BLOCKED = false;
-    console.log('✅ Solana locking page: Wallet auto-connection blocking disabled for testing');
   </script>
   
   <!-- Multi-wallet management -->
@@ -1039,20 +1032,18 @@
     
     // DISABLED: Wallet blocking system
     function blockAllWallets() {
-      console.log('⚠️ Wallet blocking disabled for debugging');
+      // Wallet blocking disabled for debugging
       return;
     }
     
     function unblockAllWallets() {
-      console.log('✅ Wallets already unblocked (blocking disabled)');
+      // Wallets already unblocked (blocking disabled)
       return;
     }
     
     // Make functions globally available (no-ops)
     window.unblockWallets = unblockAllWallets;
     window.blockWallets = blockAllWallets;
-    
-    console.log('✅ EXTREME WALLET BLOCKING DISABLED - Testing mode');
     
     // --- SOLANA PROGRAM ADDRESS (replace with your deployed program address) ---
     const PROGRAM_ID = new solanaWeb3.PublicKey("8AqhFyokcMouAf9rruTdnDxVmnNyvn5f4Gf71FJDLXyV");
