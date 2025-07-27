@@ -53,6 +53,7 @@
         width: 95vw;
         max-height: 90vh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         text-align: center;
         color: white;
         font-family: 'Orbitron', Arial, sans-serif;
@@ -62,7 +63,6 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         position: relative;
         animation: disclaimerSlideIn 0.6s ease-out;
-        overflow: hidden;
       ">
         <!-- Close button -->
         <button onclick="
@@ -132,7 +132,7 @@
           text-transform: uppercase;
           line-height: 1.2;
         ">
-          Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em;">WILDWEST</span>
+          Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em; font-size: 1.5rem;">WILDWEST</span>
         </h1>
         
         <!-- Legal disclaimer text -->
