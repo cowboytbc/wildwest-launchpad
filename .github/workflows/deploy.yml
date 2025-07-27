@@ -16,6 +16,9 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     
     steps:
@@ -24,6 +27,14 @@ jobs:
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        
+      - name: Debug environment and secrets
+        run: |
+          echo "🔍 DEBUGGING GITHUB ENVIRONMENT:"
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Runner: ${{ runner.os }}"
         
       - name: Inject QuickNode secrets
         env:
