@@ -16,9 +16,6 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,6 +27,15 @@ jobs:
           SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
           BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
+          echo "Secrets check:"
+          echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
+          echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
+          
+          if [ -z "$SOLANA_RPC_ENDPOINT" ] || [ -z "$BASE_RPC_ENDPOINT" ]; then
+            echo "ERROR: Secrets not available!"
+            exit 1
+          fi
+          
           mkdir -p js
           cat > js/production-config.js << EOF
           (function() {
@@ -50,6 +56,8 @@ jobs:
             };
           })();
           EOF
+          
+          echo "Production config created successfully"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
