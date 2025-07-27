@@ -47,10 +47,30 @@ jobs:
           echo "🔍 Running on ref: ${{ github.ref }}"
           echo "🔍 Event name: ${{ github.event_name }}"
           echo ""
+          
+          # Check if any secrets are available at all
+          echo "🔍 Secret availability check:"
           echo "SOLANA_RPC_ENDPOINT present: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
           echo "BASE_RPC_ENDPOINT present: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
           echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
           echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
+          
+          # If no secrets, provide clear guidance
+          if [ -z "$SOLANA_RPC_ENDPOINT" ] && [ -z "$BASE_RPC_ENDPOINT" ]; then
+            echo ""
+            echo "❌ CRITICAL: NO SECRETS FOUND!"
+            echo "❌ This could mean:"
+            echo "❌   1. Secrets are not configured in the repository"
+            echo "❌   2. Secrets are not configured for the 'github-pages' environment"
+            echo "❌   3. Secret names don't match exactly"
+            echo ""
+            echo "📋 TO FIX:"
+            echo "📋   Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "📋   Add these repository secrets:"
+            echo "📋     - SOLANA_RPC_ENDPOINT (your QuickNode Solana endpoint)"
+            echo "📋     - BASE_RPC_ENDPOINT (your QuickNode Base endpoint)"
+            echo "📋   OR configure them for the 'github-pages' environment"
+          fi
           
           # Debug: Check if secrets are empty or null
           if [ -z "$SOLANA_RPC_ENDPOINT" ]; then
