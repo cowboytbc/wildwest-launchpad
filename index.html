@@ -3909,140 +3909,85 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </footer>
   
-  <!-- NUCLEAR OVERRIDE DROPDOWN SYSTEM -->
+  <!-- SIMPLE FUCKING DROPDOWN SYSTEM THAT WORKS -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 NUCLEAR DROPDOWN OVERRIDE STARTING...');
+    console.log('🚀 SIMPLE DROPDOWN SYSTEM STARTING...');
     
-    // Debug: Check what elements exist
-    console.log('🔍 All elements with dropdown classes:');
-    document.querySelectorAll('.launch-token-dropdown').forEach(el => console.log('  Launch dropdown:', el));
-    document.querySelectorAll('.staking-dropdown').forEach(el => console.log('  Staking dropdown:', el));
-    document.querySelectorAll('.token-locking-dropdown').forEach(el => console.log('  Locking dropdown:', el));
-    
-    console.log('🔍 All dropdown triggers:');
-    document.querySelectorAll('.dropdown-trigger').forEach(el => console.log('  Trigger:', el.textContent.trim()));
-    
-    console.log('🔍 All dropdown menus:');
-    document.querySelectorAll('.dropdown-menu').forEach(el => console.log('  Menu:', el.id));
-    
-    // COMPLETELY REPLACE all dropdown triggers with clean versions
-    const launchTrigger = document.querySelector('.launch-token-dropdown .dropdown-trigger');
-    const stakingTrigger = document.querySelector('.staking-dropdown .dropdown-trigger');
-    const lockingTrigger = document.querySelector('.token-locking-dropdown .dropdown-trigger');
-    
-    console.log('🔍 Found triggers:', {
-      launch: !!launchTrigger,
-      staking: !!stakingTrigger,
-      locking: !!lockingTrigger
+    // Simple click handlers
+    document.addEventListener('click', function(e) {
+      if (e.target.textContent.includes('Launch Token')) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔽 Launch clicked');
+        
+        const menu = document.getElementById('launch-menu');
+        if (menu) {
+          menu.style.display = 'block';
+          menu.style.position = 'fixed';
+          menu.style.left = '50%';
+          menu.style.top = '50%';
+          menu.style.transform = 'translate(-50%, -50%)';
+          menu.style.zIndex = '9999';
+          menu.style.background = '#1a1e2e';
+          menu.style.border = '2px solid #00eaff';
+          menu.style.borderRadius = '10px';
+          menu.style.padding = '20px';
+          console.log('✅ Launch menu opened');
+        }
+      }
+      
+      if (e.target.textContent.includes('Staking')) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔽 Staking clicked');
+        
+        const menu = document.getElementById('staking-menu');
+        if (menu) {
+          menu.style.display = 'block';
+          menu.style.position = 'fixed';
+          menu.style.left = '50%';
+          menu.style.top = '50%';
+          menu.style.transform = 'translate(-50%, -50%)';
+          menu.style.zIndex = '9999';
+          menu.style.background = '#1a1e2e';
+          menu.style.border = '2px solid #00eaff';
+          menu.style.borderRadius = '10px';
+          menu.style.padding = '20px';
+          console.log('✅ Staking menu opened');
+        }
+      }
+      
+      if (e.target.textContent.includes('Token Locking')) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔽 Locking clicked');
+        
+        const menu = document.getElementById('locking-menu');
+        if (menu) {
+          menu.style.display = 'block';
+          menu.style.position = 'fixed';
+          menu.style.left = '50%';
+          menu.style.top = '50%';
+          menu.style.transform = 'translate(-50%, -50%)';
+          menu.style.zIndex = '9999';
+          menu.style.background = '#1a1e2e';
+          menu.style.border = '2px solid #00eaff';
+          menu.style.borderRadius = '10px';
+          menu.style.padding = '20px';
+          console.log('✅ Locking menu opened');
+        }
+      }
+      
+      // Close menus when clicking outside
+      if (!e.target.closest('.dropdown-menu') && !e.target.textContent.includes('▼')) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.style.display = 'none';
+        });
+      }
     });
     
-    if (launchTrigger) {
-      console.log('🔧 Setting up Launch trigger');
-      launchTrigger.href = '#';
-      launchTrigger.onclick = null;
-      launchTrigger.removeAttribute('onclick');
-      launchTrigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔽 NUCLEAR: Launch clicked');
-        
-        // Close all dropdowns
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-          menu.classList.remove('show');
-          menu.style.display = 'none';
-        });
-        
-        // Open launch menu
-        const menu = document.getElementById('launch-menu');
-        console.log('🔍 Launch menu element:', menu);
-        if (menu) {
-          menu.classList.add('show');
-          menu.style.display = 'block';
-          menu.style.visibility = 'visible';
-          menu.style.opacity = '1';
-          menu.style.pointerEvents = 'auto';
-          console.log('✅ NUCLEAR: Launch menu opened');
-        } else {
-          console.error('❌ Launch menu not found!');
-        }
-      });
-      console.log('✅ Launch trigger setup complete');
-    } else {
-      console.error('❌ Launch trigger not found!');
-    }
-    
-    if (stakingTrigger) {
-      console.log('🔧 Setting up Staking trigger');
-      stakingTrigger.href = '#';
-      stakingTrigger.onclick = null;
-      stakingTrigger.removeAttribute('onclick');
-      stakingTrigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔽 NUCLEAR: Staking clicked');
-        
-        // Close all dropdowns
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-          menu.classList.remove('show');
-          menu.style.display = 'none';
-        });
-        
-        // Open staking menu
-        const menu = document.getElementById('staking-menu');
-        console.log('🔍 Staking menu element:', menu);
-        if (menu) {
-          menu.classList.add('show');
-          menu.style.display = 'block';
-          menu.style.visibility = 'visible';
-          menu.style.opacity = '1';
-          menu.style.pointerEvents = 'auto';
-          console.log('✅ NUCLEAR: Staking menu opened');
-        } else {
-          console.error('❌ Staking menu not found!');
-        }
-      });
-      console.log('✅ Staking trigger setup complete');
-    } else {
-      console.error('❌ Staking trigger not found!');
-    }
-    
-    if (lockingTrigger) {
-      console.log('🔧 Setting up Locking trigger');
-      lockingTrigger.href = '#';
-      lockingTrigger.onclick = null;
-      lockingTrigger.removeAttribute('onclick');
-      lockingTrigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔽 NUCLEAR: Locking clicked');
-        
-        // Close all dropdowns
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-          menu.classList.remove('show');
-          menu.style.display = 'none';
-        });
-        
-        // Open locking menu
-        const menu = document.getElementById('locking-menu');
-        console.log('🔍 Locking menu element:', menu);
-        if (menu) {
-          menu.classList.add('show');
-          menu.style.display = 'block';
-          menu.style.visibility = 'visible';
-          menu.style.opacity = '1';
-          menu.style.pointerEvents = 'auto';
-          console.log('✅ NUCLEAR: Locking menu opened');
-        } else {
-          console.error('❌ Locking menu not found!');
-        }
-      });
-      console.log('✅ Locking trigger setup complete');
-    } else {
-      console.error('❌ Locking trigger not found!');
-    }
-    
-    console.log('✅ NUCLEAR DROPDOWN OVERRIDE COMPLETE');
+    console.log('✅ SIMPLE DROPDOWN SYSTEM COMPLETE');
   });
   </script>
 
