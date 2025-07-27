@@ -2228,7 +2228,8 @@
     }
   }
   
-  // Close when clicking outside
+  // TEMPORARILY DISABLED - Close when clicking outside
+  /*
   document.addEventListener('click', function(e) {
     console.log('🖱️ Click detected:', e.target);
     console.log('🖱️ Is inside nav?', e.target.closest('.main-nav'));
@@ -2242,6 +2243,9 @@
       console.log('🎯 Click inside nav - keeping dropdowns open');
     }
   });
+  */
+  
+  console.log('✅ Click-outside handler DISABLED for testing');
   
   console.log('✅ Inline dropdown system ready');
   </script>
