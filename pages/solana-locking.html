@@ -1249,17 +1249,30 @@
     let connection = null;
 
     // Initialize connection using centralized config
-    function initializeConnection() {
+    async function initializeConnection() {
       if (window.RPC_CONFIG) {
-        // Use direct QuickNode access like Base page does - no async needed
+        // Try QuickNode first if available
         if (window.RPC_CONFIG.SOLANA.QUICKNODE) {
-          connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.QUICKNODE);
-          console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
-        } else {
-          // Direct fallback like Base page - no async testing
-          connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
-          console.log('⚠️ QuickNode Solana endpoint not available, using fallback:', window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
+          console.log('🔍 Testing QuickNode Solana endpoint...');
+          try {
+            // Test QuickNode endpoint with a simple call
+            const testConnection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.QUICKNODE);
+            await testConnection.getVersion();
+            
+            connection = testConnection;
+            console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
+            return;
+          } catch (error) {
+            console.error('❌ QuickNode endpoint failed:', error.message);
+            if (error.message.includes('403') || error.message.includes('API key')) {
+              console.error('🔑 QuickNode API key issue - falling back to public endpoint');
+            }
+          }
         }
+        
+        // Fallback to public endpoint
+        console.warn('⚠️ Using fallback Solana endpoint:', window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
+        connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
       } else {
         // Fallback to hardcoded endpoint if config not loaded
         connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
@@ -1268,9 +1281,9 @@
     }
 
     // Wait for config to load, then initialize connection
-    function waitForRPCConfig() {
+    async function waitForRPCConfig() {
       if (window.RPC_CONFIG) {
-        initializeConnection();
+        await initializeConnection();
       } else {
         setTimeout(waitForRPCConfig, 100);
       }
@@ -2105,7 +2118,17 @@
         tokenInfoDiv.textContent = `${symbol} | Decimals: ${decimals} | Balance: ${balance.toLocaleString(undefined, { maximumFractionDigits: decimals })}`;
         tokenInfoDiv.style.color = '#00e676'; // Green for success
       } catch (err) {
-        tokenInfoDiv.textContent = 'Could not fetch token info.';
+        console.error('Token info fetch error:', err);
+        if (err.message && err.message.includes('403')) {
+          tokenInfoDiv.textContent = 'RPC endpoint error (403). Trying fallback...';
+          // Try to reinitialize connection with fallback
+          if (window.RPC_CONFIG && window.RPC_CONFIG.SOLANA.FALLBACKS[0]) {
+            connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
+            tokenInfoDiv.textContent = 'Switched to fallback endpoint. Try again.';
+          }
+        } else {
+          tokenInfoDiv.textContent = 'Could not fetch token info.';
+        }
         tokenInfoDiv.style.color = '#ff6c6c'; // Red for error
       }
     }
