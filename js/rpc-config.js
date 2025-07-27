@@ -46,7 +46,7 @@ const RPC_CONFIG = {
   },
 
   // Helper functions to get endpoints
-  getSolanaEndpoint: function() {
+  getSolanaEndpoint: async function() {
     // First priority: QuickNode from GitHub Secrets
     if (this.SOLANA.QUICKNODE) {
       console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
@@ -55,10 +55,12 @@ const RPC_CONFIG = {
     
     // Fallback: Use public endpoints with testing
     console.warn('⚠️ QuickNode Solana endpoint not available, using fallback');
-    return this.getSolanaEndpointWithFallback().catch(() => {
+    try {
+      return await this.getSolanaEndpointWithFallback();
+    } catch (error) {
       console.warn('⚠️ All fallback endpoints failed, using first fallback');
       return this.SOLANA.FALLBACKS[0];
-    });
+    }
   },
   
   // Get Solana endpoint with automatic fallback (only used when QuickNode unavailable)

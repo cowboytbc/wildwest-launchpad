@@ -290,22 +290,17 @@
             // Set up Solana connection for transactions
             if (typeof window.connection === 'undefined') {
               try {
-                const { getSolanaEndpoint } = window.RPC_CONFIG || {};
-                if (getSolanaEndpoint) {
-                  getSolanaEndpoint().then(endpoint => {
-                    window.connection = new solanaWeb3.Connection(endpoint);
-                    console.log('🌐 Solana connection established:', endpoint);
-                  }).catch(err => {
-                    console.warn('⚠️ Using fallback Solana connection due to RPC error:', err.message);
-                    window.connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-                  });
+                if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaEndpoint) {
+                  const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+                  window.connection = new solanaWeb3.Connection(endpoint);
+                  console.log('🌐 Solana connection established:', endpoint);
                 } else {
-                  console.warn('⚠️ No getSolanaEndpoint function available, using fallback');
-                  window.connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+                  console.warn('⚠️ No RPC_CONFIG available, using fallback');
+                  window.connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
                 }
               } catch (error) {
                 console.warn('⚠️ RPC config error, using fallback Solana connection:', error.message);
-                window.connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+                window.connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
               }
             }
             
@@ -1225,14 +1220,24 @@
     let connection = null;
 
     // Initialize connection using centralized config
-    function initializeConnection() {
-      if (window.RPC_CONFIG) {
-        connection = window.RPC_CONFIG.getSolanaConnection();
-        console.log('✅ Using centralized RPC config:', window.RPC_CONFIG.getSolanaEndpoint());
+    async function initializeConnection() {
+      if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaEndpoint) {
+        try {
+          const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+          connection = new solanaWeb3.Connection(endpoint);
+          window.connection = connection; // Make it globally available
+          console.log('✅ Using centralized RPC config with endpoint:', endpoint);
+        } catch (error) {
+          console.warn('⚠️ Error getting Solana endpoint:', error.message);
+          connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
+          window.connection = connection;
+          console.log('⚠️ Using fallback RPC endpoint');
+        }
       } else {
         // Fallback to hardcoded endpoint if config not loaded
-        connection = new solanaWeb3.Connection(window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com');
-        console.log('⚠️ Using fallback RPC endpoint');
+        connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
+        window.connection = connection;
+        console.log('⚠️ Using fallback RPC endpoint - no config available');
       }
     }
 
