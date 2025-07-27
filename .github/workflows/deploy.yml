@@ -24,14 +24,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Generate Production Config
+      - name: Generate Production Config with Cache Busting
         env:
           SOLANA_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
           BASE_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+          CACHE_BUST: ${{ github.sha }}
         run: |
           mkdir -p js
-          cat > js/production-config.js << EOF
-          // PRODUCTION CONFIG - QuickNode endpoints active
+          # Generate production config with cache busting
+          cat > js/production-config.js << 'EOF'
+          // PRODUCTION CONFIG - Generated from GitHub Secrets
           (function() {
             'use strict';
             
@@ -40,14 +42,15 @@ jobs:
               return;
             }
             
-            // QuickNode endpoints - high performance RPC
+            // QuickNode endpoints - injected from GitHub Secrets
             window.PRODUCTION_CONFIG = {
               rpc: {
-                solana: '${SOLANA_ENDPOINT}',
-                base: '${BASE_ENDPOINT}'
+                solana: 'SOLANA_PLACEHOLDER',
+                base: 'BASE_PLACEHOLDER'
               },
               injectedAt: new Date().toISOString(),
-              source: 'github-secrets-injection'
+              source: 'github-secrets-injection',
+              cacheHash: 'CACHE_PLACEHOLDER'
             };
             
             window.RPC_CONFIG = {
@@ -69,8 +72,13 @@ jobs:
             console.log('⚡ High-performance RPC endpoints active');
           })();
           EOF
-          echo "Generated production config:"
+          # Replace placeholders with actual values
+          sed -i "s|SOLANA_PLACEHOLDER|${SOLANA_ENDPOINT}|g" js/production-config.js
+          sed -i "s|BASE_PLACEHOLDER|${BASE_ENDPOINT}|g" js/production-config.js
+          sed -i "s|CACHE_PLACEHOLDER|${CACHE_BUST}|g" js/production-config.js
+          echo "=== GENERATED PRODUCTION CONFIG ==="
           cat js/production-config.js
+          echo "=== END PRODUCTION CONFIG ==="
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
