@@ -86,6 +86,11 @@ class MobileWalletIntegration {
   async handleMobileWalletConnection(walletType, originalConnect) {
     console.log('📱 Handling mobile wallet connection...');
     
+    // FORCE SHOW MODAL FOR DEBUGGING
+    console.log('🚨 FORCING MODAL TO SHOW FOR DEBUG');
+    this.showWalletBrowserGuidance();
+    return false;
+    
     // First try standard connection (works in wallet browsers)
     try {
       console.log('🔗 Attempting standard wallet connection...');
@@ -250,14 +255,16 @@ class MobileWalletIntegration {
   }
 
   showWalletBrowserGuidance() {
+    console.log('🚨 SHOWING MODAL NOW!');
     const modal = document.createElement('div');
+    modal.id = 'debug-modal-test';
     modal.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0,0,0,0.9);
+      background: rgba(255,0,0,0.9);
       z-index: 999999999;
       display: flex;
       align-items: center;
@@ -279,10 +286,10 @@ class MobileWalletIntegration {
         color: white;
       ">
         <h3 style="color: #00eaff; margin: 0 0 20px 0; font-size: 18px;">
-          Open in Wallet Browser
+          🚨 DEBUG: Modal Working!
         </h3>
         <p style="margin: 0 0 25px 0; color: #ccc; font-size: 14px; line-height: 1.4;">
-          Open this website in your wallet app's browser for the best experience.
+          If you see this, the modal system is working! Open this website in your wallet app's browser for the best experience.
         </p>
         <button onclick="this.parentElement.parentElement.remove()" style="
           width: 100%;
@@ -301,6 +308,7 @@ class MobileWalletIntegration {
     `;
     
     document.body.appendChild(modal);
+    console.log('✅ Modal added to DOM, element:', modal);
   }
 
   enhanceConnectButton() {
