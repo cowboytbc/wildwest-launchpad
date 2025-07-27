@@ -28,6 +28,26 @@ jobs:
           echo "BASE_RPC_ENDPOINT present: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
           echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
           echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
+          
+          if [ -z "$SOLANA_RPC_ENDPOINT" ] && [ -z "$BASE_RPC_ENDPOINT" ]; then
+            echo ""
+            echo "❌ CRITICAL: NO SECRETS ACCESSIBLE AT REPOSITORY LEVEL"
+            echo "❌ This means the secrets are either:"
+            echo "❌   1. Not configured in: Settings > Secrets and variables > Actions"
+            echo "❌   2. Configured with different names"
+            echo "❌   3. Configured in a different environment"
+            echo ""
+            echo "📋 REQUIRED REPOSITORY SECRETS:"
+            echo "📋   Name: SOLANA_RPC_ENDPOINT"
+            echo "📋   Value: Your QuickNode Solana endpoint URL"
+            echo "📋   Name: BASE_RPC_ENDPOINT" 
+            echo "📋   Value: Your QuickNode Base endpoint URL"
+            echo ""
+            echo "🔗 Configure at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+          else
+            echo "✅ Repository-level secrets are working!"
+            echo "✅ Issue must be in the build-and-deploy environment"
+          fi
 
   build-and-deploy:
     environment:
