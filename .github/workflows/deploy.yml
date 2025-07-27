@@ -16,41 +16,44 @@ concurrency:
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create Production Config
-        env:
-          SOLANA_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
-          BASE_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
+      - name: Create Config with Secrets
         run: |
           mkdir -p js
-          echo "(function() {" > js/production-config.js
-          echo "  'use strict';" >> js/production-config.js
-          echo "  if (window.PRODUCTION_CONFIG) { console.warn('Production config already loaded.'); return; }" >> js/production-config.js
-          echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
-          echo "    rpc: {" >> js/production-config.js
-          echo "      solana: '${SOLANA_ENDPOINT}'," >> js/production-config.js
-          echo "      base: '${BASE_ENDPOINT}'" >> js/production-config.js
-          echo "    }," >> js/production-config.js
-          echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
-          echo "    source: 'github-actions'" >> js/production-config.js
-          echo "  };" >> js/production-config.js
-          echo "  window.RPC_CONFIG = {" >> js/production-config.js
-          echo "    getSolanaEndpoint: function() {" >> js/production-config.js
-          echo "      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.solana) { throw new Error('CRITICAL: QuickNode Solana endpoint not available.'); }" >> js/production-config.js
-          echo "      return window.PRODUCTION_CONFIG.rpc.solana;" >> js/production-config.js
-          echo "    }," >> js/production-config.js
-          echo "    getBaseEndpoint: function() {" >> js/production-config.js
-          echo "      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.base) { throw new Error('CRITICAL: QuickNode Base endpoint not available.'); }" >> js/production-config.js
-          echo "      return window.PRODUCTION_CONFIG.rpc.base;" >> js/production-config.js
-          echo "    }" >> js/production-config.js
-          echo "  };" >> js/production-config.js
-          echo "  console.log('Production config injected by GitHub Actions.');" >> js/production-config.js
-          echo "})();" >> js/production-config.js
-          echo "Production config created successfully."
+          echo '(function() {' > js/production-config.js
+          echo '  "use strict";' >> js/production-config.js
+          echo '  if (window.PRODUCTION_CONFIG) return;' >> js/production-config.js
+          echo '  window.PRODUCTION_CONFIG = {' >> js/production-config.js
+          echo '    rpc: {' >> js/production-config.js
+          echo '      solana: "${{ secrets.SOLANA_RPC_ENDPOINT }}",' >> js/production-config.js
+          echo '      base: "${{ secrets.BASE_RPC_ENDPOINT }}"' >> js/production-config.js
+          echo '    },' >> js/production-config.js
+          echo '    injectedAt: new Date().toISOString(),' >> js/production-config.js
+          echo '    source: "github-actions"' >> js/production-config.js
+          echo '  };' >> js/production-config.js
+          echo '  window.RPC_CONFIG = {' >> js/production-config.js
+          echo '    getSolanaEndpoint: function() {' >> js/production-config.js
+          echo '      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.solana) {' >> js/production-config.js
+          echo '        throw new Error("CRITICAL: QuickNode Solana endpoint not available.");' >> js/production-config.js
+          echo '      }' >> js/production-config.js
+          echo '      return window.PRODUCTION_CONFIG.rpc.solana;' >> js/production-config.js
+          echo '    },' >> js/production-config.js
+          echo '    getBaseEndpoint: function() {' >> js/production-config.js
+          echo '      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.base) {' >> js/production-config.js
+          echo '        throw new Error("CRITICAL: QuickNode Base endpoint not available.");' >> js/production-config.js
+          echo '      }' >> js/production-config.js
+          echo '      return window.PRODUCTION_CONFIG.rpc.base;' >> js/production-config.js
+          echo '    }' >> js/production-config.js
+          echo '  };' >> js/production-config.js
+          echo '  console.log("Production config injected by GitHub Actions.");' >> js/production-config.js
+          echo '})();' >> js/production-config.js
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
