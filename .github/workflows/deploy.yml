@@ -25,48 +25,50 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Generate Production Config
+        env:
+          SOLANA_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+          BASE_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
-          cat > js/production-config.js << 'EOF'
-          // PRODUCTION CONFIG - QuickNode endpoints active
-          (function() {
-            'use strict';
-            
-            if (window.PRODUCTION_CONFIG) {
-              console.log('🔐 Production config already loaded');
-              return;
-            }
-            
-            // QuickNode endpoints - high performance RPC
-            window.PRODUCTION_CONFIG = {
-              rpc: {
-                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
-                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
-              },
-              injectedAt: new Date().toISOString(),
-              source: 'github-secrets-injection'
-            };
-            
-            window.RPC_CONFIG = {
-              getSolanaEndpoint: function() {
-                if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.solana) {
-                  throw new Error('CRITICAL: QuickNode Solana endpoint not available.');
-                }
-                return window.PRODUCTION_CONFIG.rpc.solana;
-              },
-              getBaseEndpoint: function() {
-                if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.base) {
-                  throw new Error('CRITICAL: QuickNode Base endpoint not available.');
-                }
-                return window.PRODUCTION_CONFIG.rpc.base;
-              }
-            };
-            
-            console.log('🚀 QuickNode production config loaded successfully');
-            console.log('⚡ High-performance RPC endpoints active');
-          })();
-          EOF
-          echo "Generated production config with secrets"
+          echo "// PRODUCTION CONFIG - QuickNode endpoints active" > js/production-config.js
+          echo "(function() {" >> js/production-config.js
+          echo "  'use strict';" >> js/production-config.js
+          echo "  " >> js/production-config.js
+          echo "  if (window.PRODUCTION_CONFIG) {" >> js/production-config.js
+          echo "    console.log('🔐 Production config already loaded');" >> js/production-config.js
+          echo "    return;" >> js/production-config.js
+          echo "  }" >> js/production-config.js
+          echo "  " >> js/production-config.js
+          echo "  // QuickNode endpoints - high performance RPC" >> js/production-config.js
+          echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
+          echo "    rpc: {" >> js/production-config.js
+          echo "      solana: '${SOLANA_ENDPOINT}'," >> js/production-config.js
+          echo "      base: '${BASE_ENDPOINT}'" >> js/production-config.js
+          echo "    }," >> js/production-config.js
+          echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
+          echo "    source: 'github-secrets-injection'" >> js/production-config.js
+          echo "  };" >> js/production-config.js
+          echo "  " >> js/production-config.js
+          echo "  window.RPC_CONFIG = {" >> js/production-config.js
+          echo "    getSolanaEndpoint: function() {" >> js/production-config.js
+          echo "      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.solana) {" >> js/production-config.js
+          echo "        throw new Error('CRITICAL: QuickNode Solana endpoint not available.');" >> js/production-config.js
+          echo "      }" >> js/production-config.js
+          echo "      return window.PRODUCTION_CONFIG.rpc.solana;" >> js/production-config.js
+          echo "    }," >> js/production-config.js
+          echo "    getBaseEndpoint: function() {" >> js/production-config.js
+          echo "      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.base) {" >> js/production-config.js
+          echo "        throw new Error('CRITICAL: QuickNode Base endpoint not available.');" >> js/production-config.js
+          echo "      }" >> js/production-config.js
+          echo "      return window.PRODUCTION_CONFIG.rpc.base;" >> js/production-config.js
+          echo "    }" >> js/production-config.js
+          echo "  };" >> js/production-config.js
+          echo "  " >> js/production-config.js
+          echo "  console.log('🚀 QuickNode production config loaded successfully');" >> js/production-config.js
+          echo "  console.log('⚡ High-performance RPC endpoints active');" >> js/production-config.js
+          echo "})();" >> js/production-config.js
+          echo "=== GENERATED PRODUCTION CONFIG ==="
           cat js/production-config.js
+          echo "=== END PRODUCTION CONFIG ==="
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
