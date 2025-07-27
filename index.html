@@ -3914,19 +3914,25 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 NUCLEAR DROPDOWN OVERRIDE STARTING...');
     
-    // Remove ALL existing onclick handlers
-    document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
-      trigger.onclick = null;
-      trigger.removeAttribute('onclick');
+    // COMPLETELY REPLACE all dropdown triggers with clean versions
+    const launchTrigger = document.querySelector('.launch-token-dropdown .dropdown-trigger');
+    const stakingTrigger = document.querySelector('.staking-dropdown .dropdown-trigger');
+    const lockingTrigger = document.querySelector('.token-locking-dropdown .dropdown-trigger');
+    
+    console.log('🔍 Found triggers:', {
+      launch: !!launchTrigger,
+      staking: !!stakingTrigger,
+      locking: !!lockingTrigger
     });
     
-    // Add new clean event listeners
-    document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
-      trigger.addEventListener('click', function(e) {
+    if (launchTrigger) {
+      launchTrigger.href = '#';
+      launchTrigger.onclick = null;
+      launchTrigger.removeAttribute('onclick');
+      launchTrigger.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
-        console.log('🔽 NUCLEAR: Dropdown clicked:', this.textContent.trim());
+        console.log('🔽 NUCLEAR: Launch clicked');
         
         // Close all dropdowns
         document.querySelectorAll('.dropdown-menu').forEach(menu => {
@@ -3934,28 +3940,74 @@ document.addEventListener('DOMContentLoaded', function() {
           menu.style.display = 'none';
         });
         
-        // Find and open the target menu
-        let targetMenu = null;
-        if (this.textContent.includes('Launch')) {
-          targetMenu = document.getElementById('launch-menu');
-        } else if (this.textContent.includes('Staking')) {
-          targetMenu = document.getElementById('staking-menu');
-        } else if (this.textContent.includes('Locking')) {
-          targetMenu = document.getElementById('locking-menu');
-        }
-        
-        if (targetMenu) {
-          targetMenu.classList.add('show');
-          targetMenu.style.display = 'block';
-          targetMenu.style.visibility = 'visible';
-          targetMenu.style.opacity = '1';
-          targetMenu.style.pointerEvents = 'auto';
-          console.log('✅ NUCLEAR: Menu opened successfully:', targetMenu.id);
-        } else {
-          console.error('❌ NUCLEAR: Could not find target menu');
+        // Open launch menu
+        const menu = document.getElementById('launch-menu');
+        if (menu) {
+          menu.classList.add('show');
+          menu.style.display = 'block';
+          menu.style.visibility = 'visible';
+          menu.style.opacity = '1';
+          menu.style.pointerEvents = 'auto';
+          console.log('✅ NUCLEAR: Launch menu opened');
         }
       });
-    });
+    }
+    
+    if (stakingTrigger) {
+      stakingTrigger.href = '#';
+      stakingTrigger.onclick = null;
+      stakingTrigger.removeAttribute('onclick');
+      stakingTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔽 NUCLEAR: Staking clicked');
+        
+        // Close all dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.classList.remove('show');
+          menu.style.display = 'none';
+        });
+        
+        // Open staking menu
+        const menu = document.getElementById('staking-menu');
+        if (menu) {
+          menu.classList.add('show');
+          menu.style.display = 'block';
+          menu.style.visibility = 'visible';
+          menu.style.opacity = '1';
+          menu.style.pointerEvents = 'auto';
+          console.log('✅ NUCLEAR: Staking menu opened');
+        }
+      });
+    }
+    
+    if (lockingTrigger) {
+      lockingTrigger.href = '#';
+      lockingTrigger.onclick = null;
+      lockingTrigger.removeAttribute('onclick');
+      lockingTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔽 NUCLEAR: Locking clicked');
+        
+        // Close all dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.classList.remove('show');
+          menu.style.display = 'none';
+        });
+        
+        // Open locking menu
+        const menu = document.getElementById('locking-menu');
+        if (menu) {
+          menu.classList.add('show');
+          menu.style.display = 'block';
+          menu.style.visibility = 'visible';
+          menu.style.opacity = '1';
+          menu.style.pointerEvents = 'auto';
+          console.log('✅ NUCLEAR: Locking menu opened');
+        }
+      });
+    }
     
     console.log('✅ NUCLEAR DROPDOWN OVERRIDE COMPLETE');
   });
