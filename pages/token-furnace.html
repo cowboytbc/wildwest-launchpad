@@ -1481,13 +1481,11 @@ async function initializeRPCEndpoints() {
       BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
       console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
     } else {
-      console.warn('⚠️ RPC_CONFIG not available, using fallback endpoints');
-      // Better fallback endpoints that should work
-      SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
-      BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
+      throw new Error('RPC_CONFIG not available - GitHub Secrets required');
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
+    throw error;
     // Ensure we have working fallbacks
     SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
     BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
@@ -3357,8 +3355,8 @@ async function updateBalance() {
     try {
       console.log('🔍 Fetching Solana token balance for:', { tokenAddress, wallet: addressToUse });
       
-      // Get the current RPC endpoint (async)
-      const solanaRPC = window.RPC_CONFIG ? await window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com';
+      // Get the current RPC endpoint (async) - ONLY QuickNode
+      const solanaRPC = await window.RPC_CONFIG.getSolanaEndpoint();
       const connection = new window.solanaWeb3.Connection(solanaRPC);
       const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
       const ownerPubkey = new window.solanaWeb3.PublicKey(addressToUse);
@@ -4008,7 +4006,7 @@ async function burnSolanaToken(tokenAddress, amount) {
   try {
     // Get the current RPC endpoint (async) - USING QUICKNODE ENDPOINT
     console.log('📡 Initializing Solana connection with QuickNode endpoint...');
-    const solanaRPC = window.RPC_CONFIG ? await window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com';
+    const solanaRPC = await window.RPC_CONFIG.getSolanaEndpoint();
     console.log('📡 Using Solana QuickNode RPC:', solanaRPC);
     
     const connection = new window.solanaWeb3.Connection(solanaRPC, 'confirmed');
@@ -4889,8 +4887,8 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     }
     
     try {
-      // Get the current RPC endpoint (async)
-      const solanaRPC = window.RPC_CONFIG ? await window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com';
+      // Get the current RPC endpoint (async) - ONLY QuickNode
+      const solanaRPC = await window.RPC_CONFIG.getSolanaEndpoint();
       const connection = new window.solanaWeb3.Connection(solanaRPC);
       const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
       const ownerPubkey = new window.solanaWeb3.PublicKey(addressToUse);

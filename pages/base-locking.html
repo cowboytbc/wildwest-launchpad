@@ -202,7 +202,7 @@
                     chainId: '0x2105',
                     chainName: 'Base',
                     nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-                    rpcUrls: [RPC_CONFIG.BASE.QUICKNODE],
+                    rpcUrls: [RPC_CONFIG.getBaseEndpoint()],
                     blockExplorerUrls: ['https://basescan.org']
                   }]
                 });
@@ -1234,7 +1234,7 @@
                       chainId: '0x2105',
                       chainName: 'Base',
                       nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-                      rpcUrls: [RPC_CONFIG.BASE.QUICKNODE],
+                      rpcUrls: [RPC_CONFIG.getBaseEndpoint()],
                       blockExplorerUrls: ['https://basescan.org']
                     }]
                   });

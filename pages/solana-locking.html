@@ -287,17 +287,12 @@
             // Set up Solana connection for transactions
             if (typeof window.connection === 'undefined') {
               try {
-                if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaEndpoint) {
-                  const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
-                  window.connection = new solanaWeb3.Connection(endpoint);
-                  console.log('🌐 Solana connection established:', endpoint);
-                } else {
-                  console.warn('⚠️ No RPC_CONFIG available, using fallback');
-                  window.connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-                }
+                const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+                window.connection = new solanaWeb3.Connection(endpoint);
+                console.log('🌐 Solana connection established:', endpoint);
               } catch (error) {
-                console.warn('⚠️ RPC config error, using fallback Solana connection:', error.message);
-                window.connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
+                console.error('❌ Failed to get QuickNode endpoint:', error);
+                throw error;
               }
             }
             
@@ -1257,22 +1252,19 @@
       console.log('🔍 Debug: RPC_CONFIG.SOLANA.QUICKNODE:', window.RPC_CONFIG?.SOLANA?.QUICKNODE);
       
       if (window.RPC_CONFIG) {
-        // Check for QuickNode endpoint from GitHub Secrets
-        const quicknodeEndpoint = window.RPC_CONFIG.SOLANA.QUICKNODE;
-        console.log('🔍 QuickNode endpoint check:', quicknodeEndpoint);
+        // Use QuickNode endpoint from GitHub Secrets ONLY
+        const quicknodeEndpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+        console.log('🔍 QuickNode endpoint from GitHub Secrets:', quicknodeEndpoint);
         
-        if (quicknodeEndpoint) {
-          connection = new solanaWeb3.Connection(quicknodeEndpoint);
-          console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
-          console.log('🔗 Endpoint URL:', quicknodeEndpoint.substring(0, 50) + '...');
-          
-          // Test connection in background without blocking
-          connection.getVersion().then(() => {
-            console.log('✅ QuickNode endpoint verified working');
-          }).catch(error => {
-            console.error('❌ QuickNode endpoint test failed:', error.message);
-            if (error.message.includes('403') || error.message.includes('API key')) {
-              console.error('🔑 QuickNode API key issue - switching to working fallback');
+        connection = new solanaWeb3.Connection(quicknodeEndpoint);
+        console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
+        console.log('🔗 Endpoint URL:', quicknodeEndpoint.substring(0, 50) + '...');
+        
+        // Test connection in background without blocking
+        connection.getVersion().then(() => {
+          console.log('✅ QuickNode endpoint verified working');
+        }).catch(error => {
+          console.error('❌ QuickNode endpoint test failed:', error.message);
               // Switch to working Alchemy endpoint immediately
               connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
               console.log('🔄 Switched to working Alchemy endpoint');
@@ -1915,19 +1907,14 @@
     window.refreshSolanaConnection = async function() {
       console.log('🔄 Refreshing Solana connection with QuickNode endpoints...');
       try {
-        if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaEndpoint) {
-          const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
-          window.connection = new solanaWeb3.Connection(endpoint);
-          console.log('✅ Solana connection refreshed with endpoint:', endpoint);
-          
-          // Test the connection
-          const version = await window.connection.getVersion();
-          console.log('✅ Connection test successful:', version);
-          return endpoint;
-        } else {
-          console.error('❌ RPC_CONFIG not available');
-          return null;
-        }
+        const endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+        window.connection = new solanaWeb3.Connection(endpoint);
+        console.log('✅ Solana connection refreshed with endpoint:', endpoint);
+        
+        // Test the connection
+        const version = await window.connection.getVersion();
+        console.log('✅ Connection test successful:', version);
+        return endpoint;
       } catch (error) {
         console.error('❌ Failed to refresh Solana connection:', error);
         return null;
