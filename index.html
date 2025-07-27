@@ -899,6 +899,74 @@
         width: 100%;
       }
     }
+    
+    /* SIMPLE BULLETPROOF DROPDOWN CSS */
+    .dropdown-menu {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 24, 34, 0.98);
+      border: 2px solid #00eaff;
+      border-radius: 15px;
+      padding: 20px;
+      z-index: 9999;
+      min-width: 250px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    }
+    
+    .dropdown-menu.show {
+      display: block !important;
+    }
+    
+    .dropdown-menu li {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .dropdown-menu a {
+      display: block;
+      padding: 15px 20px;
+      color: #00eaff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 18px;
+      border-radius: 8px;
+      margin: 8px 0;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+    
+    .dropdown-menu a:hover,
+    .dropdown-menu a:active,
+    .dropdown-menu a:focus {
+      background: #00eaff;
+      color: #1a1e2e;
+      border-color: #00eaff;
+    }
+    
+    /* Desktop positioning */
+    @media (min-width: 769px) {
+      .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        transform: none;
+        min-width: 180px;
+        padding: 10px 0;
+      }
+      
+      .dropdown-menu a {
+        padding: 12px 20px;
+        font-size: 14px;
+        text-align: left;
+        margin: 0;
+      }
+    }
+    
     /* Compact navigation for smaller desktop screens */
     @media (min-width: 701px) and (max-width: 1200px) {
       .main-nav ul {
@@ -2020,25 +2088,25 @@
   <nav class="main-nav">
     <ul>
       <li class="launch-token-dropdown">
-        <a href="javascript:void(0)" onclick="toggleDropdown('launch')">Launch Token ▼</a>
-        <ul class="launch-token-menu" id="launch-menu" style="display:none;">
-          <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/base-launch.html" class="launch-token-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Base</a></li>
-          <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/solana-launch.html" class="launch-token-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Solana</a></li>
+        <a href="javascript:void(0)" onclick="toggleDropdown('launch')" class="dropdown-trigger">Launch Token ▼</a>
+        <ul class="launch-token-menu dropdown-menu" id="launch-menu">
+          <li><a href="pages/base-launch.html" onclick="closeAllDropdowns()">Base</a></li>
+          <li><a href="pages/solana-launch.html" onclick="closeAllDropdowns()">Solana</a></li>
         </ul>
       </li>
       <li><a href="pages/nft-marketplace.html">NFT Marketplace</a></li>
       <li class="staking-dropdown">
-        <a href="javascript:void(0)" onclick="toggleDropdown('staking')">Staking ▼</a>
-        <ul class="staking-menu" id="staking-menu" style="display:none;">
-          <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/base-staking.html" class="staking-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Base</a></li>
-          <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/solana-staking.html" class="staking-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Solana</a></li>
+        <a href="javascript:void(0)" onclick="toggleDropdown('staking')" class="dropdown-trigger">Staking ▼</a>
+        <ul class="staking-menu dropdown-menu" id="staking-menu">
+          <li><a href="pages/base-staking.html" onclick="closeAllDropdowns()">Base</a></li>
+          <li><a href="pages/solana-staking.html" onclick="closeAllDropdowns()">Solana</a></li>
         </ul>
       </li>
       <li class="token-locking-dropdown">
-        <a href="javascript:void(0)" onclick="toggleDropdown('locking')">Token Locking ▼</a>
-        <ul class="token-locking-menu" id="locking-menu" style="display:none;">
-          <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/base-locking.html" class="token-lock-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Base</a></li>
-          <li style="margin: 0 !important; padding: 0 !important; list-style: none !important;"><a href="pages/solana-locking.html" class="token-lock-link" style="display: block !important; padding: 10px 15px !important; color: #fff !important; text-decoration: none !important;">Solana</a></li>
+        <a href="javascript:void(0)" onclick="toggleDropdown('locking')" class="dropdown-trigger">Token Locking ▼</a>
+        <ul class="token-locking-menu dropdown-menu" id="locking-menu">
+          <li><a href="pages/base-locking.html" onclick="closeAllDropdowns()">Base</a></li>
+          <li><a href="pages/solana-locking.html" onclick="closeAllDropdowns()">Solana</a></li>
         </ul>
       </li>
       <li><a href="pages/token-furnace.html">Token Furnace</a></li>
@@ -2046,128 +2114,42 @@
     </ul>
   </nav>
 
-  <!-- SIMPLE INLINE ONCLICK DROPDOWNS -->
+  <!-- BULLETPROOF MOBILE DROPDOWN SYSTEM -->
   <script>
-  // Global dropdown function - works everywhere
-  function toggleDropdown(name) {
-    console.log('🔽 Toggling dropdown:', name);
-    
-    // Close all menus first
-    const allMenuIds = ['launch-menu', 'staking-menu', 'locking-menu'];
-    const allMenuClasses = ['.launch-token-menu', '.staking-menu', '.token-locking-menu'];
-    
-    // Close by ID first - remove active class
-    allMenuIds.forEach(function(menuId) {
-      const menu = document.getElementById(menuId);
-      if (menu) {
-        menu.classList.remove('mobile-dropdown-show');
-        menu.style.display = 'none';
-      }
+  // Simple functions that actually work
+  function closeAllDropdowns() {
+    console.log('� Closing all dropdowns');
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+      menu.classList.remove('show');
     });
-    
-    // Close by class as backup - remove active class
-    allMenuClasses.forEach(function(menuClass) {
-      const menu = document.querySelector(menuClass);
-      if (menu) {
-        menu.classList.remove('mobile-dropdown-show');
-        menu.style.display = 'none';
-      }
-    });
-    
-    // Open the requested menu - try ID first
-    let targetMenuId;
-    let targetMenuClass;
-    
-    if (name === 'launch') {
-      targetMenuId = 'launch-menu';
-      targetMenuClass = '.launch-token-menu';
-    } else if (name === 'staking') {
-      targetMenuId = 'staking-menu';
-      targetMenuClass = '.staking-menu';
-    } else if (name === 'locking') {
-      targetMenuId = 'locking-menu';
-      targetMenuClass = '.token-locking-menu';
-    }
-    
-    console.log('🎯 Looking for menu ID:', targetMenuId);
-    console.log('🎯 Backup class:', targetMenuClass);
-    
-    // Try ID first
-    let targetMenu = document.getElementById(targetMenuId);
-    if (targetMenu) {
-      targetMenu.classList.add('mobile-dropdown-show');
-      targetMenu.style.display = 'block';
-      console.log('✅ Opened menu by ID:', name);
-      
-      // Add click handlers to menu links to close dropdown after navigation
-      const menuLinks = targetMenu.querySelectorAll('a');
-      menuLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-          console.log('🔗 Menu link clicked:', link.href);
-          // Allow default navigation
-          // Close dropdown after a short delay to allow navigation
-          setTimeout(function() {
-            targetMenu.classList.remove('mobile-dropdown-show');
-            targetMenu.style.display = 'none';
-          }, 100);
-        });
-      });
-      
-      return;
-    }
-    
-    // Try class selector
-    targetMenu = document.querySelector(targetMenuClass);
-    if (targetMenu) {
-      targetMenu.classList.add('mobile-dropdown-show');
-      targetMenu.style.display = 'block';
-      console.log('✅ Opened menu by class:', name);
-      
-      // Add click handlers to menu links to close dropdown after navigation
-      const menuLinks = targetMenu.querySelectorAll('a');
-      menuLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-          console.log('🔗 Menu link clicked:', link.href);
-          // Allow default navigation
-          // Close dropdown after a short delay to allow navigation
-          setTimeout(function() {
-            targetMenu.classList.remove('mobile-dropdown-show');
-            targetMenu.style.display = 'none';
-          }, 100);
-        });
-      });
-      
-      return;
-    }
-    
-    console.error('❌ Menu not found by ID or class:', name);
-    console.log('🔍 Available elements with IDs:', document.querySelectorAll('[id*="menu"]'));
-    console.log('🔍 Available elements with menu classes:', document.querySelectorAll('[class*="menu"]'));
   }
   
-  // Close menus when clicking outside
+  function toggleDropdown(name) {
+    console.log('🔽 Toggle dropdown:', name);
+    
+    // Close all first
+    closeAllDropdowns();
+    
+    // Open the requested one
+    const menuId = name + '-menu';
+    const menu = document.getElementById(menuId);
+    
+    if (menu) {
+      menu.classList.add('show');
+      console.log('✅ Opened dropdown:', name);
+    } else {
+      console.error('❌ Menu not found:', menuId);
+    }
+  }
+  
+  // Close when clicking outside
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.main-nav')) {
-      // Close by both ID and class
-      ['launch-menu', 'staking-menu', 'locking-menu'].forEach(function(menuId) {
-        const menu = document.getElementById(menuId);
-        if (menu) {
-          menu.classList.remove('mobile-dropdown-show');
-          menu.style.display = 'none';
-        }
-      });
-      
-      ['.launch-token-menu', '.staking-menu', '.token-locking-menu'].forEach(function(menuClass) {
-        const menu = document.querySelector(menuClass);
-        if (menu) {
-          menu.classList.remove('mobile-dropdown-show');
-          menu.style.display = 'none';
-        }
-      });
+      closeAllDropdowns();
     }
   });
   
-  console.log('✅ Inline dropdown system ready');
+  console.log('✅ Simple dropdown system ready');
   </script>
 
   <!-- Top Ad Banner -->
