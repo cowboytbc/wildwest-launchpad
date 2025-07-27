@@ -7,10 +7,10 @@ const RPC_CONFIG = {
     PRIMARY: window.PRODUCTION_CONFIG?.rpc?.solana,
     QUICKNODE: window.PRODUCTION_CONFIG?.rpc?.solana,
     FALLBACKS: [
-      "https://rpc.ankr.com/solana",
-      "https://solana.public-rpc.com",
-      "https://solana-mainnet.g.alchemy.com/v2/demo",
-      "https://api.mainnet-beta.solana.com"
+      "https://solana-mainnet.g.alchemy.com/v2/demo",  // Working endpoint first
+      "https://api.mainnet-beta.solana.com",
+      "https://rpc.ankr.com/solana",  // Moved to end as it's currently broken
+      "https://solana.public-rpc.com"
     ]
   },
   

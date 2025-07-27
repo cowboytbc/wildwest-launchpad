@@ -1262,18 +1262,21 @@
           }).catch(error => {
             console.error('❌ QuickNode endpoint test failed:', error.message);
             if (error.message.includes('403') || error.message.includes('API key')) {
-              console.error('🔑 QuickNode API key issue detected - but continuing to use endpoint');
+              console.error('🔑 QuickNode API key issue - switching to working fallback');
+              // Switch to working Alchemy endpoint immediately
+              connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
+              console.log('🔄 Switched to working Alchemy endpoint');
             }
           });
         } else {
-          // Direct fallback like Base page
-          connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
-          console.log('⚠️ QuickNode Solana endpoint not available, using fallback:', window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
+          // Skip broken Ankr endpoint, use working Alchemy directly
+          connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
+          console.log('⚠️ Using working Alchemy endpoint (Ankr known to be broken)');
         }
       } else {
-        // Fallback to hardcoded endpoint if config not loaded
-        connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-        console.log('⚠️ Using hardcoded fallback RPC endpoint');
+        // Fallback to Alchemy endpoint (better than broken api.mainnet-beta.solana.com)
+        connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
+        console.log('⚠️ Using Alchemy fallback RPC endpoint');
       }
     }
 
