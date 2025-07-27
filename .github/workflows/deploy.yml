@@ -23,15 +23,18 @@ jobs:
 
       - name: Verify Secrets
         run: |
+          echo "Checking if secrets are available..."
           if [ -z "${{ secrets.SOLANA_RPC_ENDPOINT }}" ]; then
             echo "::error::SOLANA_RPC_ENDPOINT secret is not set."
+            echo "Available secrets context: ${{ toJSON(secrets) }}"
             exit 1
           fi
           if [ -z "${{ secrets.BASE_RPC_ENDPOINT }}" ]; then
             echo "::error::BASE_RPC_ENDPOINT secret is not set."
+            echo "Available secrets context: ${{ toJSON(secrets) }}"
             exit 1
           fi
-          echo "Secrets are present."
+          echo "✅ Both secrets are present and will be injected."
         
       - name: Inject GitHub Secrets
         env:
