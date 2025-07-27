@@ -3909,85 +3909,83 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </footer>
   
-  <!-- SIMPLE FUCKING DROPDOWN SYSTEM THAT WORKS -->
+  <!-- NUCLEAR MOBILE DROPDOWN FIX -->
   <script>
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 SIMPLE DROPDOWN SYSTEM STARTING...');
+    console.log('🚀 NUCLEAR MOBILE DROPDOWN FIX STARTING...');
     
-    // Simple click handlers
-    document.addEventListener('click', function(e) {
-      if (e.target.textContent.includes('Launch Token')) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔽 Launch clicked');
-        
-        const menu = document.getElementById('launch-menu');
-        if (menu) {
-          menu.style.display = 'block';
-          menu.style.position = 'fixed';
-          menu.style.left = '50%';
-          menu.style.top = '50%';
-          menu.style.transform = 'translate(-50%, -50%)';
-          menu.style.zIndex = '9999';
-          menu.style.background = '#1a1e2e';
-          menu.style.border = '2px solid #00eaff';
-          menu.style.borderRadius = '10px';
-          menu.style.padding = '20px';
-          console.log('✅ Launch menu opened');
-        }
-      }
+    // KILL ALL EXISTING ONCLICK HANDLERS AND REPLACE WITH MOBILE-FRIENDLY ONES
+    setTimeout(() => {
+      // Find all dropdown triggers and nuke their onclick handlers
+      const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
+      console.log('🎯 Found dropdown triggers:', dropdownTriggers.length);
       
-      if (e.target.textContent.includes('Staking')) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔽 Staking clicked');
+      dropdownTriggers.forEach((trigger, index) => {
+        console.log(`🔧 Fixing trigger ${index}:`, trigger.textContent);
         
-        const menu = document.getElementById('staking-menu');
-        if (menu) {
-          menu.style.display = 'block';
-          menu.style.position = 'fixed';
-          menu.style.left = '50%';
-          menu.style.top = '50%';
-          menu.style.transform = 'translate(-50%, -50%)';
-          menu.style.zIndex = '9999';
-          menu.style.background = '#1a1e2e';
-          menu.style.border = '2px solid #00eaff';
-          menu.style.borderRadius = '10px';
-          menu.style.padding = '20px';
-          console.log('✅ Staking menu opened');
-        }
-      }
-      
-      if (e.target.textContent.includes('Token Locking')) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🔽 Locking clicked');
+        // Remove existing onclick
+        trigger.removeAttribute('onclick');
+        trigger.onclick = null;
         
-        const menu = document.getElementById('locking-menu');
-        if (menu) {
-          menu.style.display = 'block';
-          menu.style.position = 'fixed';
-          menu.style.left = '50%';
-          menu.style.top = '50%';
-          menu.style.transform = 'translate(-50%, -50%)';
-          menu.style.zIndex = '9999';
-          menu.style.background = '#1a1e2e';
-          menu.style.border = '2px solid #00eaff';
-          menu.style.borderRadius = '10px';
-          menu.style.padding = '20px';
-          console.log('✅ Locking menu opened');
-        }
-      }
-      
-      // Close menus when clicking outside
-      if (!e.target.closest('.dropdown-menu') && !e.target.textContent.includes('▼')) {
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-          menu.style.display = 'none';
+        // Add new mobile-friendly click handler
+        trigger.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          console.log('� Mobile click detected on:', this.textContent);
+          
+          // Close all dropdowns first
+          document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.style.display = 'none';
+            menu.classList.remove('show');
+          });
+          
+          // Find the menu for this trigger
+          let menu = null;
+          if (this.textContent.includes('Launch')) {
+            menu = document.getElementById('launch-menu');
+          } else if (this.textContent.includes('Staking')) {
+            menu = document.getElementById('staking-menu');
+          } else if (this.textContent.includes('Token Locking')) {
+            menu = document.getElementById('locking-menu');
+          }
+          
+          if (menu) {
+            // Force show the menu with mobile positioning
+            menu.style.display = 'block';
+            menu.style.position = 'fixed';
+            menu.style.left = '50%';
+            menu.style.top = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+            menu.style.zIndex = '99999';
+            menu.style.background = '#1a1e2e';
+            menu.style.border = '3px solid #00eaff';
+            menu.style.borderRadius = '15px';
+            menu.style.padding = '25px';
+            menu.style.minWidth = '200px';
+            menu.style.boxShadow = '0 0 20px rgba(0, 234, 255, 0.5)';
+            menu.classList.add('show');
+            
+            console.log('✅ Mobile menu opened:', menu.id);
+          } else {
+            console.error('❌ Menu not found for trigger:', this.textContent);
+          }
         });
-      }
-    });
+      });
+      
+      // Also add document click handler to close menus
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-trigger')) {
+          document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.style.display = 'none';
+            menu.classList.remove('show');
+          });
+        }
+      });
+      
+      console.log('✅ NUCLEAR MOBILE DROPDOWN FIX COMPLETE');
+    }, 500);
     
-    console.log('✅ SIMPLE DROPDOWN SYSTEM COMPLETE');
   });
   </script>
 
