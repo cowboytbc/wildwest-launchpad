@@ -2098,6 +2098,21 @@
       targetMenu.classList.add('mobile-dropdown-show');
       targetMenu.style.display = 'block';
       console.log('✅ Opened menu by ID:', name);
+      
+      // Add click handlers to menu links to close dropdown after navigation
+      const menuLinks = targetMenu.querySelectorAll('a');
+      menuLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          console.log('🔗 Menu link clicked:', link.href);
+          // Allow default navigation
+          // Close dropdown after a short delay to allow navigation
+          setTimeout(function() {
+            targetMenu.classList.remove('mobile-dropdown-show');
+            targetMenu.style.display = 'none';
+          }, 100);
+        });
+      });
+      
       return;
     }
     
@@ -2107,6 +2122,21 @@
       targetMenu.classList.add('mobile-dropdown-show');
       targetMenu.style.display = 'block';
       console.log('✅ Opened menu by class:', name);
+      
+      // Add click handlers to menu links to close dropdown after navigation
+      const menuLinks = targetMenu.querySelectorAll('a');
+      menuLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          console.log('🔗 Menu link clicked:', link.href);
+          // Allow default navigation
+          // Close dropdown after a short delay to allow navigation
+          setTimeout(function() {
+            targetMenu.classList.remove('mobile-dropdown-show');
+            targetMenu.style.display = 'none';
+          }, 100);
+        });
+      });
+      
       return;
     }
     
@@ -3788,48 +3818,11 @@ document.addEventListener('DOMContentLoaded', function() {
   </footer>
   
   <script>
-    // Dropdown Menu Toggle Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🔧 Setting up dropdown menu functionality');
-      
-      // Set up dropdown button event listeners
-      const dropdownButtons = [
-        { buttonId: 'launchTokenDropdownBtn', menuId: 'launchTokenMenu' },
-        { buttonId: 'stakingDropdownBtn', menuId: 'stakingMenu' },
-        { buttonId: 'tokenLockingDropdownBtn', menuId: 'tokenLockingMenu' }
-      ];
-      
-      dropdownButtons.forEach(({ buttonId, menuId }) => {
-        const button = document.getElementById(buttonId);
-        if (button) {
-          button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🔽 Dropdown button clicked:', buttonId);
-            toggleDropdown(menuId);
-          });
-          console.log('✅ Event listener added for:', buttonId);
-        } else {
-          console.warn('⚠️ Button not found:', buttonId);
-        }
-      });
-      
-      // Close dropdowns when clicking outside
-      document.addEventListener('click', function(e) {
-        // Check if click is outside all dropdown containers
-        const isDropdownClick = e.target.closest('.launch-token-dropdown, .staking-dropdown, .token-locking-dropdown');
-        
-        if (!isDropdownClick) {
-          console.log('🔒 Clicking outside dropdowns, closing all');
-          const dropdowns = document.querySelectorAll('.launch-token-menu, .staking-menu, .token-locking-menu');
-          dropdowns.forEach(dropdown => {
-            dropdown.classList.remove('show-menu');
-          });
-        }
-      });
-      
-      console.log('✅ Dropdown menu functionality setup complete');
-    });
+  // Simple console log for page ready status
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Page loaded - using inline onclick dropdown system');
+  });
+  </script>
 
 </body>
 </html>
