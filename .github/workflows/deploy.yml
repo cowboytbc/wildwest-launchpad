@@ -27,6 +27,8 @@ jobs:
       - name: Create Config with Secrets
         run: |
           mkdir -p js
+          # Remove existing file first to ensure clean overwrite
+          rm -f js/production-config.js
           echo '(function() {' > js/production-config.js
           echo '  "use strict";' >> js/production-config.js
           echo '  if (window.PRODUCTION_CONFIG) return;' >> js/production-config.js
@@ -54,6 +56,11 @@ jobs:
           echo '  };' >> js/production-config.js
           echo '  console.log("Production config injected by GitHub Actions.");' >> js/production-config.js
           echo '})();' >> js/production-config.js
+          
+          # Verify the file was created properly
+          echo "Generated config file:"
+          cat js/production-config.js
+          echo "File size: $(wc -c < js/production-config.js) bytes"
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
