@@ -7,8 +7,8 @@ const RPC_CONFIG = {
     get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     FALLBACKS: [
-      "https://solana-mainnet.g.alchemy.com/v2/demo",  // Working endpoint first
-      "https://api.mainnet-beta.solana.com",
+      "https://api.mainnet-beta.solana.com",  // Official Solana endpoint first
+      "https://solana-mainnet.rpc.extrnode.com", // Alternative CORS-friendly endpoint
       "https://rpc.ankr.com/solana",  // Moved to end as it's currently broken
       "https://solana.public-rpc.com"
     ]
