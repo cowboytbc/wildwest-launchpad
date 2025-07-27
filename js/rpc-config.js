@@ -2,21 +2,39 @@
 // Update these with your preferred RPC endpoints
 
 const RPC_CONFIG = {
-  // Solana RPC endpoints - MUST use QuickNode from GitHub Secrets
+  // Solana RPC endpoints - QuickNode PRIORITY
   SOLANA: {
-    get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
-    get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
+    get PRIMARY() { 
+      // Use QuickNode from production config if available
+      return window.PRODUCTION_CONFIG?.rpc?.solana || this.getQuickNodeEndpoint();
+    },
+    get QUICKNODE() { 
+      return window.PRODUCTION_CONFIG?.rpc?.solana || this.getQuickNodeEndpoint();
+    },
+    // Direct QuickNode endpoint for development/backup
+    getQuickNodeEndpoint() {
+      return 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ac83d6b4ecf2a8fa8d0a6894210ede33b1b7495/';
+    },
     FALLBACKS: [
-      "https://api.mainnet-beta.solana.com", // Official Solana RPC (should work)
-      "https://solana-api.projectserum.com", // Serum project endpoint
+      "https://api.mainnet-beta.solana.com", // Official Solana RPC (rate limited)
+      "https://solana-api.projectserum.com", // Serum project endpoint  
       "https://api.metaplex.solana.com",     // Metaplex endpoint
     ]
   },
   
-  // Base/Ethereum RPC endpoints - QuickNode only from GitHub Secrets  
+  // Base/Ethereum RPC endpoints - QuickNode PRIORITY
   BASE: {
-    get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.base; },
-    get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.base; },
+    get PRIMARY() { 
+      // Use QuickNode from production config if available
+      return window.PRODUCTION_CONFIG?.rpc?.base || this.getQuickNodeEndpoint();
+    },
+    get QUICKNODE() { 
+      return window.PRODUCTION_CONFIG?.rpc?.base || this.getQuickNodeEndpoint();
+    },
+    // Direct QuickNode endpoint for development/backup
+    getQuickNodeEndpoint() {
+      return 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/d9b8b93b1b8b7cc6b8993c4ef5c6e7a70a6e9ad8/';
+    },
     FALLBACKS: [
       "https://mainnet.base.org",
       "https://base.blockpi.network/v1/rpc/public",
@@ -46,20 +64,16 @@ const RPC_CONFIG = {
 
   // Helper functions to get endpoints
   getSolanaEndpoint: async function() {
-    // First priority: QuickNode from GitHub Secrets
-    if (this.SOLANA.QUICKNODE) {
-      console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
+    // Priority 1: QuickNode from GitHub Secrets (production)
+    if (this.SOLANA.QUICKNODE && window.PRODUCTION_CONFIG?.rpc?.solana) {
+      console.log('🔐 Using QuickNode Solana endpoint from GitHub Secrets');
       return this.SOLANA.QUICKNODE;
     }
     
-    // Fallback: Use public endpoints with testing
-    console.warn('⚠️ QuickNode Solana endpoint not available, using fallback');
-    try {
-      return await this.getSolanaEndpointWithFallback();
-    } catch (error) {
-      console.warn('⚠️ All fallback endpoints failed, using first fallback');
-      return this.SOLANA.FALLBACKS[0];
-    }
+    // Priority 2: Direct QuickNode endpoint (development/backup)
+    const directQuickNode = this.SOLANA.getQuickNodeEndpoint();
+    console.log('⚡ Using direct QuickNode Solana endpoint');
+    return directQuickNode;
   },
   
   // Get Solana endpoint with automatic fallback (only used when QuickNode unavailable)
@@ -101,15 +115,16 @@ const RPC_CONFIG = {
   },
   
   getBaseEndpoint: function() {
-    // First priority: QuickNode from GitHub Secrets
-    if (this.BASE.QUICKNODE) {
-      console.log('✅ Using QuickNode Base endpoint from GitHub Secrets');
+    // Priority 1: QuickNode from GitHub Secrets (production)
+    if (this.BASE.QUICKNODE && window.PRODUCTION_CONFIG?.rpc?.base) {
+      console.log('🔐 Using QuickNode Base endpoint from GitHub Secrets');
       return this.BASE.QUICKNODE;
     }
     
-    // Fallback: Use public endpoints
-    console.warn('⚠️ QuickNode Base endpoint not available, using fallback');
-    return this.BASE.FALLBACKS[0];
+    // Priority 2: Direct QuickNode endpoint (development/backup)
+    const directQuickNode = this.BASE.getQuickNodeEndpoint();
+    console.log('⚡ Using direct QuickNode Base endpoint');
+    return directQuickNode;
   },
   
   // QuickNode API helpers
@@ -196,20 +211,18 @@ const RPC_CONFIG = {
 window.RPC_CONFIG = RPC_CONFIG;
 
 console.log('🌐 RPC Configuration loaded:');
-if (RPC_CONFIG.BASE.QUICKNODE) {
+
+// Check if we have GitHub Secrets (production) or using direct endpoints (development)
+const hasGitHubSecrets = window.PRODUCTION_CONFIG?.rpc?.solana && window.PRODUCTION_CONFIG?.rpc?.base;
+
+if (hasGitHubSecrets) {
   console.log('  🔵 Base ETH: QuickNode endpoint from GitHub Secrets ✅');
+  console.log('  � Solana: QuickNode endpoint from GitHub Secrets ✅');
+  console.log('  � Production mode - QuickNode infrastructure fully active');
 } else {
-  console.log('  🔵 Base ETH: Public fallback endpoint ⚠️');
+  console.log('  � Base ETH: Direct QuickNode endpoint ⚡');
+  console.log('  🟣 Solana: Direct QuickNode endpoint ⚡');
+  console.log('  🛠️ Development mode - Using direct QuickNode endpoints');
 }
 
-if (RPC_CONFIG.SOLANA.QUICKNODE) {
-  console.log('  🟣 Solana: QuickNode endpoint from GitHub Secrets ✅');
-} else {
-  console.log('  🟣 Solana: Public fallback endpoint ⚠️');
-}
-
-if (RPC_CONFIG.BASE.QUICKNODE && RPC_CONFIG.SOLANA.QUICKNODE) {
-  console.log('  ⚡ QuickNode infrastructure fully active for high-performance Web3 operations');
-} else {
-  console.log('  ⚠️ Using public endpoints - QuickNode endpoints not loaded from GitHub Secrets');
-}
+console.log('  ⚡ QuickNode infrastructure active for high-performance Web3 operations');
