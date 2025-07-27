@@ -86,7 +86,7 @@
   <!-- SPL Token -->
   <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.js"></script>
   <!-- Production Configuration (GitHub Secrets injection) -->
-  <script src="../js/production-config.js"></script>
+  <script src="../js/production-config.js?v=20250727"></script>
   <!-- Development Configuration (Local testing when secrets unavailable) -->
   <script src="../js/dev-config.js"></script>
   <script src="../js/rpc-config.js"></script>
@@ -1934,6 +1934,31 @@
       }
     };
 
+    // Function to force reload production config from deployed site
+    window.forceLoadProductionConfig = async function() {
+      console.log('🔄 Force loading production config from deployed site...');
+      try {
+        const response = await fetch('https://wildwestlaunch.xyz/js/production-config.js?t=' + Date.now());
+        const configScript = await response.text();
+        
+        // Clear existing config
+        delete window.PRODUCTION_CONFIG;
+        
+        // Execute the fresh config
+        eval(configScript);
+        
+        console.log('✅ Production config force loaded:', window.PRODUCTION_CONFIG);
+        
+        // Refresh the connection
+        await refreshSolanaConnection();
+        
+        return window.PRODUCTION_CONFIG;
+      } catch (error) {
+        console.error('❌ Failed to force load production config:', error);
+        return null;
+      }
+    };
+
     // NUCLEAR OPTION: Function to completely reset and force fresh wallet approval
     window.nukeWalletConnection = function() {
       console.log('💥 NUCLEAR WALLET RESET - Clearing ALL wallet state...');
@@ -2006,6 +2031,7 @@
     console.log('• debugSolanaWalletSystem() - Check wallet system status');
     console.log('• testSolanaConnection() - Manually test wallet connection');
     console.log('• refreshSolanaConnection() - Refresh connection with QuickNode endpoints');
+    console.log('• forceLoadProductionConfig() - Force reload config from deployed site');
     console.log('• nukeWalletConnection() - NUCLEAR OPTION: Clear all wallet state and refresh page');
     console.log('• testWalletBlocking() - Test if wallets are properly blocked');
     console.log('• unblockWallets() - Manually unblock wallets');
