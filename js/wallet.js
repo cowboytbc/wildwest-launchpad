@@ -895,24 +895,17 @@ class WildWestWallet {
 
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
-    // DISABLED - No installation guides for clean UI
-    console.log('🚫 Wallet installation guide disabled for clean UI');
-    return;
-    if (!document.getElementById('mobile-wallet-animations')) {
-      const style = document.createElement('style');
-      style.id = 'mobile-wallet-animations';
-      style.textContent = `
-        @keyframes slideUp {
-          from { transform: translateY(30px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
-        }
-      `;
-      document.head.appendChild(style);
+    // Check if user is on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (!isMobile) {
+      // For desktop users, disabled for clean UI
+      console.log('🖥️ Desktop user - wallet installation guide disabled for clean UI');
+      return;
     }
+    
+    // For mobile users, show simple guidance
+    console.log('� Mobile user detected - showing wallet browser guidance');
     
     const modal = document.createElement('div');
     modal.style.cssText = `
@@ -930,182 +923,52 @@ class WildWestWallet {
       box-sizing: border-box;
     `;
     
-    const isBase = network === 'base';
-    const networkName = isBase ? 'Base' : 'Solana';
-    const borderColor = isBase ? '#00eaff' : '#9945ff';
-    
     modal.innerHTML = `
       <div style="
         background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 2px solid ${borderColor};
+        border: 2px solid #00eaff;
         border-radius: 16px;
         padding: 2rem;
-        max-width: 420px;
+        max-width: 400px;
         width: 90vw;
         text-align: center;
         color: white;
         font-family: 'Orbitron', Arial, sans-serif;
-        box-shadow: 0 0 30px rgba(${isBase ? '0, 234, 255' : '153, 69, 255'}, 0.3);
-        animation: slideUp 0.3s ease-out;
+        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
         position: relative;
       ">
-        <h2 style="color: ${borderColor}; margin-bottom: 1.5rem; font-size: 1.3rem; font-weight: 600;">
-          ${networkName} Wallet Required
+        <h2 style="color: #00eaff; margin-bottom: 1.5rem; font-size: 1.3rem; font-weight: 600;">
+          📱 Mobile User?
         </h2>
         
         <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">
-          To use ${networkName}, open this page in a wallet app:
+          Open this site inside your wallet browser (MetaMask, Phantom, etc.) instead of your regular browser.
         </p>
         
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-          ${isBase ? `
-            <a href="https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}" 
-               style="
-                 display: flex;
-                 align-items: center;
-                 padding: 1rem;
-                 background: rgba(0, 234, 255, 0.05);
-                 border: 1px solid rgba(0, 234, 255, 0.2);
-                 border-radius: 12px;
-                 text-decoration: none;
-                 color: white;
-                 transition: all 0.2s;
-                 font-family: inherit;
-               ">
-              <div style="text-align: left; flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 0.2rem;">MetaMask</div>
-                <div style="font-size: 0.8rem; color: #aaa;">Most popular Web3 wallet</div>
-              </div>
-            </a>
-            
-            <a href="https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}" 
-               style="
-                 display: flex;
-                 align-items: center;
-                 padding: 1rem;
-                 background: rgba(0, 234, 255, 0.05);
-                 border: 1px solid rgba(0, 234, 255, 0.2);
-                 border-radius: 12px;
-                 text-decoration: none;
-                 color: white;
-                 transition: all 0.2s;
-                 font-family: inherit;
-               ">
-              <div style="text-align: left; flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 0.2rem;">Coinbase Wallet</div>
-                <div style="font-size: 0.8rem; color: #aaa;">Easy to use & secure</div>
-              </div>
-            </a>
-            
-            <a href="https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}" 
-               style="
-                 display: flex;
-                 align-items: center;
-                 padding: 1rem;
-                 background: rgba(0, 234, 255, 0.05);
-                 border: 1px solid rgba(0, 234, 255, 0.2);
-                 border-radius: 12px;
-                 text-decoration: none;
-                 color: white;
-                 transition: all 0.2s;
-                 font-family: inherit;
-               ">
-              <div style="text-align: left; flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 0.2rem;">Trust Wallet</div>
-                <div style="font-size: 0.8rem; color: #aaa;">Multi-chain support</div>
-              </div>
-            </a>
-          ` : `
-            <a href="phantom://browse/${encodeURIComponent(window.location.href)}" 
-               style="
-                 display: flex;
-                 align-items: center;
-                 padding: 1rem;
-                 background: rgba(153, 69, 255, 0.05);
-                 border: 1px solid rgba(153, 69, 255, 0.2);
-                 border-radius: 12px;
-                 text-decoration: none;
-                 color: white;
-                 transition: all 0.2s;
-                 font-family: inherit;
-               ">
-              <div style="text-align: left; flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 0.2rem;">Phantom</div>
-                <div style="font-size: 0.8rem; color: #aaa;">Leading Solana wallet</div>
-              </div>
-            </a>
-            
-            <a href="solflare://v1/browse/${encodeURIComponent(window.location.href)}" 
-               style="
-                 display: flex;
-                 align-items: center;
-                 padding: 1rem;
-                 background: rgba(153, 69, 255, 0.05);
-                 border: 1px solid rgba(153, 69, 255, 0.2);
-                 border-radius: 12px;
-                 text-decoration: none;
-                 color: white;
-                 transition: all 0.2s;
-                 font-family: inherit;
-               ">
-              <div style="text-align: left; flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 0.2rem;">Solflare</div>
-                <div style="font-size: 0.8rem; color: #aaa;">Feature-rich & secure</div>
-              </div>
-            </a>
-          `}
-        </div>
-        
         <button onclick="this.parentElement.parentElement.remove()" style="
-          background: rgba(255,255,255,0.1);
-          color: #fff;
-          border: 1px solid #666;
+          background: linear-gradient(135deg, #00eaff, #0099cc);
+          color: white;
+          border: none;
           padding: 12px 24px;
-          border-radius: 12px;
+          border-radius: 8px;
+          font-family: 'Orbitron', Arial, sans-serif;
+          font-weight: 600;
           cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s;
           font-size: 0.9rem;
-        ">Close</button>
+        ">
+          Got It
+        </button>
       </div>
     `;
     
     document.body.appendChild(modal);
     
-    // Prevent background scrolling while modal is open
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    
-    // Auto-scroll to ensure modal is visible and add focus
+    // Auto-close after 10 seconds
     setTimeout(() => {
-      // Scroll to top of page to ensure modal is visible
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      // Add a subtle pulse animation to draw attention
-      const modalContent = modal.querySelector('div');
-      if (modalContent) {
-        modalContent.style.animation = 'slideUp 0.3s ease-out, pulse 2s ease-in-out';
+      if (modal.parentNode) {
+        modal.remove();
       }
-    }, 100);
-    
-    // Function to close modal and restore scrolling
-    const closeModal = () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.removeChild(modal);
-    };
-    
-    // Add close button functionality
-    const closeBtn = modal.querySelector('button');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeModal);
-    }
-    
-    // Close on backdrop click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
+    }, 10000);
   }
 
   async switchToBase(provider = window.ethereum) {
