@@ -18,9 +18,6 @@
       window.__walletAutoConnectDisabled = false;
     };
   </script>
-      });
-    };
-  </script>
   
   <!-- Console Filter - Universal console control -->
   <script src="../js/console-filter.js"></script>
@@ -1317,19 +1314,9 @@
           const newConnectBtn = document.getElementById('connectWalletBtn');
           
           newConnectBtn.onclick = async function() {
-            console.log('🚨 USER CLICKED CONNECT - EMERGENCY WALLET RESTORE INITIATED');
+            console.log('� User clicked connect wallet button');
             
-            // STEP 1: EMERGENCY RESTORE WALLETS FROM HIDDEN STATE
-            if (window.__emergencyRestoreWallets) {
-              window.__emergencyRestoreWallets();
-              // Wait a moment for wallets to be restored
-              await new Promise(resolve => setTimeout(resolve, 200));
-            } else {
-              console.error('❌ Emergency restore function not available!');
-            }
-            
-            // STEP 2: DETECT ALL AVAILABLE SOLANA WALLETS
-            console.log('🔍 Detecting available Solana wallets...');
+            // Detect available Solana wallets normally
             const availableSolanaWallets = detectAvailableSolanaWallets();
             console.log('🔍 Available Solana wallets:', availableSolanaWallets);
             
@@ -1338,7 +1325,7 @@
               return;
             }
             
-            // STEP 3: SHOW WALLET SELECTION OR CONNECT DIRECTLY
+            // Show wallet selection or connect directly
             if (availableSolanaWallets.length === 1) {
               // Only one wallet available, connect directly
               const wallet = availableSolanaWallets[0];
@@ -1457,7 +1444,7 @@
         function detectAvailableSolanaWallets() {
           const wallets = [];
           
-          // Phantom Solana - check multiple locations including hidden
+          // Phantom Solana - check standard locations
           if (window.phantom && window.phantom.solana) {
             wallets.push({
               name: 'Phantom',
@@ -1472,16 +1459,9 @@
               provider: window.solana,
               type: 'phantom'
             });
-          } else if (window.__hidden_phantom && window.__hidden_phantom.solana) {
-            wallets.push({
-              name: 'Phantom',
-              icon: '👻',
-              provider: window.__hidden_phantom.solana,
-              type: 'phantom'
-            });
           }
           
-          // Solflare - check both normal and hidden
+          // Solflare
           if (window.solflare && window.solflare.isSolflare) {
             wallets.push({
               name: 'Solflare',
@@ -1489,16 +1469,9 @@
               provider: window.solflare,
               type: 'solflare'
             });
-          } else if (window.__hidden_solflare) {
-            wallets.push({
-              name: 'Solflare',
-              icon: '☀️',
-              provider: window.__hidden_solflare,
-              type: 'solflare'
-            });
           }
           
-          // Slope - check both normal and hidden
+          // Slope
           if (window.slope) {
             wallets.push({
               name: 'Slope',
@@ -1506,28 +1479,14 @@
               provider: window.slope,
               type: 'slope'
             });
-          } else if (window.__hidden_slope) {
-            wallets.push({
-              name: 'Slope',
-              icon: '📐',
-              provider: window.__hidden_slope,
-              type: 'slope'
-            });
           }
           
-          // Backpack - check both normal and hidden
+          // Backpack
           if (window.backpack && window.backpack.isSolana) {
             wallets.push({
               name: 'Backpack',
               icon: '🎒',
               provider: window.backpack,
-              type: 'backpack'
-            });
-          } else if (window.__hidden_backpack) {
-            wallets.push({
-              name: 'Backpack',
-              icon: '🎒',
-              provider: window.__hidden_backpack,
               type: 'backpack'
             });
           }
@@ -1542,7 +1501,7 @@
             });
           }
           
-          console.log('🔍 Detected Solana wallets (including hidden):', wallets.map(w => w.name));
+          console.log('🔍 Detected Solana wallets:', wallets.map(w => w.name));
           return wallets;
         }
 
