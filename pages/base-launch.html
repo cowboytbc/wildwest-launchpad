@@ -78,5 +78,14 @@
       </div>
     </div>
   </footer>
-</body>
+    <!-- Mobile wallet integration -->
+    <script>
+      // Auto-show modal for mobile users after page loads
+      window.addEventListener('load', () => {
+        if (window.MobileWalletIntegration) {
+          window.MobileWalletIntegration.init();
+        }
+      });
+    </script>
+  </body>
 </html>

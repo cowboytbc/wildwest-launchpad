@@ -50,6 +50,14 @@ class MobileWalletIntegration {
     
     console.log('🔗 Initializing mobile wallet integration...');
     
+    // IMMEDIATE TEST: Show modal if mobile
+    if (this.isMobile) {
+      console.log('🚨 MOBILE DETECTED - SHOWING MODAL IN 2 SECONDS');
+      setTimeout(() => {
+        this.showWalletBrowserGuidance();
+      }, 2000);
+    }
+    
     // Override existing wallet connection to use mobile detection
     this.enhanceWalletConnection();
     
