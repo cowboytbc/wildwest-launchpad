@@ -345,7 +345,7 @@ class WildWestWallet {
       
       if (availableWallets.length === 0) {
         if (isMobile) {
-          this.showWalletInstallationGuide('solana');
+          console.log(' Mobile user with no Solana wallet detected');
           return false;
         } else {
           throw new Error('No Solana wallet found. Please install Phantom, Solflare, or another Solana wallet.');
@@ -426,7 +426,7 @@ class WildWestWallet {
       if (availableWallets.length === 0) {
         if (isMobile) {
           // Show wallet installation guide
-          this.showWalletInstallationGuide('solana');
+          console.log(' Mobile user with no Solana wallet detected');
           return false;
         } else {
           throw new Error('No Solana wallet found. Please install Phantom, Solflare, or another Solana wallet.');
@@ -581,7 +581,7 @@ class WildWestWallet {
       
       if (availableWallets.length === 0) {
         if (isMobile) {
-          this.showWalletInstallationGuide('base');
+          console.log(' Mobile user with no EVM wallet detected');
           return false;
         } else {
           throw new Error('No EVM wallet detected. Please install MetaMask, Coinbase Wallet, or another Web3 wallet.');
@@ -659,7 +659,7 @@ class WildWestWallet {
           }
           
           // On mobile, show wallet installation guide
-          this.showWalletInstallationGuide('base', 'MetaMask');
+          console.log(' Mobile user with no MetaMask wallet detected');
           return false;
         } else {
           throw new Error('No EVM wallet detected. Please install MetaMask, Coinbase Wallet, or another Web3 wallet.');
@@ -895,16 +895,9 @@ class WildWestWallet {
 
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
-    // DISABLED - Too aggressive, only show in specific "No Wallets Detected" cards
-    console.log('🚫 Wallet installation guide disabled - use targeted disclaimers instead');
+    // COMPLETELY DISABLED - Mobile disclaimers only show in specific "No Wallets Detected" cards
+    console.log('� Wallet installation guide disabled - clean mobile experience');
     return;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (!isMobile) {
-      // For desktop users, disabled for clean UI
-      console.log('🖥️ Desktop user - wallet installation guide disabled for clean UI');
-      return;
-    }
     
     // For mobile users, show simple guidance
     console.log('� Mobile user detected - showing wallet browser guidance');
@@ -1688,3 +1681,4 @@ if (document.readyState === 'loading') {
 
 // Export for use in other files
 window.WildWestWallet = WildWestWallet;
+
