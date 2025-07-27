@@ -132,7 +132,7 @@
           text-transform: uppercase;
           line-height: 1.2;
         ">
-          Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em; font-size: 1.5rem;">WILDWEST</span>
+          Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em; font-size: 3rem;">WILDWEST</span>
         </h1>
         
         <!-- Legal disclaimer text -->
@@ -230,16 +230,6 @@
             I Agree & Continue
           </button>
         </div>
-        
-        <!-- Fine print -->
-        <div style="
-          margin-top: 1rem;
-          font-size: 0.65rem;
-          color: #888;
-          opacity: 0.8;
-        ">
-          This disclaimer was acknowledged on: <span id="disclaimer-timestamp"></span>
-        </div>
       </div>
     `;
     
@@ -296,14 +286,6 @@
     }
     
     document.body.appendChild(backdrop);
-    
-    // Update timestamp
-    setTimeout(() => {
-      const timestampEl = document.getElementById('disclaimer-timestamp');
-      if (timestampEl) {
-        timestampEl.textContent = new Date().toLocaleString();
-      }
-    }, 100);
     
     // Mark as shown this session
     sessionStorage.setItem(SESSION_KEY, 'true');
