@@ -16,13 +16,19 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Debug Secrets
+        run: |
+          echo "Checking secret availability..."
+          echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
+          echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
+        env:
+          SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+          BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
 
       - name: Create Config with Secrets
         run: |
