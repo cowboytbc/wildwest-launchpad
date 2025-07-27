@@ -7,10 +7,10 @@ const RPC_CONFIG = {
     get PRIMARY() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     get QUICKNODE() { return window.PRODUCTION_CONFIG?.rpc?.solana; },
     FALLBACKS: [
-      "https://rpc.ankr.com/solana",  // Working CORS-friendly endpoint
-      "https://solana-mainnet.rpc.extrnode.com", // Alternative CORS-friendly endpoint
-      "https://api.mainnet-beta.solana.com",  // Official endpoint (may have 403 issues)
-      "https://solana.public-rpc.com"
+      "https://solana-mainnet.rpc.extrnode.com", // Known working CORS-friendly endpoint
+      "https://solana-mainnet.phantom.app",      // Phantom's public RPC
+      "https://rpc.helius.xyz/?api-key=public",  // Helius public endpoint
+      "https://mainnet.helius-rpc.com/?api-key=public-key" // Alternative Helius
     ]
   },
   
