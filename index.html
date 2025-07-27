@@ -2045,7 +2045,7 @@
   <script>
   // Global dropdown function - works everywhere
   function toggleDropdown(name) {
-    console.log('🎯 toggleDropdown called:', name);
+    console.log('🔽 Toggling dropdown:', name);
     
     // Close all menus first
     const allMenus = ['launch-menu', 'staking-menu', 'locking-menu'];
@@ -2054,13 +2054,25 @@
       if (menu) menu.style.display = 'none';
     });
     
-    // Open the requested menu
-    const targetMenu = document.getElementById(name + '-menu');
+    // Open the requested menu - fix the ID lookup
+    let targetMenuId;
+    if (name === 'launch') targetMenuId = 'launch-menu';
+    else if (name === 'staking') targetMenuId = 'staking-menu';  
+    else if (name === 'locking') targetMenuId = 'locking-menu';
+    
+    console.log('🎯 Looking for menu ID:', targetMenuId);
+    const targetMenu = document.getElementById(targetMenuId);
     if (targetMenu) {
       targetMenu.style.display = 'block';
       console.log('✅ Opened menu:', name);
     } else {
-      console.error('❌ Menu not found:', name + '-menu');
+      console.error('❌ Menu not found:', targetMenuId);
+      // Try backup selectors
+      const backupMenu = document.querySelector('.' + name + '-token-menu, .' + name + '-menu');
+      if (backupMenu) {
+        backupMenu.style.display = 'block';
+        console.log('✅ Opened menu via backup selector:', name);
+      }
     }
   }
   
