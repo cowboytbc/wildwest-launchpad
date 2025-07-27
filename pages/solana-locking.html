@@ -1216,6 +1216,10 @@
       console.log('🔍 Debug: PRODUCTION_CONFIG.rpc:', window.PRODUCTION_CONFIG?.rpc);
       console.log('🔍 Debug: window.RPC_CONFIG exists:', !!window.RPC_CONFIG);
       
+      // Additional debugging for deployment issue
+      console.log('🔍 Debug: Current URL:', window.location.href);
+      console.log('🔍 Debug: Is production domain:', window.location.hostname === 'wildwestlaunch.xyz');
+      
       if (!window.RPC_CONFIG) {
         throw new Error('RPC_CONFIG not available - GitHub Secrets required');
       }
@@ -1234,6 +1238,22 @@
         console.log('✅ QuickNode endpoint verified working');
       } catch (error) {
         console.error('❌ QuickNode endpoint failed:', error.message);
+        
+        // Enhanced debugging for deployment issues
+        if (error.message.includes('GitHub Secrets')) {
+          console.log('🔍 Attempting to debug production config loading...');
+          
+          try {
+            const response = await fetch('/js/production-config.js?t=' + Date.now());
+            console.log('🔍 Production config fetch status:', response.status);
+            const configText = await response.text();
+            console.log('🔍 Production config content length:', configText.length);
+            console.log('🔍 Production config preview:', configText.substring(0, 200) + '...');
+          } catch (fetchError) {
+            console.error('🔍 Failed to fetch production config:', fetchError.message);
+          }
+        }
+        
         throw new Error('QuickNode Solana endpoint required - GitHub Secrets not available');
       }
     }
@@ -1890,7 +1910,14 @@
       console.log('🔄 Force loading production config from deployed site...');
       try {
         const response = await fetch('https://wildwestlaunch.xyz/js/production-config.js?t=' + Date.now());
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const configScript = await response.text();
+        console.log('📄 Production config loaded, length:', configScript.length);
+        console.log('📄 Config preview:', configScript.substring(0, 300) + '...');
         
         // Clear existing config
         delete window.PRODUCTION_CONFIG;
@@ -1906,8 +1933,38 @@
         return window.PRODUCTION_CONFIG;
       } catch (error) {
         console.error('❌ Failed to force load production config:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          type: error.constructor.name,
+          status: error.status || 'unknown'
+        });
         return null;
       }
+    };
+
+    // Debug function to test current config status
+    window.debugProductionConfig = function() {
+      console.log('🔍 PRODUCTION CONFIG DEBUG STATUS:');
+      console.log('  window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
+      console.log('  PRODUCTION_CONFIG value:', window.PRODUCTION_CONFIG);
+      console.log('  window.RPC_CONFIG exists:', !!window.RPC_CONFIG);
+      console.log('  Current domain:', window.location.hostname);
+      console.log('  Is production:', window.location.hostname === 'wildwestlaunch.xyz');
+      
+      if (window.PRODUCTION_CONFIG?.rpc) {
+        console.log('  Solana endpoint available:', !!window.PRODUCTION_CONFIG.rpc.solana);
+        console.log('  Base endpoint available:', !!window.PRODUCTION_CONFIG.rpc.base);
+        if (window.PRODUCTION_CONFIG.rpc.solana) {
+          console.log('  Solana endpoint preview:', window.PRODUCTION_CONFIG.rpc.solana.substring(0, 30) + '...');
+        }
+      }
+      
+      return {
+        hasProductionConfig: !!window.PRODUCTION_CONFIG,
+        hasRPCConfig: !!window.RPC_CONFIG,
+        isDomain: window.location.hostname,
+        isProduction: window.location.hostname === 'wildwestlaunch.xyz'
+      };
     };
 
     // NUCLEAR OPTION: Function to completely reset and force fresh wallet approval
@@ -1980,6 +2037,7 @@
 
     console.log('💡 Solana Debug functions available:');
     console.log('• debugSolanaWalletSystem() - Check wallet system status');
+    console.log('• debugProductionConfig() - Check production config status');
     console.log('• testSolanaConnection() - Manually test wallet connection');
     console.log('• refreshSolanaConnection() - Refresh connection with QuickNode endpoints');
     console.log('• forceLoadProductionConfig() - Force reload config from deployed site');
