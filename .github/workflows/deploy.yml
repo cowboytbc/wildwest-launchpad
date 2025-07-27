@@ -22,18 +22,21 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Inject GitHub Secrets
+        env:
+          SOLANA_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
+          BASE_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
           echo "Creating production config with secrets..."
           mkdir -p js
           
-          cat > js/production-config.js << 'EOF'
+          cat > js/production-config.js << EOF
           (function() {
             'use strict';
             
             window.PRODUCTION_CONFIG = {
               rpc: {
-                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
-                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
+                solana: '${SOLANA_ENDPOINT}',
+                base: '${BASE_ENDPOINT}'
               },
               injectedAt: new Date().toISOString(),
               source: 'github-actions'
@@ -46,7 +49,7 @@ jobs:
           })();
           EOF
           
-          echo "Production config created"
+          echo "Production config created with actual endpoints"
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
