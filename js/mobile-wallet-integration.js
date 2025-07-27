@@ -361,7 +361,8 @@ window.showUnifiedWalletBrowserGuidance = function() {
     z-index: 10000;
     padding: 20px;
     box-sizing: border-box;
-    animation: modalFadeIn 0.3s ease-out;
+    opacity: 0;
+    animation: unifiedModalFadeIn 0.4s ease-out forwards;
   `;
   
   modal.innerHTML = `
@@ -380,7 +381,9 @@ window.showUnifiedWalletBrowserGuidance = function() {
         0 10px 30px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
       position: relative;
-      animation: modalSlideIn 0.4s ease-out;
+      animation: unifiedModalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      transform: translateY(50px) scale(0.9);
+      opacity: 0;
       overflow: hidden;
     ">
       <div style="
@@ -434,7 +437,11 @@ window.showUnifiedWalletBrowserGuidance = function() {
         <div>MetaMask • Phantom • Trust Wallet • Coinbase Wallet</div>
       </div>
       
-      <button onclick="this.parentElement.parentElement.style.animation='modalFadeOut 0.3s ease-in'; setTimeout(() => this.parentElement.parentElement.remove(), 300)" style="
+      <button onclick="
+        this.parentElement.parentElement.style.animation='unifiedModalFadeOut 0.3s ease-in forwards';
+        this.parentElement.style.animation='unifiedModalSlideOut 0.3s ease-in forwards';
+        setTimeout(() => this.parentElement.parentElement.remove(), 300);
+      " style="
         background: linear-gradient(135deg, #00eaff 0%, #0088cc 50%, #006699 100%);
         color: white;
         border: none;
@@ -461,17 +468,33 @@ window.showUnifiedWalletBrowserGuidance = function() {
     const style = document.createElement('style');
     style.id = 'unifiedWalletModalAnimations';
     style.textContent = `
-      @keyframes modalFadeIn {
+      @keyframes unifiedModalFadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
       }
-      @keyframes modalFadeOut {
+      @keyframes unifiedModalFadeOut {
         from { opacity: 1; }
         to { opacity: 0; }
       }
-      @keyframes modalSlideIn {
-        from { transform: translateY(-50px) scale(0.9); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
+      @keyframes unifiedModalSlideIn {
+        from { 
+          transform: translateY(50px) scale(0.9); 
+          opacity: 0; 
+        }
+        to { 
+          transform: translateY(0) scale(1); 
+          opacity: 1; 
+        }
+      }
+      @keyframes unifiedModalSlideOut {
+        from { 
+          transform: translateY(0) scale(1); 
+          opacity: 1; 
+        }
+        to { 
+          transform: translateY(-30px) scale(0.95); 
+          opacity: 0; 
+        }
       }
       @keyframes shimmer {
         0% { transform: translateX(-100%); }
@@ -488,10 +511,11 @@ window.showUnifiedWalletBrowserGuidance = function() {
   
   document.body.appendChild(modal);
   
-  // Auto-close after 12 seconds with fade out
+  // Auto-close after 12 seconds with graceful fade out
   setTimeout(() => {
     if (modal.parentNode) {
-      modal.style.animation = 'modalFadeOut 0.3s ease-in';
+      modal.style.animation = 'unifiedModalFadeOut 0.3s ease-in forwards';
+      modal.querySelector('div').style.animation = 'unifiedModalSlideOut 0.3s ease-in forwards';
       setTimeout(() => modal.remove(), 300);
     }
   }, 12000);
