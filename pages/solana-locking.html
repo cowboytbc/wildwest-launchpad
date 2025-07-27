@@ -1226,16 +1226,13 @@
 
     // Initialize connection using centralized config
     function initializeConnection() {
-      if (window.RPC_CONFIG && window.RPC_CONFIG.getSolanaConnection) {
-        window.connection = window.RPC_CONFIG.getSolanaConnection();
-        connection = window.connection; // Keep local reference for compatibility
-        console.log('✅ Using centralized RPC config for Solana connection');
+      if (window.RPC_CONFIG) {
+        connection = window.RPC_CONFIG.getSolanaConnection();
+        console.log('✅ Using centralized RPC config:', window.RPC_CONFIG.getSolanaEndpoint());
       } else {
-        // Fallback to working endpoint
-        const fallbackEndpoint = 'https://solana-mainnet.g.alchemy.com/v2/demo';
-        window.connection = new solanaWeb3.Connection(fallbackEndpoint);
-        connection = window.connection; // Keep local reference for compatibility
-        console.log('⚠️ Using fallback RPC endpoint:', fallbackEndpoint);
+        // Fallback to hardcoded endpoint if config not loaded
+        connection = new solanaWeb3.Connection(window.RPC_CONFIG ? window.RPC_CONFIG.getSolanaEndpoint() : 'https://api.mainnet-beta.solana.com');
+        console.log('⚠️ Using fallback RPC endpoint');
       }
     }
 
@@ -1933,25 +1930,6 @@
     console.log('• testWalletBlocking() - Test if wallets are properly blocked');
     console.log('• unblockWallets() - Manually unblock wallets');
     console.log('• blockWallets() - Manually re-block wallets');
-    console.log('• testTokenInfo() - Test token info fetching');
-    console.log('• testMEButton() - Test ME button functionality');
-    
-    // Debug function to test token info
-    window.testTokenInfo = function(tokenAddress) {
-      if (!tokenAddress) {
-        console.log('Usage: testTokenInfo("TOKEN_MINT_ADDRESS")');
-        console.log('Example: testTokenInfo("So11111111111111111111111111111111111111112")'); // Wrapped SOL
-        return;
-      }
-      
-      document.getElementById('tokenAddress').value = tokenAddress;
-      fetchTokenInfo();
-    };
-    
-    // Debug function to test ME button
-    window.testMEButton = function() {
-      document.getElementById('setSelfBeneficiary').click();
-    };
 
     // Load and display the lock creation fee
     async function loadLockCreationFee() {
@@ -1975,16 +1953,10 @@
     loadLockCreationFee();
 
     document.getElementById('setSelfBeneficiary').onclick = function() {
-      console.log('🔘 ME button clicked');
-      console.log('🔍 Current publicKey:', window.publicKey);
-      console.log('🔍 Current wallet:', !!window.wallet);
-      
-      if (window.publicKey) {
-        document.getElementById('beneficiary').value = window.publicKey;
-        console.log('✅ Set beneficiary to:', window.publicKey);
+      if (publicKey) {
+        document.getElementById('beneficiary').value = publicKey;
       } else {
         alert('Connect wallet first!');
-        console.log('❌ No wallet connected');
       }
     };
 
@@ -2051,96 +2023,58 @@
     async function fetchTokenInfo() {
       const tokenAddress = document.getElementById('tokenAddress').value.trim();
       const tokenInfoDiv = document.getElementById('tokenInfo');
-      
-      console.log('🔍 fetchTokenInfo called with:', tokenAddress);
-      console.log('🔍 Current connection:', !!window.connection);
-      console.log('🔍 Current publicKey:', window.publicKey);
-      
       tokenInfoDiv.textContent = '';
-      
-      if (!tokenAddress) {
-        console.log('❌ No token address provided');
-        return;
-      }
-      
-      if (!window.publicKey) {
-        tokenInfoDiv.textContent = 'Connect wallet first to see token info';
-        tokenInfoDiv.style.color = '#ff6c6c';
-        console.log('❌ No wallet connected');
-        return;
-      }
-      
-      if (!window.connection) {
-        tokenInfoDiv.textContent = 'No RPC connection available';
-        tokenInfoDiv.style.color = '#ff6c6c';
-        console.log('❌ No RPC connection');
-        return;
-      }
-      
-      // Validate tokenAddress as base58
+      if (!tokenAddress || !publicKey) return;
+      // Validate tokenAddress and publicKey as base58
       try {
         new solanaWeb3.PublicKey(tokenAddress);
       } catch (e) {
-        tokenInfoDiv.textContent = 'Invalid SPL token mint address';
-        tokenInfoDiv.style.color = '#ff6c6c';
-        console.log('❌ Invalid token address:', e.message);
+        tokenInfoDiv.textContent = 'Invalid SPL token mint address (not base58).';
         return;
       }
-      
       try {
-        console.log('🔍 Fetching token info for:', tokenAddress);
-        tokenInfoDiv.textContent = 'Loading token info...';
-        tokenInfoDiv.style.color = '#ffae00';
-        
-        // Get mint account info
+        new solanaWeb3.PublicKey(publicKey);
+      } catch (e) {
+        tokenInfoDiv.textContent = 'Invalid wallet address (not base58).';
+        return;
+      }
+      try {
+        // --- Browser-compatible SPL Token info fetch ---
         const mintPubkey = new solanaWeb3.PublicKey(tokenAddress);
-        const mintAccountInfo = await window.connection.getAccountInfo(mintPubkey);
-        
+        const mintAccountInfo = await connection.getAccountInfo(mintPubkey);
         if (!mintAccountInfo) {
-          tokenInfoDiv.textContent = 'Token not found or invalid mint address';
-          tokenInfoDiv.style.color = '#ff6c6c';
-          console.log('❌ Token not found');
+          tokenInfoDiv.textContent = 'Invalid SPL token mint address.';
           return;
         }
-        
         const mintInfo = MintLayout.decode(mintAccountInfo.data);
         const decimals = mintInfo.decimals;
-        
-        console.log('✅ Token found, decimals:', decimals);
         
         // Get token symbol
         const symbol = getKnownTokenSymbol(tokenAddress) || `${tokenAddress.slice(0, 4)}...${tokenAddress.slice(-4)}`;
         
-        // Find user's associated token account
+        // Find user's associated token account (browser-compatible)
         const userTokenAccountAddr = await window.splToken.getAssociatedTokenAddress(
           mintPubkey,
-          new solanaWeb3.PublicKey(window.publicKey)
+          new solanaWeb3.PublicKey(publicKey)
         );
-        
         let balance = 0;
         try {
-          const tokenAccountInfo = await window.connection.getAccountInfo(userTokenAccountAddr);
+          const tokenAccountInfo = await connection.getAccountInfo(userTokenAccountAddr);
           if (tokenAccountInfo) {
             const accountInfo = AccountLayout.decode(tokenAccountInfo.data);
             balance = Number(accountInfo.amount) / Math.pow(10, decimals);
-            console.log('✅ Token balance found:', balance);
           } else {
-            console.log('ℹ️ No token account found, balance = 0');
+            balance = 0;
           }
         } catch (e) {
-          console.log('⚠️ Error getting balance:', e.message);
+          balance = 0;
         }
         
         // Enhanced display with symbol
-        const displayText = `${symbol} | Decimals: ${decimals} | Balance: ${balance.toLocaleString(undefined, { maximumFractionDigits: decimals })}`;
-        tokenInfoDiv.textContent = displayText;
+        tokenInfoDiv.textContent = `${symbol} | Decimals: ${decimals} | Balance: ${balance.toLocaleString(undefined, { maximumFractionDigits: decimals })}`;
         tokenInfoDiv.style.color = '#00e676'; // Green for success
-        
-        console.log('✅ Token info displayed:', displayText);
-        
       } catch (err) {
-        console.error('❌ Error fetching token info:', err);
-        tokenInfoDiv.textContent = 'Could not fetch token info: ' + err.message;
+        tokenInfoDiv.textContent = 'Could not fetch token info.';
         tokenInfoDiv.style.color = '#ff6c6c'; // Red for error
       }
     }
