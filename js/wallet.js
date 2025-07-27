@@ -907,75 +907,13 @@ class WildWestWallet {
 
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
-    // COMPLETELY DISABLED - Mobile disclaimers only show in specific "No Wallets Detected" cards
-    console.log('� Wallet installation guide disabled - clean mobile experience');
-    return;
-    
-    // For mobile users, show simple guidance
-    console.log('� Mobile user detected - showing wallet browser guidance');
-    
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-      padding: 20px;
-      box-sizing: border-box;
-    `;
-    
-    modal.innerHTML = `
-      <div style="
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 2px solid #00eaff;
-        border-radius: 16px;
-        padding: 2rem;
-        max-width: 400px;
-        width: 90vw;
-        text-align: center;
-        color: white;
-        font-family: 'Orbitron', Arial, sans-serif;
-        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
-        position: relative;
-      ">
-        <h2 style="color: #00eaff; margin-bottom: 1.5rem; font-size: 1.3rem; font-weight: 600;">
-          📱 Mobile User?
-        </h2>
-        
-        <p style="color: #c0c0c0; margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">
-          Open this site inside your wallet browser (MetaMask, Phantom, etc.) instead of your regular browser.
-        </p>
-        
-        <button onclick="this.parentElement.parentElement.remove()" style="
-          background: linear-gradient(135deg, #00eaff, #0099cc);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-family: 'Orbitron', Arial, sans-serif;
-          font-weight: 600;
-          cursor: pointer;
-          font-size: 0.9rem;
-        ">
-          Got It
-        </button>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Auto-close after 10 seconds
-    setTimeout(() => {
-      if (modal.parentNode) {
-        modal.remove();
-      }
-    }, 10000);
+    // Use the unified function to ensure consistency across all pages
+    if (typeof window.showUnifiedWalletBrowserGuidance === 'function') {
+      window.showUnifiedWalletBrowserGuidance();
+    } else {
+      // Fallback if unified function not available
+      console.log('📱 Mobile user detected - wallet browser guidance needed');
+    }
   }
 
   async switchToBase(provider = window.ethereum) {

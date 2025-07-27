@@ -263,9 +263,8 @@ class MobileWalletIntegration {
   }
 
   showWalletBrowserGuidance() {
-    console.log('� Mobile wallet guidance - debug modal disabled');
-    // Debug modal removed for production
-    return;
+    // Use the unified function to ensure consistency across all pages
+    window.showUnifiedWalletBrowserGuidance();
   }
 
   enhanceConnectButton() {
@@ -334,3 +333,194 @@ document.addEventListener('visibilitychange', function() {
 });
 
 console.log('🔗 Mobile Wallet Integration loaded');
+
+// GLOBAL UNIFIED WALLET BROWSER GUIDANCE FUNCTION
+// This ensures all pages show the same modal regardless of which wallet system is used
+window.showUnifiedWalletBrowserGuidance = function() {
+  // Prevent duplicate modals
+  if (document.querySelector('.unified-wallet-browser-modal')) {
+    return;
+  }
+  
+  console.log('📱 Showing unified wallet browser guidance modal');
+  
+  // Create the enhanced modal
+  const modal = document.createElement('div');
+  modal.className = 'unified-wallet-browser-modal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    box-sizing: border-box;
+    animation: modalFadeIn 0.3s ease-out;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+      border: 2px solid #00eaff;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      max-width: 420px;
+      width: 90vw;
+      text-align: center;
+      color: white;
+      font-family: 'Orbitron', Arial, sans-serif;
+      box-shadow: 
+        0 0 40px rgba(0, 234, 255, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      animation: modalSlideIn 0.4s ease-out;
+      overflow: hidden;
+    ">
+      <div style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00eaff, transparent);
+        animation: shimmer 2s infinite;
+      "></div>
+      
+      <div style="
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 10px #00eaff);
+        animation: bounce 2s infinite;
+      ">📱</div>
+      
+      <h2 style="
+        color: #00eaff;
+        margin-bottom: 1rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+        letter-spacing: 0.5px;
+      ">
+        Wallet Browser Required
+      </h2>
+      
+      <p style="
+        color: #e0e0e0;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        line-height: 1.6;
+        opacity: 0.9;
+      ">
+        For the best experience, open this site in your <strong style="color: #00eaff;">wallet's built-in browser</strong>
+      </p>
+      
+      <div style="
+        background: rgba(0, 234, 255, 0.1);
+        border: 1px solid rgba(0, 234, 255, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        font-size: 0.85rem;
+        color: #b0b0b0;
+      ">
+        <div style="margin-bottom: 0.5rem; color: #00eaff; font-weight: 600;">Popular Wallet Browsers:</div>
+        <div>MetaMask • Phantom • Trust Wallet • Coinbase Wallet</div>
+      </div>
+      
+      <button onclick="this.parentElement.parentElement.style.animation='modalFadeOut 0.3s ease-in'; setTimeout(() => this.parentElement.parentElement.remove(), 300)" style="
+        background: linear-gradient(135deg, #00eaff 0%, #0088cc 50%, #006699 100%);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-family: 'Orbitron', Arial, sans-serif;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 234, 255, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        width: 100%;
+        max-width: 200px;
+      " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 234, 255, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 234, 255, 0.3)'">
+        Got It! 👍
+      </button>
+    </div>
+  `;
+  
+  // Add CSS animations if not already added
+  if (!document.getElementById('unifiedWalletModalAnimations')) {
+    const style = document.createElement('style');
+    style.id = 'unifiedWalletModalAnimations';
+    style.textContent = `
+      @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes modalFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      @keyframes modalSlideIn {
+        from { transform: translateY(-50px) scale(0.9); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+      }
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-5px); }
+        60% { transform: translateY(-3px); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(modal);
+  
+  // Auto-close after 12 seconds with fade out
+  setTimeout(() => {
+    if (modal.parentNode) {
+      modal.style.animation = 'modalFadeOut 0.3s ease-in';
+      setTimeout(() => modal.remove(), 300);
+    }
+  }, 12000);
+};
+
+// Override all existing wallet guidance functions to use the unified one
+setTimeout(() => {
+  // Override wallet.js function if it exists
+  if (window.walletManager && typeof window.walletManager.showWalletInstallationGuide === 'function') {
+    const originalFunc = window.walletManager.showWalletInstallationGuide;
+    window.walletManager.showWalletInstallationGuide = function() {
+      window.showUnifiedWalletBrowserGuidance();
+    };
+    console.log('🔄 Overrode walletManager.showWalletInstallationGuide');
+  }
+  
+  // Override any global functions
+  if (typeof window.showWalletInstallationGuide === 'function') {
+    window.showWalletInstallationGuide = function() {
+      window.showUnifiedWalletBrowserGuidance();
+    };
+    console.log('🔄 Overrode global showWalletInstallationGuide');
+  }
+  
+  // Also override the class method
+  if (window.mobileWalletIntegration && typeof window.mobileWalletIntegration.showWalletBrowserGuidance === 'function') {
+    window.mobileWalletIntegration.showWalletBrowserGuidance = function() {
+      window.showUnifiedWalletBrowserGuidance();
+    };
+    console.log('🔄 Overrode mobileWalletIntegration.showWalletBrowserGuidance');
+  }
+}, 1000);
