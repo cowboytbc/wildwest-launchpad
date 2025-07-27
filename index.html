@@ -914,16 +914,19 @@
       z-index: 9999;
       min-width: 250px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+      pointer-events: auto;
     }
     
     .dropdown-menu.show {
       display: block !important;
+      pointer-events: auto !important;
     }
     
     .dropdown-menu li {
       list-style: none;
       margin: 0;
       padding: 0;
+      pointer-events: auto;
     }
     
     .dropdown-menu a {
@@ -938,6 +941,9 @@
       text-align: center;
       transition: all 0.3s ease;
       border: 1px solid transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      touch-action: manipulation;
     }
     
     .dropdown-menu a:hover,
@@ -2095,12 +2101,16 @@
         " class="dropdown-trigger">Launch Token ▼</a>
         <ul class="launch-token-menu dropdown-menu" id="launch-menu">
           <li><a href="pages/base-launch.html" onclick="
-            console.log('🔗 Base clicked');
+            console.log('🔗 Base launch clicked - navigating to pages/base-launch.html');
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            setTimeout(() => { window.location.href = 'pages/base-launch.html'; }, 50);
+            return false;
           ">Base</a></li>
           <li><a href="pages/solana-launch.html" onclick="
-            console.log('🔗 Solana clicked');
+            console.log('🔗 Solana launch clicked - navigating to pages/solana-launch.html');
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            setTimeout(() => { window.location.href = 'pages/solana-launch.html'; }, 50);
+            return false;
           ">Solana</a></li>
         </ul>
       </li>
@@ -2113,12 +2123,16 @@
         " class="dropdown-trigger">Staking ▼</a>
         <ul class="staking-menu dropdown-menu" id="staking-menu">
           <li><a href="pages/base-staking.html" onclick="
-            console.log('🔗 Base staking clicked');
+            console.log('🔗 Base staking clicked - navigating to pages/base-staking.html');
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            setTimeout(() => { window.location.href = 'pages/base-staking.html'; }, 50);
+            return false;
           ">Base</a></li>
           <li><a href="pages/solana-staking.html" onclick="
-            console.log('🔗 Solana staking clicked');
+            console.log('🔗 Solana staking clicked - navigating to pages/solana-staking.html');
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            setTimeout(() => { window.location.href = 'pages/solana-staking.html'; }, 50);
+            return false;
           ">Solana</a></li>
         </ul>
       </li>
@@ -2130,12 +2144,16 @@
         " class="dropdown-trigger">Token Locking ▼</a>
         <ul class="token-locking-menu dropdown-menu" id="locking-menu">
           <li><a href="pages/base-locking.html" onclick="
-            console.log('🔗 Base locking clicked');
+            console.log('🔗 Base locking clicked - navigating to pages/base-locking.html');
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            setTimeout(() => { window.location.href = 'pages/base-locking.html'; }, 50);
+            return false;
           ">Base</a></li>
           <li><a href="pages/solana-locking.html" onclick="
-            console.log('🔗 Solana locking clicked');
+            console.log('🔗 Solana locking clicked - navigating to pages/solana-locking.html');
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            setTimeout(() => { window.location.href = 'pages/solana-locking.html'; }, 50);
+            return false;
           ">Solana</a></li>
         </ul>
       </li>
