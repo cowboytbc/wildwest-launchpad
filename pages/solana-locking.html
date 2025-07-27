@@ -3124,5 +3124,74 @@
     </div>
   </footer>
 
+  <!-- Emergency wallet button setup - runs after all other scripts -->
+  <script>
+    console.log('🚨 Emergency wallet button setup starting...');
+    
+    // Wait a moment for all scripts to finish loading
+    setTimeout(function() {
+      console.log('🔧 Setting up wallet button...');
+      
+      const btn = document.getElementById('connectWalletBtn');
+      if (!btn) {
+        console.error('❌ Button not found!');
+        return;
+      }
+      
+      console.log('✅ Button found, setting up click handler');
+      
+      // Clear any existing handlers
+      btn.onclick = null;
+      
+      // Add simple click handler
+      btn.onclick = function() {
+        console.log('🚀 Button clicked!');
+        
+        // Check for Phantom wallet (most common)
+        if (window.solana && window.solana.isPhantom) {
+          console.log('👻 Phantom wallet found, connecting...');
+          
+          window.solana.connect()
+            .then(function(response) {
+              console.log('✅ Connected:', response);
+              btn.textContent = 'WALLET CONNECTED';
+              
+              if (response.publicKey) {
+                document.getElementById('walletAddress').textContent = 'CONNECTED: ' + response.publicKey.toString();
+              }
+            })
+            .catch(function(error) {
+              console.error('❌ Connection failed:', error);
+              alert('Failed to connect to Phantom wallet: ' + error.message);
+            });
+            
+        } else if (window.phantom && window.phantom.solana) {
+          console.log('👻 Phantom wallet found (alternative location), connecting...');
+          
+          window.phantom.solana.connect()
+            .then(function(response) {
+              console.log('✅ Connected:', response);
+              btn.textContent = 'WALLET CONNECTED';
+              
+              if (response.publicKey) {
+                document.getElementById('walletAddress').textContent = 'CONNECTED: ' + response.publicKey.toString();
+              }
+            })
+            .catch(function(error) {
+              console.error('❌ Connection failed:', error);
+              alert('Failed to connect to Phantom wallet: ' + error.message);
+            });
+            
+        } else {
+          console.log('❌ No Solana wallets detected');
+          alert('No Solana wallets detected. Please install Phantom wallet and try again.');
+        }
+      };
+      
+      console.log('✅ Emergency wallet button setup complete!');
+      
+    }, 1000); // Wait 1 second for everything to load
+  </script>
+
 </body>
 </html>
