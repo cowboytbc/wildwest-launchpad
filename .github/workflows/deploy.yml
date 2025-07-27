@@ -20,36 +20,56 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.SOLANA_RPC_ENDPOINT }}" ]; then
+            echo "::error::SOLANA_RPC_ENDPOINT secret is not set."
+            exit 1
+          fi
+          if [ -z "${{ secrets.BASE_RPC_ENDPOINT }}" ]; then
+            echo "::error::BASE_RPC_ENDPOINT secret is not set."
+            exit 1
+          fi
+          echo "Secrets are present."
         
       - name: Inject GitHub Secrets
         env:
           SOLANA_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
           BASE_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
+          set -e
           echo "Creating production config with secrets..."
           mkdir -p js
           
-          cat > js/production-config.js << EOF
-          (function() {
-            'use strict';
-            
-            window.PRODUCTION_CONFIG = {
-              rpc: {
-                solana: '${SOLANA_ENDPOINT}',
-                base: '${BASE_ENDPOINT}'
-              },
-              injectedAt: new Date().toISOString(),
-              source: 'github-actions'
-            };
-            
-            window.RPC_CONFIG = {
-              getSolanaEndpoint: function() { return window.PRODUCTION_CONFIG.rpc.solana; },
-              getBaseEndpoint: function() { return window.PRODUCTION_CONFIG.rpc.base; }
-            };
-          })();
-          EOF
+          # Overwrite if exists, create if not. Using line-by-line echo to avoid YAML parsing issues.
+          > js/production-config.js
           
-          echo "Production config created with actual endpoints"
+          echo "(function() {" >> js/production-config.js
+          echo "  'use strict';" >> js/production-config.js
+          echo "  if (window.PRODUCTION_CONFIG) { console.warn('Production config already loaded.'); return; }" >> js/production-config.js
+          echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
+          echo "    rpc: {" >> js/production-config.js
+          echo "      solana: '${SOLANA_ENDPOINT}'," >> js/production-config.js
+          echo "      base: '${BASE_ENDPOINT}'" >> js/production-config.js
+          echo "    }," >> js/production-config.js
+          echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
+          echo "    source: 'github-actions'" >> js/production-config.js
+          echo "  };" >> js/production-config.js
+          echo "  window.RPC_CONFIG = {" >> js/production-config.js
+          echo "    getSolanaEndpoint: function() {" >> js/production-config.js
+          echo "      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.solana) { throw new Error('CRITICAL: QuickNode Solana endpoint not available.'); }" >> js/production-config.js
+          echo "      return window.PRODUCTION_CONFIG.rpc.solana;" >> js/production-config.js
+          echo "    }," >> js/production-config.js
+          echo "    getBaseEndpoint: function() {" >> js/production-config.js
+          echo "      if (!window.PRODUCTION_CONFIG || !window.PRODUCTION_CONFIG.rpc.base) { throw new Error('CRITICAL: QuickNode Base endpoint not available.'); }" >> js/production-config.js
+          echo "      return window.PRODUCTION_CONFIG.rpc.base;" >> js/production-config.js
+          echo "    }" >> js/production-config.js
+          echo "  };" >> js/production-config.js
+          echo "  console.log('Production config injected by GitHub Actions.');" >> js/production-config.js
+          echo "})();" >> js/production-config.js
+          
+          echo "Production config created successfully."
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
