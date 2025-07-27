@@ -204,28 +204,29 @@
         </div>
         
         <!-- Action buttons -->
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
           <button onclick="
             sessionStorage.setItem('wildwest_session_disclaimer', 'true');
             localStorage.setItem('wildwest_disclaimer_acknowledged', new Date().toISOString());
             document.getElementById('legal-disclaimer-backdrop').style.animation='disclaimerFadeOut 0.3s ease-in';
             setTimeout(() => document.getElementById('legal-disclaimer-backdrop').remove(), 300);
           " style="
-            background: linear-gradient(135deg, #00eaff 0%, #0088cc 50%, #006699 100%);
+            background: linear-gradient(135deg, #00eaff 0%, #0099dd 100%);
             color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 10px;
+            border: 2px solid #00eaff;
+            padding: 10px 24px;
+            border-radius: 8px;
             font-family: 'Orbitron', Arial, sans-serif;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 234, 255, 0.4);
+            box-shadow: 0 3px 12px rgba(0, 234, 255, 0.3);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            min-width: 140px;
-          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 234, 255, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 234, 255, 0.4)'">
+            letter-spacing: 0.3px;
+            width: 100%;
+            max-width: 200px;
+          " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(0, 234, 255, 0.5)'; this.style.background='linear-gradient(135deg, #00fff7 0%, #00ccee 100%)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 12px rgba(0, 234, 255, 0.3)'; this.style.background='linear-gradient(135deg, #00eaff 0%, #0099dd 100%)'">
             I Agree & Continue
           </button>
         </div>
