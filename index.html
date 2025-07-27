@@ -3909,10 +3909,55 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </footer>
   
+  <!-- NUCLEAR OVERRIDE DROPDOWN SYSTEM -->
   <script>
-  // Simple console log for page ready status
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Page loaded - using inline onclick dropdown system');
+    console.log('🚀 NUCLEAR DROPDOWN OVERRIDE STARTING...');
+    
+    // Remove ALL existing onclick handlers
+    document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+      trigger.onclick = null;
+      trigger.removeAttribute('onclick');
+    });
+    
+    // Add new clean event listeners
+    document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🔽 NUCLEAR: Dropdown clicked:', this.textContent.trim());
+        
+        // Close all dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.classList.remove('show');
+          menu.style.display = 'none';
+        });
+        
+        // Find and open the target menu
+        let targetMenu = null;
+        if (this.textContent.includes('Launch')) {
+          targetMenu = document.getElementById('launch-menu');
+        } else if (this.textContent.includes('Staking')) {
+          targetMenu = document.getElementById('staking-menu');
+        } else if (this.textContent.includes('Locking')) {
+          targetMenu = document.getElementById('locking-menu');
+        }
+        
+        if (targetMenu) {
+          targetMenu.classList.add('show');
+          targetMenu.style.display = 'block';
+          targetMenu.style.visibility = 'visible';
+          targetMenu.style.opacity = '1';
+          targetMenu.style.pointerEvents = 'auto';
+          console.log('✅ NUCLEAR: Menu opened successfully:', targetMenu.id);
+        } else {
+          console.error('❌ NUCLEAR: Could not find target menu');
+        }
+      });
+    });
+    
+    console.log('✅ NUCLEAR DROPDOWN OVERRIDE COMPLETE');
   });
   </script>
 
