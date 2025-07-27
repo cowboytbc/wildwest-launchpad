@@ -39,6 +39,7 @@
       padding: 20px;
       box-sizing: border-box;
       animation: disclaimerFadeIn 0.5s ease-out;
+      overflow: hidden;
     `;
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -60,6 +61,7 @@
         width: 90vw;
         max-height: 85vh;
         overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         text-align: center;
         color: white;
@@ -71,6 +73,7 @@
         position: relative;
         animation: disclaimerSlideIn 0.6s ease-out;
         box-sizing: border-box;
+        overflow: hidden;
       ">
         <!-- Close button -->
         <button onclick="
