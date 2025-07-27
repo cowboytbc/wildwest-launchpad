@@ -1295,23 +1295,24 @@
       }
     }
     
-    // Wait for wallet.js to be available (SECURITY: No auto-connection)
-    function waitForWalletSystem() {
-      console.log('🔍 Waiting for wallet system... wildWestWallet exists:', !!window.wildWestWallet);
+    // Simple direct wallet button setup (no dependency on complex wallet system)
+    function setupSolanaWalletButton() {
+      console.log('🔍 Setting up Solana wallet connect button');
       
-      if (window.wildWestWallet) {
-        console.log('✅ Wallet system loaded, setting up Solana connect button (no auto-connection)');
-        
-        // SECURITY: Do not check existing connections - let user choose to connect
-        // Always start with disconnected state for security
-        document.getElementById('connectWalletBtn').textContent = 'CONNECT SOLANA WALLET';
-        
-        const connectBtn = document.getElementById('connectWalletBtn');
-        if (connectBtn) {
-          // Clear any existing event listeners to prevent dual modal conflict
-          connectBtn.onclick = null;
-          connectBtn.replaceWith(connectBtn.cloneNode(true));
-          const newConnectBtn = document.getElementById('connectWalletBtn');
+      const connectBtn = document.getElementById('connectWalletBtn');
+      if (!connectBtn) {
+        console.error('❌ Connect wallet button not found');
+        return;
+      }
+      
+      // Reset button state
+      connectBtn.textContent = 'CONNECT SOLANA WALLET';
+      connectBtn.disabled = false;
+      
+      // Clear any existing event listeners
+      connectBtn.onclick = null;
+      connectBtn.replaceWith(connectBtn.cloneNode(true));
+      const newConnectBtn = document.getElementById('connectWalletBtn');
           
           newConnectBtn.onclick = async function() {
             console.log('� User clicked connect wallet button');
@@ -1439,6 +1440,7 @@
         } else {
           console.error('❌ Connect button not found');
         }
+    }
         
         // --- SOLANA WALLET DETECTION FUNCTIONS ---
         function detectAvailableSolanaWallets() {
@@ -1637,14 +1639,14 @@
             }
           });
         }
-      } else {
-        console.log('⏳ Wallet system not ready, waiting...');
-        setTimeout(waitForWalletSystem, 100);
-      }
     }
     
-    // Initialize safe wallet system (no auto-connection)
-    waitForWalletSystem();
+    // Initialize wallet button when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupSolanaWalletButton);
+    } else {
+      setupSolanaWalletButton();
+    }
 
     // Debug function to test wallet system
     window.debugSolanaWalletSystem = function() {
