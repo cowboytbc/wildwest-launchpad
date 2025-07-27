@@ -43,15 +43,22 @@
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // Check if user is in a wallet browser (don't show mobile guidance if they are)
+    const isInWalletBrowser = /MetaMask|Trust|Coinbase|Rainbow|WalletConnect|Phantom/i.test(navigator.userAgent) || 
+                              window.ethereum || window.solana;
+    
+    // Only show mobile guidance if on mobile AND not in wallet browser
+    const showMobileGuidance = isMobile && !isInWalletBrowser;
+    
     backdrop.innerHTML = `
       <div style="
         background: linear-gradient(135deg, #0a0a1e 0%, #1a1a2e 30%, #16213e 70%, #0f1419 100%);
         border: 3px solid #00eaff;
         border-radius: 15px;
         padding: 1.5rem 1rem;
-        max-width: 420px;
-        width: 95vw;
-        max-height: 90vh;
+        max-width: 400px;
+        width: 90vw;
+        max-height: 85vh;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         text-align: center;
@@ -63,6 +70,7 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         position: relative;
         animation: disclaimerSlideIn 0.6s ease-out;
+        box-sizing: border-box;
       ">
         <!-- Close button -->
         <button onclick="
@@ -164,7 +172,7 @@
 
         </div>
         
-        ${isMobile ? `
+        ${showMobileGuidance ? `
         <!-- Mobile-specific guidance -->
         <div style="
           background: rgba(0, 234, 255, 0.1);
