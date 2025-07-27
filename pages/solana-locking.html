@@ -1437,10 +1437,7 @@
             }
           }
           console.log('✅ Solana connect button configured (wallet blocking disabled for testing)');
-        } else {
-          console.error('❌ Connect button not found');
         }
-    }
         
         // --- SOLANA WALLET DETECTION FUNCTIONS ---
         function detectAvailableSolanaWallets() {
@@ -3321,8 +3318,40 @@
             btn.textContent = 'WALLET CONNECTED';
             
             if (response.publicKey) {
-              const publicKey = response.publicKey.toString ? response.publicKey.toString() : response.publicKey;
-              document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKey;
+              const publicKeyStr = response.publicKey.toString ? response.publicKey.toString() : response.publicKey;
+              
+              // Set global variables for the rest of the app
+              window.wallet = wallet.provider;
+              window.publicKey = publicKeyStr;
+              
+              // Set up Solana connection for transactions
+              if (typeof connection === 'undefined') {
+                const { getSolanaEndpoint } = window.RPC_CONFIG || {};
+                if (getSolanaEndpoint) {
+                  getSolanaEndpoint().then(endpoint => {
+                    window.connection = new solanaWeb3.Connection(endpoint);
+                    console.log('🌐 Solana connection established:', endpoint);
+                  }).catch(err => {
+                    console.warn('⚠️ Using fallback Solana connection');
+                    window.connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+                  });
+                } else {
+                  window.connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+                }
+              }
+              
+              // Update UI
+              document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKeyStr;
+              
+              // Load user locks after successful connection
+              if (typeof loadUserLocks === 'function') {
+                setTimeout(loadUserLocks, 1000);
+              }
+              
+              // Fetch token info if there's a token address
+              if (typeof fetchTokenInfo === 'function') {
+                fetchTokenInfo();
+              }
             }
           })
           .catch(function(error) {
