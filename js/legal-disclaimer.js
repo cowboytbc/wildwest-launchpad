@@ -47,20 +47,19 @@
       <div style="
         background: linear-gradient(135deg, #0a0a1e 0%, #1a1a2e 30%, #16213e 70%, #0f1419 100%);
         border: 3px solid #00eaff;
-        border-radius: 20px;
-        padding: 2rem 1.5rem;
-        max-width: 480px;
-        width: 90vw;
-        max-height: 85vh;
+        border-radius: 15px;
+        padding: 1.5rem 1rem;
+        max-width: 420px;
+        width: 95vw;
+        max-height: 90vh;
         overflow-y: auto;
         text-align: center;
         color: white;
         font-family: 'Orbitron', Arial, sans-serif;
         box-shadow: 
-          0 0 40px rgba(0, 234, 255, 0.5),
-          0 15px 30px rgba(0, 0, 0, 0.7),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1),
-          inset 0 0 60px rgba(0, 234, 255, 0.05);
+          0 0 30px rgba(0, 234, 255, 0.4),
+          0 10px 25px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         position: relative;
         animation: disclaimerSlideIn 0.6s ease-out;
         overflow: hidden;
@@ -125,12 +124,13 @@
         <!-- Title -->
         <h1 style="
           color: #00eaff;
-          margin-bottom: 1rem;
-          font-size: 1.5rem;
+          margin-bottom: 0.8rem;
+          font-size: 1.3rem;
           font-weight: 900;
           text-shadow: 0 0 15px rgba(0, 234, 255, 0.7);
           letter-spacing: 1px;
           text-transform: uppercase;
+          line-height: 1.2;
         ">
           Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em;">WILDWEST</span>
         </h1>
@@ -139,14 +139,14 @@
         <div style="
           background: rgba(0, 0, 0, 0.4);
           border: 1px solid rgba(0, 234, 255, 0.3);
-          border-radius: 12px;
-          padding: 1.5rem;
-          margin-bottom: 1.5rem;
+          border-radius: 10px;
+          padding: 1rem;
+          margin-bottom: 1rem;
           text-align: left;
-          line-height: 1.5;
-          font-size: 0.85rem;
+          line-height: 1.4;
+          font-size: 0.8rem;
           color: #e0e0e0;
-          max-height: 200px;
+          max-height: 180px;
           overflow-y: auto;
         ">
           <div style="text-align: center; margin-bottom: 1rem; color: #00eaff; font-weight: 700;">
@@ -169,20 +169,20 @@
         <div style="
           background: rgba(0, 234, 255, 0.1);
           border: 2px solid #00eaff;
-          border-radius: 12px;
-          padding: 1rem;
-          margin-bottom: 1.5rem;
+          border-radius: 10px;
+          padding: 0.8rem;
+          margin-bottom: 1rem;
           animation: mobilePulse 3s infinite;
         ">
           <div style="
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
             filter: drop-shadow(0 0 10px #00eaff);
           ">📱</div>
-          <div style="color: #00eaff; font-weight: 700; margin-bottom: 0.5rem; font-size: 1.1rem;">
+          <div style="color: #00eaff; font-weight: 700; margin-bottom: 0.3rem; font-size: 0.95rem;">
             MOBILE USERS - IMPORTANT!
           </div>
-          <div style="font-size: 0.95rem; color: #e0e0e0;">
+          <div style="font-size: 0.8rem; color: #e0e0e0; line-height: 1.3;">
             For proper functionality, open this site in your <strong style="color: #00eaff;">wallet's built-in browser</strong> 
             (MetaMask, Phantom, Trust Wallet, Coinbase Wallet, etc.) instead of your regular mobile browser.
           </div>
@@ -193,11 +193,12 @@
         <div style="
           background: rgba(0, 234, 255, 0.1);
           border: 1px solid rgba(0, 234, 255, 0.3);
-          border-radius: 10px;
-          padding: 1rem;
-          margin-bottom: 1.5rem;
-          font-size: 0.85rem;
+          border-radius: 8px;
+          padding: 0.8rem;
+          margin-bottom: 1rem;
+          font-size: 0.8rem;
           color: #e0e0e0;
+          line-height: 1.3;
         ">
           <strong>By continuing, you confirm that you understand these terms and are ready to explore the Wild West responsibly!</strong>
         </div>
@@ -213,17 +214,17 @@
             background: linear-gradient(135deg, #00eaff 0%, #0088cc 50%, #006699 100%);
             color: white;
             border: none;
-            padding: 14px 32px;
-            border-radius: 12px;
+            padding: 12px 28px;
+            border-radius: 10px;
             font-family: 'Orbitron', Arial, sans-serif;
             font-weight: 700;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 234, 255, 0.4);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            min-width: 160px;
+            min-width: 140px;
           " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 234, 255, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 234, 255, 0.4)'">
             I Agree & Continue
           </button>
@@ -231,8 +232,8 @@
         
         <!-- Fine print -->
         <div style="
-          margin-top: 2rem;
-          font-size: 0.7rem;
+          margin-top: 1rem;
+          font-size: 0.65rem;
           color: #888;
           opacity: 0.8;
         ">
