@@ -78,6 +78,13 @@ jobs:
           # Also create a test file to verify deployment
           echo "Deployment test - $(date)" > deployment-verification.txt
           
+      - name: List what's being uploaded
+        run: |
+          echo "=== FILES BEING UPLOADED ==="
+          find . -name "production-config.js" -exec echo "Found: {}" \; -exec head -3 {} \;
+          echo "=== ALL JS FILES ==="
+          find . -name "*.js" | head -10
+          
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
