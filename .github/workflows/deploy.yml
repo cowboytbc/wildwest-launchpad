@@ -16,9 +16,6 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     
     steps:
@@ -34,6 +31,11 @@ jobs:
           BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
           echo "🔧 Injecting QuickNode secrets..."
+          echo "🔍 Environment variables debug:"
+          echo "🔍 Running in repository: ${{ github.repository }}"
+          echo "🔍 Running on ref: ${{ github.ref }}"
+          echo "🔍 Event name: ${{ github.event_name }}"
+          echo ""
           echo "SOLANA_RPC_ENDPOINT present: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
           echo "BASE_RPC_ENDPOINT present: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
           echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
