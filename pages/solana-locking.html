@@ -1909,7 +1909,19 @@
     window.forceLoadProductionConfig = async function() {
       console.log('🔄 Force loading production config from deployed site...');
       try {
-        const response = await fetch('https://wildwestlaunch.xyz/js/production-config.js?t=' + Date.now());
+        // Use multiple cache-busting strategies
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(7);
+        const cacheBuster = `?t=${timestamp}&r=${randomId}&v=force`;
+        
+        const response = await fetch(`https://wildwestlaunch.xyz/js/production-config.js${cacheBuster}`, {
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1918,6 +1930,13 @@
         const configScript = await response.text();
         console.log('📄 Production config loaded, length:', configScript.length);
         console.log('📄 Config preview:', configScript.substring(0, 300) + '...');
+        
+        // Check if this is the GitHub Actions injected version
+        if (configScript.includes('injected from GitHub Secrets')) {
+          console.log('✅ Found GitHub Actions injected version!');
+        } else if (configScript.includes('fallback-placeholder')) {
+          console.log('⚠️ Still getting fallback placeholder - GitHub Secrets not injected');
+        }
         
         // Clear existing config
         delete window.PRODUCTION_CONFIG;
@@ -1939,6 +1958,39 @@
           status: error.status || 'unknown'
         });
         return null;
+      }
+    };
+
+    // Function to manually inject QuickNode endpoints (temporary fix)
+    window.manuallyInjectEndpoints = function() {
+      console.log('🔧 MANUAL ENDPOINT INJECTION - Please provide your QuickNode endpoints');
+      
+      const solanaEndpoint = prompt('Enter your QuickNode Solana endpoint (starts with https://):');
+      const baseEndpoint = prompt('Enter your QuickNode Base endpoint (starts with https://):');
+      
+      if (solanaEndpoint && baseEndpoint && 
+          solanaEndpoint.startsWith('https://') && 
+          baseEndpoint.startsWith('https://')) {
+        
+        // Override the production config
+        window.PRODUCTION_CONFIG = {
+          rpc: {
+            solana: solanaEndpoint,
+            base: baseEndpoint
+          },
+          injectedAt: new Date().toISOString(),
+          source: 'manual-override'
+        };
+        
+        console.log('✅ Endpoints manually injected successfully!');
+        console.log('🔗 Solana endpoint:', solanaEndpoint.substring(0, 30) + '...');
+        console.log('🔗 Base endpoint:', baseEndpoint.substring(0, 30) + '...');
+        
+        // Refresh the Solana connection
+        return refreshSolanaConnection();
+      } else {
+        console.error('❌ Invalid endpoints provided. Must start with https://');
+        return false;
       }
     };
 
