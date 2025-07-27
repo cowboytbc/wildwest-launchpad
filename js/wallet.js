@@ -895,7 +895,9 @@ class WildWestWallet {
 
   // Show wallet installation guide for mobile users
   showWalletInstallationGuide(network) {
-    // Add CSS animations if not already added
+    // DISABLED - No installation guides for clean UI
+    console.log('🚫 Wallet installation guide disabled for clean UI');
+    return;
     if (!document.getElementById('mobile-wallet-animations')) {
       const style = document.createElement('style');
       style.id = 'mobile-wallet-animations';

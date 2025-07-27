@@ -1,5 +1,6 @@
 // mobile-wallet-integration.js
 // 🔗 INTEGRATION BETWEEN MOBILE WALLET DETECTOR AND EXISTING WALLET SYSTEM
+// CACHE BUST: 2025-07-26-15:30 - ALL DISCLAIMERS REMOVED
 
 class MobileWalletIntegration {
   constructor() {
@@ -319,38 +320,8 @@ class MobileWalletIntegration {
       display: none;
     `;
     
-    const detectedWallets = window.mobileWalletDetector.getDetectedWallets();
-    const availableCount = detectedWallets.filter(w => w.status === 'available').length;
-    
-    if (availableCount > 0) {
-      infoDiv.innerHTML = `
-        <span style="font-size: 16px;">📱</span>
-        <strong>${availableCount} mobile wallet${availableCount > 1 ? 's' : ''} ready!</strong>
-        Tap Connect Wallet to proceed.
-      `;
-      infoDiv.style.display = 'block';
-    } else {
-      // DON'T show "install wallet" message - just show connection ready
-      infoDiv.innerHTML = `
-        <span style="font-size: 16px;">�</span>
-        <strong>Mobile Ready!</strong>
-        Tap Connect Wallet to get started.
-        <button onclick="window.mobileWalletDetector.showMobileWalletModal()" style="
-          background: none;
-          border: 1px solid #00eaff;
-          color: #00eaff;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 10px;
-          margin-left: 5px;
-          cursor: pointer;
-        ">View Options</button>
-      `;
-      infoDiv.style.display = 'block';
-    }
-    
-    walletSection.appendChild(infoDiv);
-    console.log('✅ Mobile wallet guidance added');
+    // All disclaimer content removed for clean UI
+    console.log('✅ Mobile wallet guidance disabled for clean UI');
   }
 
   // Utility function to refresh mobile wallet status
