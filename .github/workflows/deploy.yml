@@ -15,44 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test-secrets:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test repository-level secrets
-        env:
-          SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
-          BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
-        run: |
-          echo "🧪 TESTING REPOSITORY-LEVEL SECRETS:"
-          echo "SOLANA_RPC_ENDPOINT present: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
-          echo "BASE_RPC_ENDPOINT present: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
-          echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
-          echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
-          
-          if [ -z "$SOLANA_RPC_ENDPOINT" ] && [ -z "$BASE_RPC_ENDPOINT" ]; then
-            echo ""
-            echo "❌ CRITICAL: NO SECRETS ACCESSIBLE AT REPOSITORY LEVEL"
-            echo "❌ This means the secrets are either:"
-            echo "❌   1. Not configured in: Settings > Secrets and variables > Actions"
-            echo "❌   2. Configured with different names"
-            echo "❌   3. Configured in a different environment"
-            echo ""
-            echo "📋 REQUIRED REPOSITORY SECRETS:"
-            echo "📋   Name: SOLANA_RPC_ENDPOINT"
-            echo "📋   Value: Your QuickNode Solana endpoint URL"
-            echo "📋   Name: BASE_RPC_ENDPOINT" 
-            echo "📋   Value: Your QuickNode Base endpoint URL"
-            echo ""
-            echo "🔗 Configure at: https://github.com/${{ github.repository }}/settings/secrets/actions"
-          else
-            echo "✅ Repository-level secrets are working!"
-            echo "✅ Issue must be in the build-and-deploy environment"
-          fi
-
   build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     
     steps:
@@ -62,110 +25,41 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
-      - name: Debug environment and secrets
-        run: |
-          echo "🔍 DEBUGGING GITHUB ENVIRONMENT:"
-          echo "Repository: ${{ github.repository }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "Event: ${{ github.event_name }}"
-          echo "Runner: ${{ runner.os }}"
-          echo "Workflow environment: github-pages"
-          echo ""
-          echo "🔍 SECRET DIAGNOSTIC TEST:"
-          echo "Testing if secrets are accessible in this workflow context..."
-        
-      - name: Test secret access without environment variables
-        run: |
-          echo "🧪 TESTING DIRECT SECRET ACCESS:"
-          echo "This step tests if secrets are accessible at all"
-          echo "SOLANA_RPC_ENDPOINT configured: ${{ secrets.SOLANA_RPC_ENDPOINT != '' }}"
-          echo "BASE_RPC_ENDPOINT configured: ${{ secrets.BASE_RPC_ENDPOINT != '' }}"
-        
       - name: Inject QuickNode secrets
         env:
           SOLANA_RPC_ENDPOINT: ${{ secrets.SOLANA_RPC_ENDPOINT }}
           BASE_RPC_ENDPOINT: ${{ secrets.BASE_RPC_ENDPOINT }}
         run: |
-          echo "🔧 Injecting QuickNode secrets..."
-          echo "🔍 Environment variables debug:"
-          echo "🔍 Running in repository: ${{ github.repository }}"
-          echo "🔍 Running on ref: ${{ github.ref }}"
-          echo "🔍 Event name: ${{ github.event_name }}"
-          echo ""
-          echo "SOLANA_RPC_ENDPOINT present: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
-          echo "BASE_RPC_ENDPOINT present: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'true' || echo 'false')"
-          echo "SOLANA_RPC_ENDPOINT length: ${#SOLANA_RPC_ENDPOINT}"
-          echo "BASE_RPC_ENDPOINT length: ${#BASE_RPC_ENDPOINT}"
-          
-          # Debug: Check if secrets are empty or null
-          if [ -z "$SOLANA_RPC_ENDPOINT" ]; then
-            echo "❌ CRITICAL: SOLANA_RPC_ENDPOINT is empty or undefined!"
-            echo "❌ This indicates the GitHub Secret is not properly configured"
-            echo "❌ Please check repository settings > Secrets and variables > Actions"
-          else
-            echo "✅ SOLANA_RPC_ENDPOINT is available"
-          fi
-          
-          if [ -z "$BASE_RPC_ENDPOINT" ]; then
-            echo "❌ CRITICAL: BASE_RPC_ENDPOINT is empty or undefined!"
-            echo "❌ This indicates the GitHub Secret is not properly configured"
-          else
-            echo "✅ BASE_RPC_ENDPOINT is available"
-          fi
+          echo "🔧 Injecting QuickNode secrets into production config..."
           
           # Ensure js directory exists
           mkdir -p js
           
-          # Check if we have valid endpoints before writing config
-          if [ -n "$SOLANA_RPC_ENDPOINT" ] && [ -n "$BASE_RPC_ENDPOINT" ]; then
-            echo "✅ Both endpoints available, creating production config with GitHub Secrets..."
+          # Inject secrets into production config
+          cat > js/production-config.js << 'EOF'
+          // Production configuration injected from GitHub Secrets
+          (function() {
+            'use strict';
             
-            # Overwrite production config file with secret injection
-            echo "🔄 Overwriting existing production-config.js with GitHub Secrets..."
-            echo "// Production configuration injected from GitHub Secrets" > js/production-config.js
-            echo "(function() {" >> js/production-config.js
-            echo "  'use strict';" >> js/production-config.js
-            echo "  " >> js/production-config.js
-            echo "  if (window.PRODUCTION_CONFIG) {" >> js/production-config.js
-            echo "    console.log('🔐 Production config already loaded');" >> js/production-config.js
-            echo "    return;" >> js/production-config.js
-            echo "  }" >> js/production-config.js
-            echo "  " >> js/production-config.js
-            echo "  window.PRODUCTION_CONFIG = {" >> js/production-config.js
-            echo "    rpc: {" >> js/production-config.js
-            echo "      solana: '${SOLANA_RPC_ENDPOINT}'," >> js/production-config.js
-            echo "      base: '${BASE_RPC_ENDPOINT}'" >> js/production-config.js
-            echo "    }," >> js/production-config.js
-            echo "    injectedAt: new Date().toISOString()," >> js/production-config.js
-            echo "    source: 'github-actions'" >> js/production-config.js
-            echo "  };" >> js/production-config.js
-            echo "  " >> js/production-config.js
-            echo "  console.log('🔐 QuickNode endpoints loaded from GitHub Secrets');" >> js/production-config.js
-            echo "  console.log('📊 Solana endpoint:', window.PRODUCTION_CONFIG.rpc.solana ? 'LOADED (' + window.PRODUCTION_CONFIG.rpc.solana.substring(0, 30) + '...)' : 'MISSING');" >> js/production-config.js
-            echo "  console.log('📊 Base endpoint:', window.PRODUCTION_CONFIG.rpc.base ? 'LOADED (' + window.PRODUCTION_CONFIG.rpc.base.substring(0, 30) + '...)' : 'MISSING');" >> js/production-config.js
-            echo "})();" >> js/production-config.js
+            if (window.PRODUCTION_CONFIG) {
+              console.log('🔐 Production config already loaded');
+              return;
+            }
             
-            echo "✅ Production config updated with QuickNode secrets"
-          else
-            echo "⚠️ Some endpoints missing, keeping placeholder config for debugging..."
-            echo "⚠️ SOLANA_RPC_ENDPOINT available: $([ -n \"$SOLANA_RPC_ENDPOINT\" ] && echo 'YES' || echo 'NO')"
-            echo "⚠️ BASE_RPC_ENDPOINT available: $([ -n \"$BASE_RPC_ENDPOINT\" ] && echo 'YES' || echo 'NO')"
-            echo "⚠️ Production config will use fallback placeholder"
-          fi
+            window.PRODUCTION_CONFIG = {
+              rpc: {
+                solana: '${{ secrets.SOLANA_RPC_ENDPOINT }}',
+                base: '${{ secrets.BASE_RPC_ENDPOINT }}'
+              },
+              injectedAt: new Date().toISOString(),
+              source: 'github-actions'
+            };
+            
+            console.log('🔐 QuickNode endpoints loaded from GitHub Secrets');
+          })();
+          EOF
           
-          echo "✅ Production config updated with QuickNode secrets"
-          echo "📄 Generated production-config.js:"
-          cat js/production-config.js
-          
-          # Verify file exists and has content
-          if [ -f "js/production-config.js" ]; then
-            echo "✅ production-config.js file exists"
-            echo "📊 File size: $(wc -c < js/production-config.js) bytes"
-            echo "📊 File permissions: $(ls -la js/production-config.js)"
-          else
-            echo "❌ production-config.js file NOT found!"
-            exit 1
-          fi
+          echo "✅ Production config created with GitHub Secrets"
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
