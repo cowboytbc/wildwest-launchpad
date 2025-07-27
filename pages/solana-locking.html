@@ -1243,15 +1243,18 @@
     let publicKey = null;
     let connection = null;
 
-    // Initialize connection using centralized config (synchronous like before)
-    function initializeConnection() {
+    // Initialize connection using centralized config - QuickNode ONLY
+    async function initializeConnection() {
       console.log('🔧 INITIALIZING SOLANA CONNECTION...');
       console.log('🔍 Debug: window.PRODUCTION_CONFIG exists:', !!window.PRODUCTION_CONFIG);
       console.log('🔍 Debug: PRODUCTION_CONFIG.rpc:', window.PRODUCTION_CONFIG?.rpc);
       console.log('🔍 Debug: window.RPC_CONFIG exists:', !!window.RPC_CONFIG);
-      console.log('🔍 Debug: RPC_CONFIG.SOLANA.QUICKNODE:', window.RPC_CONFIG?.SOLANA?.QUICKNODE);
       
-      if (window.RPC_CONFIG) {
+      if (!window.RPC_CONFIG) {
+        throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+      }
+      
+      try {
         // Use QuickNode endpoint from GitHub Secrets ONLY
         const quicknodeEndpoint = await window.RPC_CONFIG.getSolanaEndpoint();
         console.log('🔍 QuickNode endpoint from GitHub Secrets:', quicknodeEndpoint);
@@ -1260,34 +1263,29 @@
         console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
         console.log('🔗 Endpoint URL:', quicknodeEndpoint.substring(0, 50) + '...');
         
-        // Test connection in background without blocking
-        connection.getVersion().then(() => {
-          console.log('✅ QuickNode endpoint verified working');
-        }).catch(error => {
-          console.error('❌ QuickNode endpoint test failed:', error.message);
-              // Switch to working Alchemy endpoint immediately
-              connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-              console.log('🔄 Switched to working Alchemy endpoint');
-            }
-          });
-        } else {
-          console.log('⚠️ QuickNode endpoint not available from GitHub Secrets');
-          // Skip broken Ankr endpoint, use working Alchemy directly
-          connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-          console.log('⚠️ Using working Alchemy endpoint (QuickNode not loaded)');
-        }
-      } else {
-        console.log('⚠️ RPC_CONFIG not available');
-        // Fallback to Alchemy endpoint (better than broken api.mainnet-beta.solana.com)
-        connection = new solanaWeb3.Connection('https://solana-mainnet.g.alchemy.com/v2/demo');
-        console.log('⚠️ Using Alchemy fallback RPC endpoint');
+        // Test connection
+        await connection.getVersion();
+        console.log('✅ QuickNode endpoint verified working');
+      } catch (error) {
+        console.error('❌ QuickNode endpoint failed:', error.message);
+        throw new Error('QuickNode Solana endpoint required - GitHub Secrets not available');
       }
     }
 
-    // Wait for config to load, then initialize connection (synchronous)
-    function waitForRPCConfig() {
+    // Wait for config to load, then initialize connection
+    async function waitForRPCConfig() {
       if (window.RPC_CONFIG) {
-        initializeConnection();
+        try {
+          await initializeConnection();
+          console.log('✅ Solana connection initialized successfully');
+        } catch (error) {
+          console.error('❌ Failed to initialize Solana connection:', error.message);
+          // Show user-friendly error
+          const errorMsg = error.message.includes('GitHub Secrets') ? 
+            'Connection requires premium endpoints. Please check deployment configuration.' :
+            'Failed to connect to Solana network. Please try again.';
+          alert(errorMsg);
+        }
       } else {
         setTimeout(waitForRPCConfig, 100);
       }
@@ -2169,24 +2167,12 @@
       } catch (err) {
         console.error('Token info fetch error:', err);
         if (err.message && err.message.includes('403')) {
-          tokenInfoDiv.textContent = 'RPC endpoint error (403). Switching to fallback...';
-          tokenInfoDiv.style.color = '#ffaa00'; // Orange for switching
-          
-          // Try to switch to fallback endpoint and retry
-          if (window.RPC_CONFIG && window.RPC_CONFIG.SOLANA.FALLBACKS[0]) {
-            connection = new solanaWeb3.Connection(window.RPC_CONFIG.SOLANA.FALLBACKS[0]);
-            console.log('🔄 Switched to fallback endpoint due to 403 error');
-            
-            // Retry token info fetch with fallback endpoint
-            setTimeout(() => {
-              fetchTokenInfo();
-            }, 1000);
-            return;
-          }
+          tokenInfoDiv.textContent = 'RPC endpoint authentication failed. QuickNode connection required.';
+          tokenInfoDiv.style.color = '#ff6c6c'; // Red for error
+        } else {
+          tokenInfoDiv.textContent = 'Could not fetch token info.';
+          tokenInfoDiv.style.color = '#ff6c6c'; // Red for error
         }
-        
-        tokenInfoDiv.textContent = 'Could not fetch token info.';
-        tokenInfoDiv.style.color = '#ff6c6c'; // Red for error
       }
     }
     document.getElementById('tokenAddress').addEventListener('input', function() {
