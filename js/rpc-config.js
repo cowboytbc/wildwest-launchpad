@@ -11,9 +11,9 @@ const RPC_CONFIG = {
     get QUICKNODE() { 
       return window.PRODUCTION_CONFIG?.rpc?.solana || this.getQuickNodeEndpoint();
     },
-    // Direct QuickNode endpoint for development/backup
+    // QuickNode endpoint only available through GitHub Secrets
     getQuickNodeEndpoint() {
-      return 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ac83d6b4ecf2a8fa8d0a6894210ede33b1b7495/';
+      return null; // Security: No hardcoded endpoints
     },
     FALLBACKS: [
       "https://api.mainnet-beta.solana.com", // Official Solana RPC (rate limited)
@@ -31,9 +31,9 @@ const RPC_CONFIG = {
     get QUICKNODE() { 
       return window.PRODUCTION_CONFIG?.rpc?.base || this.getQuickNodeEndpoint();
     },
-    // Direct QuickNode endpoint for development/backup
+    // QuickNode endpoint only available through GitHub Secrets
     getQuickNodeEndpoint() {
-      return 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/d9b8b93b1b8b7cc6b8993c4ef5c6e7a70a6e9ad8/';
+      return null; // Security: No hardcoded endpoints
     },
     FALLBACKS: [
       "https://mainnet.base.org",
@@ -64,16 +64,14 @@ const RPC_CONFIG = {
 
   // Helper functions to get endpoints
   getSolanaEndpoint: async function() {
-    // Priority 1: QuickNode from GitHub Secrets (production)
-    if (this.SOLANA.QUICKNODE && window.PRODUCTION_CONFIG?.rpc?.solana) {
+    // Only use QuickNode from GitHub Secrets (production)
+    if (window.PRODUCTION_CONFIG?.rpc?.solana) {
       console.log('🔐 Using QuickNode Solana endpoint from GitHub Secrets');
-      return this.SOLANA.QUICKNODE;
+      return window.PRODUCTION_CONFIG.rpc.solana;
     }
     
-    // Priority 2: Direct QuickNode endpoint (development/backup)
-    const directQuickNode = this.SOLANA.getQuickNodeEndpoint();
-    console.log('⚡ Using direct QuickNode Solana endpoint');
-    return directQuickNode;
+    console.error('❌ No Solana RPC endpoint available - GitHub Secrets required');
+    throw new Error('Solana RPC endpoint not configured');
   },
   
   // Get Solana endpoint with automatic fallback (only used when QuickNode unavailable)
@@ -115,16 +113,14 @@ const RPC_CONFIG = {
   },
   
   getBaseEndpoint: function() {
-    // Priority 1: QuickNode from GitHub Secrets (production)
-    if (this.BASE.QUICKNODE && window.PRODUCTION_CONFIG?.rpc?.base) {
+    // Only use QuickNode from GitHub Secrets (production)
+    if (window.PRODUCTION_CONFIG?.rpc?.base) {
       console.log('🔐 Using QuickNode Base endpoint from GitHub Secrets');
-      return this.BASE.QUICKNODE;
+      return window.PRODUCTION_CONFIG.rpc.base;
     }
     
-    // Priority 2: Direct QuickNode endpoint (development/backup)
-    const directQuickNode = this.BASE.getQuickNodeEndpoint();
-    console.log('⚡ Using direct QuickNode Base endpoint');
-    return directQuickNode;
+    console.error('❌ No Base RPC endpoint available - GitHub Secrets required');
+    throw new Error('Base RPC endpoint not configured');
   },
   
   // QuickNode API helpers
@@ -210,6 +206,8 @@ const RPC_CONFIG = {
 // Make config globally available
 window.RPC_CONFIG = RPC_CONFIG;
 
+
+
 console.log('🌐 RPC Configuration loaded:');
 
 // Check if we have GitHub Secrets (production) or using direct endpoints (development)
@@ -217,12 +215,12 @@ const hasGitHubSecrets = window.PRODUCTION_CONFIG?.rpc?.solana && window.PRODUCT
 
 if (hasGitHubSecrets) {
   console.log('  🔵 Base ETH: QuickNode endpoint from GitHub Secrets ✅');
-  console.log('  � Solana: QuickNode endpoint from GitHub Secrets ✅');
-  console.log('  � Production mode - QuickNode infrastructure fully active');
+  console.log('  🟣 Solana: QuickNode endpoint from GitHub Secrets ✅');
+  console.log('  🔐 Production mode - QuickNode infrastructure fully active');
 } else {
-  console.log('  � Base ETH: Direct QuickNode endpoint ⚡');
-  console.log('  🟣 Solana: Direct QuickNode endpoint ⚡');
-  console.log('  🛠️ Development mode - Using direct QuickNode endpoints');
+  console.log('  ❌ Base ETH: No endpoint configured - GitHub Secrets required');
+  console.log('  ❌ Solana: No endpoint configured - GitHub Secrets required');
+  console.log('  � Endpoints will not work without GitHub Secrets');
 }
 
 console.log('  ⚡ QuickNode infrastructure active for high-performance Web3 operations');
