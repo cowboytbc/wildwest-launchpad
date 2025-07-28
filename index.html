@@ -841,9 +841,10 @@
     .launch-token-menu,
     .staking-menu,
     .token-locking-menu {
-      /* Removed !important to allow modal system to override */
-      display: none;
-      visibility: hidden;
+      /* FORCE HIDDEN BY DEFAULT - Override any show classes */
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
       position: absolute;
       left: 0;
       top: 100%;
@@ -1018,6 +1019,174 @@
       visibility: visible !important;
       opacity: 1 !important;
       pointer-events: auto !important;
+    }
+
+    /* EMERGENCY OVERRIDE - Force specific dropdowns hidden until clicked */
+    #launch-menu,
+    #staking-menu,
+    #locking-menu {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+
+    /* Only show when explicitly activated by click */
+    #launch-menu.show,
+    #staking-menu.show,
+    #locking-menu.show {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      position: absolute !important;
+      top: 100% !important;
+      left: 0 !important;
+      transform: none !important;
+      z-index: 1000 !important;
+      background: linear-gradient(135deg, rgba(26, 30, 46, 0.95), rgba(16, 20, 36, 0.98)) !important;
+      border: 2px solid rgba(0, 234, 255, 0.8) !important;
+      border-radius: 16px !important;
+      padding: 12px 0 !important;
+      min-width: 200px !important;
+      margin-top: 8px !important;
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.7),
+        0 5px 15px rgba(0, 234, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(15px) !important;
+      animation: dropdownSlide 0.2s ease-out !important;
+    }
+
+    @keyframes dropdownSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #launch-menu.show a,
+    #staking-menu.show a,
+    #locking-menu.show a {
+      display: block !important;
+      padding: 12px 20px !important;
+      color: #ffffff !important;
+      text-decoration: none !important;
+      font-weight: 600 !important;
+      font-size: 15px !important;
+      transition: all 0.3s ease !important;
+      border-left: 3px solid transparent !important;
+      background: transparent !important;
+    }
+
+    #launch-menu.show a:hover,
+    #staking-menu.show a:hover,
+    #locking-menu.show a:hover {
+      background: linear-gradient(90deg, rgba(0, 234, 255, 0.2), rgba(0, 234, 255, 0.1)) !important;
+      color: #00eaff !important;
+      border-left: 3px solid #00eaff !important;
+      padding-left: 25px !important;
+      transform: translateX(5px) !important;
+    }
+
+    /* Mobile-specific dropdown positioning */
+    @media (max-width: 768px) {
+      #launch-menu.show,
+      #staking-menu.show,
+      #locking-menu.show {
+        position: absolute !important;
+        top: 100% !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        min-width: 280px !important;
+        max-width: 85vw !important;
+        padding: 0 !important;
+        border-radius: 16px !important;
+        border: 2px solid rgba(0, 234, 255, 0.8) !important;
+        background: linear-gradient(135deg, rgba(20, 25, 40, 0.98), rgba(30, 35, 50, 0.95)) !important;
+        box-shadow: 
+          0 20px 40px rgba(0, 0, 0, 0.8),
+          0 0 30px rgba(0, 234, 255, 0.3) !important;
+        animation: mobileDropdownSlide 0.25s ease-out !important;
+        overflow: hidden !important;
+        margin-top: 8px !important;
+        z-index: 2000 !important;
+      }
+      
+      @keyframes mobileDropdownSlide {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+      
+      #launch-menu.show a,
+      #staking-menu.show a,
+      #locking-menu.show a {
+        display: block !important;
+        padding: 20px 25px !important;
+        font-size: 17px !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        border-bottom: 1px solid rgba(0, 234, 255, 0.15) !important;
+        border-left: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+      }
+
+      #launch-menu.show a:first-child,
+      #staking-menu.show a:first-child,
+      #locking-menu.show a:first-child {
+        border-top-left-radius: 14px !important;
+        border-top-right-radius: 14px !important;
+      }
+      
+      #launch-menu.show a:last-child,
+      #staking-menu.show a:last-child,
+      #locking-menu.show a:last-child {
+        border-bottom: none !important;
+        border-bottom-left-radius: 14px !important;
+        border-bottom-right-radius: 14px !important;
+      }
+
+      #launch-menu.show a:hover,
+      #staking-menu.show a:hover,
+      #locking-menu.show a:hover,
+      #launch-menu.show a:active,
+      #staking-menu.show a:active,
+      #locking-menu.show a:active {
+        background: linear-gradient(90deg, rgba(0, 234, 255, 0.2), rgba(0, 234, 255, 0.1)) !important;
+        color: #00eaff !important;
+        transform: none !important;
+        padding-left: 25px !important;
+        box-shadow: none !important;
+      }
+
+      /* Ensure parent dropdown containers have relative positioning */
+      .launch-token-dropdown,
+      .staking-dropdown,
+      .token-locking-dropdown {
+        position: relative !important;
+      }
+
+      /* Remove the close hint - it's not needed */
+      #launch-menu.show::before,
+      #staking-menu.show::before,
+      #locking-menu.show::before {
+        display: none !important;
+      }
     }
     
     .dropdown-menu li {
@@ -2197,20 +2366,28 @@
         <a href="javascript:void(0)" onclick="
           event.stopPropagation();
           event.preventDefault();
-          console.log('� Launch clicked');
+          console.log('🚀 Launch clicked');
+          
+          const launchMenu = document.getElementById('launch-menu');
+          const launchIsOpen = launchMenu.classList.contains('show');
+          
+          // Close all other dropdowns first
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
           
-          // Immediate show without timeout to prevent CSS flash
-          const launchMenu = document.getElementById('launch-menu');
-          launchMenu.classList.add('show');
-          launchMenu.style.display = 'block';
-          launchMenu.style.visibility = 'visible';
-          launchMenu.style.opacity = '1';
-          console.log('✅ Launch menu opened immediately');
+          // Toggle this dropdown
+          if (!launchIsOpen) {
+            launchMenu.classList.add('show');
+            launchMenu.style.display = 'block';
+            launchMenu.style.visibility = 'visible';
+            launchMenu.style.opacity = '1';
+            console.log('✅ Launch menu opened');
+          } else {
+            console.log('🔒 Launch menu closed (toggle)');
+          }
           
           return false;
         " class="dropdown-trigger">Launch Token ▼</a>
-        <ul class="launch-token-menu dropdown-menu" id="launch-menu" onclick="event.stopPropagation();">
+        <ul class="dropdown-menu" id="launch-menu" onclick="event.stopPropagation();">
           <li><a href="pages/base-launch.html" onclick="
             event.stopPropagation();
             console.log('🔗 Base launch clicked - navigating to pages/base-launch.html');
@@ -2232,20 +2409,28 @@
         <a href="javascript:void(0)" onclick="
           event.stopPropagation();
           event.preventDefault();
-          console.log('� Staking clicked');
+          console.log('🥩 Staking clicked');
+          
+          const stakingMenu = document.getElementById('staking-menu');
+          const stakingIsOpen = stakingMenu.classList.contains('show');
+          
+          // Close all other dropdowns first
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
           
-          // Immediate show without timeout to prevent CSS flash
-          const stakingMenu = document.getElementById('staking-menu');
-          stakingMenu.classList.add('show');
-          stakingMenu.style.display = 'block';
-          stakingMenu.style.visibility = 'visible';
-          stakingMenu.style.opacity = '1';
-          console.log('✅ Staking menu opened immediately');
+          // Toggle this dropdown
+          if (!stakingIsOpen) {
+            stakingMenu.classList.add('show');
+            stakingMenu.style.display = 'block';
+            stakingMenu.style.visibility = 'visible';
+            stakingMenu.style.opacity = '1';
+            console.log('✅ Staking menu opened');
+          } else {
+            console.log('🔒 Staking menu closed (toggle)');
+          }
           
           return false;
         " class="dropdown-trigger">Staking ▼</a>
-        <ul class="staking-menu dropdown-menu" id="staking-menu" onclick="event.stopPropagation();">
+        <ul class="dropdown-menu" id="staking-menu" onclick="event.stopPropagation();">
           <li><a href="pages/base-staking.html" onclick="
             event.stopPropagation();
             console.log('🔗 Base staking clicked - navigating to pages/base-staking.html');
@@ -2265,11 +2450,29 @@
       <li class="token-locking-dropdown">
         <a href="javascript:void(0)" onclick="
           event.stopPropagation();
+          event.preventDefault();
           console.log('🔽 Locking clicked');
+          
+          const lockingMenu = document.getElementById('locking-menu');
+          const lockingIsOpen = lockingMenu.classList.contains('show');
+          
+          // Close all other dropdowns first
           document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-          document.getElementById('locking-menu').classList.add('show');
+          
+          // Toggle this dropdown
+          if (!lockingIsOpen) {
+            lockingMenu.classList.add('show');
+            lockingMenu.style.display = 'block';
+            lockingMenu.style.visibility = 'visible';
+            lockingMenu.style.opacity = '1';
+            console.log('✅ Locking menu opened');
+          } else {
+            console.log('🔒 Locking menu closed (toggle)');
+          }
+          
+          return false;
         " class="dropdown-trigger">Token Locking ▼</a>
-        <ul class="token-locking-menu dropdown-menu" id="locking-menu" onclick="event.stopPropagation();">
+        <ul class="dropdown-menu" id="locking-menu" onclick="event.stopPropagation();">
           <li><a href="pages/base-locking.html" onclick="
             event.stopPropagation();
             console.log('🔗 Base locking clicked - navigating to pages/base-locking.html');
@@ -2337,6 +2540,16 @@
   */
   
   console.log('✅ Click-outside handler DISABLED for testing');
+  
+  // Add global click handler to close dropdowns
+  document.addEventListener('click', function(e) {
+    // If click is not inside a dropdown or dropdown trigger, close all dropdowns
+    if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-trigger')) {
+      document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        menu.classList.remove('show');
+      });
+    }
+  });
   
   console.log('✅ Inline dropdown system ready');
   </script>
@@ -4009,721 +4222,5 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </footer>
   
-  <!-- NUCLEAR MOBILE DROPDOWN FIX -->
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 NUCLEAR MOBILE DROPDOWN FIX STARTING...');
-    
-    // KILL ALL EXISTING ONCLICK HANDLERS AND REPLACE WITH MOBILE-FRIENDLY ONES
-    setTimeout(() => {
-      // Find all dropdown triggers and nuke their onclick handlers
-      const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
-      console.log('🎯 Found dropdown triggers:', dropdownTriggers.length);
-      
-      dropdownTriggers.forEach((trigger, index) => {
-        console.log(`🔧 Fixing trigger ${index}:`, trigger.textContent);
-        
-        // Remove existing onclick
-        trigger.removeAttribute('onclick');
-        trigger.onclick = null;
-        
-        // Add new mobile-friendly click handler
-        trigger.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          console.log('� Mobile click detected on:', this.textContent);
-          
-          // Close all dropdowns first
-          document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            menu.style.display = 'none';
-            menu.classList.remove('show');
-          });
-          
-          // Find the menu for this trigger
-          let menu = null;
-          if (this.textContent.includes('Launch')) {
-            menu = document.getElementById('launch-menu');
-          } else if (this.textContent.includes('Staking')) {
-            menu = document.getElementById('staking-menu');
-          } else if (this.textContent.includes('Token Locking')) {
-            menu = document.getElementById('locking-menu');
-          }
-          
-          if (menu) {
-            // Force show the menu with mobile positioning
-            menu.style.display = 'block';
-            menu.style.position = 'fixed';
-            menu.style.left = '50%';
-            menu.style.top = '50%';
-            menu.style.transform = 'translate(-50%, -50%)';
-            menu.style.zIndex = '99999';
-            menu.style.background = '#1a1e2e';
-            menu.style.border = '3px solid #00eaff';
-            menu.style.borderRadius = '15px';
-            menu.style.padding = '25px';
-            menu.style.minWidth = '200px';
-            menu.style.boxShadow = '0 0 20px rgba(0, 234, 255, 0.5)';
-            menu.classList.add('show');
-            
-            console.log('✅ Mobile menu opened:', menu.id);
-          } else {
-            console.error('❌ Menu not found for trigger:', this.textContent);
-          }
-        });
-      });
-      
-      // Also add document click handler to close menus
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-trigger')) {
-          document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            menu.style.display = 'none';
-            menu.classList.remove('show');
-          });
-        }
-      });
-      
-      console.log('✅ NUCLEAR MOBILE DROPDOWN FIX COMPLETE');
-    }, 500);
-    
-  });
-  </script>
-
-  <!-- FINAL NUCLEAR MOBILE DROPDOWN FIX -->
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Wait for everything to load
-    setTimeout(() => {
-      console.log('🚨 FINAL NUCLEAR MOBILE DROPDOWN FIX');
-      
-      // DESTROY ALL EXISTING ONCLICK HANDLERS
-      document.querySelectorAll('.main-nav a').forEach(link => {
-        link.removeAttribute('onclick');
-        link.onclick = null;
-      });
-      
-      // REBUILD DROPDOWN SYSTEM FOR MOBILE
-      document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
-        trigger.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          console.log('📱 MOBILE DROPDOWN CLICK:', this.textContent);
-          
-          // Close all menus
-          document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
-          
-          // Show the right menu
-          let menuId = '';
-          if (this.textContent.includes('Launch')) menuId = 'launch-menu';
-          if (this.textContent.includes('Staking')) menuId = 'staking-menu';
-          if (this.textContent.includes('Token Locking')) menuId = 'locking-menu';
-          
-          const menu = document.getElementById(menuId);
-          if (menu) {
-            menu.style.display = 'block';
-            menu.style.position = 'fixed';
-            menu.style.left = '50%';
-            menu.style.top = '50%';
-            menu.style.transform = 'translate(-50%, -50%)';
-            menu.style.zIndex = '999999';
-            menu.style.background = '#1a1e2e';
-            menu.style.border = '4px solid #00eaff';
-            menu.style.borderRadius = '20px';
-            menu.style.padding = '40px';
-            menu.style.minWidth = '300px';
-            menu.style.boxShadow = '0 0 50px rgba(0, 234, 255, 1)';
-            
-            menu.querySelectorAll('a').forEach(link => {
-              link.style.display = 'block';
-              link.style.padding = '25px';
-              link.style.color = '#00eaff';
-              link.style.fontSize = '22px';
-              link.style.fontWeight = 'bold';
-              link.style.textAlign = 'center';
-              link.style.textDecoration = 'none';
-              link.style.borderBottom = '2px solid rgba(0, 234, 255, 0.5)';
-              link.style.marginBottom = '15px';
-              
-              link.removeAttribute('onclick');
-              link.onclick = null;
-              link.addEventListener('click', function(e) {
-                e.stopPropagation();
-                window.location.href = this.href;
-              });
-            });
-            
-            console.log('✅ MOBILE MENU OPENED:', menuId);
-          }
-        });
-      });
-      
-      // Close on outside click
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-trigger')) {
-          document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
-        }
-      });
-      
-  console.log('✅ FINAL NUCLEAR FIX COMPLETE');
-    }, 2000);
-  });
-  </script>
-
-<!-- MOBILE DROPDOWN BACKDROP -->
-<div class="dropdown-backdrop" id="dropdown-backdrop" onclick="hideAllDropdowns()"></div>
-
-<script>
-// SUPER SIMPLE MOBILE DROPDOWN FUNCTIONS
-function showMobileDropdown(menuId) {
-  console.log('🚀 SHOWING MOBILE DROPDOWN:', menuId);
-  
-  // Hide all dropdowns first
-  hideAllDropdowns();
-  
-  // Show backdrop
-  const backdrop = document.getElementById('dropdown-backdrop');
-  if (backdrop) {
-    backdrop.classList.add('show');
-  }
-  
-  // Show the menu
-  const menu = document.getElementById(menuId);
-  if (menu) {
-    menu.classList.add('show');
-    
-    // Force mobile styles
-    if (window.innerWidth <= 768) {
-      menu.style.cssText = `
-        display: block !important;
-        position: fixed !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        z-index: 1000000 !important;
-        background: rgba(0, 0, 0, 0.98) !important;
-        border: 3px solid #00eaff !important;
-        border-radius: 15px !important;
-        padding: 30px !important;
-        min-width: 250px !important;
-        max-width: 80vw !important;
-        box-shadow: 0 0 30px rgba(0, 234, 255, 0.8) !important;
-      `;
-      
-      // Style the links
-      menu.querySelectorAll('a').forEach(link => {
-        link.style.cssText = `
-          display: block !important;
-          padding: 15px !important;
-          color: #00eaff !important;
-          font-size: 18px !important;
-          font-weight: bold !important;
-          text-align: center !important;
-          text-decoration: none !important;
-          margin: 10px 0 !important;
-          border: 1px solid rgba(0, 234, 255, 0.3) !important;
-          border-radius: 8px !important;
-          background: rgba(0, 234, 255, 0.1) !important;
-        `;
-      });
-    }
-    
-    console.log('✅ MOBILE DROPDOWN SHOWN');
-  }
-}
-
-function hideAllDropdowns() {
-  console.log('🔽 HIDING ALL DROPDOWNS');
-  
-  // Hide backdrop
-  const backdrop = document.getElementById('dropdown-backdrop');
-  if (backdrop) {
-    backdrop.classList.remove('show');
-  }
-  
-  // Hide all menus
-  document.querySelectorAll('.dropdown-menu').forEach(menu => {
-    menu.classList.remove('show');
-    menu.style.display = 'none';
-  });
-}
-
-// Close on escape key
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    hideAllDropdowns();
-  }
-});
-
-console.log('📱 MOBILE DROPDOWN SYSTEM LOADED');
-</script>
-
-<script>
-// EMERGENCY OVERRIDE - COMPLETELY REPLACE ALL DROPDOWN FUNCTIONALITY
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚨 EMERGENCY DROPDOWN OVERRIDE STARTING...');
-  
-  // Wait for page to fully load
-  setTimeout(() => {
-    
-    // Remove ALL existing onclick handlers
-    document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
-      trigger.removeAttribute('onclick');
-      trigger.onclick = null;
-      
-      // Add new simple click handler
-      trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('🔥 EMERGENCY CLICK:', this.textContent);
-        
-        // Hide all first
-        document.querySelectorAll('.dropdown-menu').forEach(m => {
-          m.classList.remove('show');
-          m.style.display = 'none';
-        });
-        
-        // Show backdrop
-        let backdrop = document.getElementById('dropdown-backdrop');
-        if (backdrop) backdrop.classList.add('show');
-        
-        // Determine which menu to show
-        let menuId = '';
-        if (this.textContent.includes('Launch')) menuId = 'launch-menu';
-        if (this.textContent.includes('Staking')) menuId = 'staking-menu';
-        if (this.textContent.includes('Token Locking')) menuId = 'locking-menu';
-        
-        console.log('🎯 Showing menu:', menuId);
-        
-        const menu = document.getElementById(menuId);
-        if (menu) {
-          // Nuclear styling - FORCE DISPLAY
-          menu.style.cssText = `
-            display: block !important;
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            z-index: 9999999 !important;
-            background: rgba(0, 0, 0, 0.95) !important;
-            border: 4px solid #00eaff !important;
-            border-radius: 20px !important;
-            padding: 40px !important;
-            min-width: 300px !important;
-            max-width: 90vw !important;
-            box-shadow: 0 0 50px rgba(0, 234, 255, 1) !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          `;
-          
-          // Style all links inside
-          menu.querySelectorAll('a').forEach(link => {
-            if (!link.classList.contains('mobile-close-btn')) {
-              link.style.cssText = `
-                display: block !important;
-                padding: 20px !important;
-                color: #00eaff !important;
-                font-size: 20px !important;
-                font-weight: bold !important;
-                text-align: center !important;
-                text-decoration: none !important;
-                margin: 15px 0 !important;
-                border: 2px solid rgba(0, 234, 255, 0.5) !important;
-                border-radius: 10px !important;
-                background: rgba(0, 234, 255, 0.1) !important;
-                transition: all 0.3s ease !important;
-              `;
-              
-              link.addEventListener('mouseenter', function() {
-                this.style.background = 'rgba(0, 234, 255, 0.3) !important';
-              });
-              
-              link.addEventListener('mouseleave', function() {
-                this.style.background = 'rgba(0, 234, 255, 0.1) !important';
-              });
-            }
-          });
-          
-          console.log('✅ EMERGENCY MENU DISPLAYED:', menuId);
-        }
-      });
-    });
-    
-    // Global close function
-    window.hideAllDropdowns = function() {
-      console.log('🔥 EMERGENCY CLOSE ALL');
-      document.querySelectorAll('.dropdown-menu').forEach(m => {
-        m.classList.remove('show');
-        m.style.display = 'none';
-      });
-      
-      let backdrop = document.getElementById('dropdown-backdrop');
-      if (backdrop) backdrop.classList.remove('show');
-    };
-    
-    // Click outside to close
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-trigger')) {
-        hideAllDropdowns();
-      }
-    });
-    
-    console.log('✅ EMERGENCY DROPDOWN OVERRIDE COMPLETE');
-  }, 500);
-});
-
-// MEGA NUCLEAR OVERRIDE - BYPASS ALL HTML ONCLICK HANDLERS
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(() => {
-    console.log('🚨 MEGA NUCLEAR OVERRIDE - REPLACING ALL DROPDOWN FUNCTIONALITY');
-    
-    // FORCE CREATE MENU ELEMENTS IF THEY DON'T EXIST
-    const menuData = [
-      { id: 'launch-menu', text: 'Launch Token', links: [
-        { href: 'pages/base-launch.html', text: 'Base' },
-        { href: 'pages/solana-launch.html', text: 'Solana' }
-      ]},
-      { id: 'staking-menu', text: 'Staking', links: [
-        { href: 'pages/base-staking.html', text: 'Base' },
-        { href: 'pages/solana-staking.html', text: 'Solana' }
-      ]},
-      { id: 'locking-menu', text: 'Token Locking', links: [
-        { href: 'pages/base-locking.html', text: 'Base' },
-        { href: 'pages/solana-locking.html', text: 'Solana' }
-      ]}
-    ];
-    
-    // Create menus if they don't exist
-    menuData.forEach(menuInfo => {
-      let menu = document.getElementById(menuInfo.id);
-      if (!menu) {
-        console.log('🔧 Creating missing menu:', menuInfo.id);
-        
-        // Create the menu structure
-        menu = document.createElement('ul');
-        menu.id = menuInfo.id;
-        menu.className = 'dropdown-menu';
-        menu.onclick = function(e) { e.stopPropagation(); };
-        
-        // Add close button
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'mobile-close-btn';
-        closeBtn.innerHTML = '✕';
-        closeBtn.onclick = function() { hideAllDropdowns(); };
-        menu.appendChild(closeBtn);
-        
-        // Add menu items
-        menuInfo.links.forEach(linkInfo => {
-          const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = linkInfo.href;
-          a.textContent = linkInfo.text;
-          a.onclick = function(e) {
-            hideAllDropdowns();
-            setTimeout(() => { window.location.href = this.href; }, 100);
-          };
-          li.appendChild(a);
-          menu.appendChild(li);
-        });
-        
-        // Append to body
-        document.body.appendChild(menu);
-      } else {
-        console.log('✅ Menu exists:', menuInfo.id);
-      }
-    });
-    
-    // NUCLEAR OVERRIDE ALL DROPDOWN TRIGGERS
-    document.querySelectorAll('.dropdown-trigger').forEach((trigger, index) => {
-      console.log(`🔧 Nuclear override trigger ${index}:`, trigger.textContent);
-      
-      // Remove ALL existing events
-      const newTrigger = trigger.cloneNode(true);
-      trigger.parentNode.replaceChild(newTrigger, trigger);
-      
-      // Add clean click handler
-      newTrigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('💥 NUCLEAR CLICK:', this.textContent);
-        
-        // Hide all first
-        hideAllDropdowns();
-        
-        // Show backdrop
-        let backdrop = document.getElementById('dropdown-backdrop');
-        if (backdrop) backdrop.classList.add('show');
-        
-        // Show correct menu
-        let menuId = '';
-        if (this.textContent.includes('Launch')) menuId = 'launch-menu';
-        if (this.textContent.includes('Staking')) menuId = 'staking-menu';
-        if (this.textContent.includes('Token Locking')) menuId = 'locking-menu';
-        
-        console.log('🎯 Nuclear showing menu:', menuId);
-        
-        const menu = document.getElementById(menuId);
-        if (menu) {
-          // FORCE MEGA DISPLAY
-          menu.style.cssText = `
-            display: block !important;
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            z-index: 999999999 !important;
-            background: rgba(0, 0, 0, 0.98) !important;
-            border: 5px solid #00eaff !important;
-            border-radius: 25px !important;
-            padding: 50px !important;
-            min-width: 350px !important;
-            max-width: 90vw !important;
-            box-shadow: 0 0 100px rgba(0, 234, 255, 1) !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-          `;
-          
-          // Style all links
-          menu.querySelectorAll('a').forEach(link => {
-            if (!link.classList.contains('mobile-close-btn')) {
-              link.style.cssText = `
-                display: block !important;
-                padding: 25px !important;
-                color: #00eaff !important;
-                font-size: 22px !important;
-                font-weight: bold !important;
-                text-align: center !important;
-                text-decoration: none !important;
-                margin: 15px 0 !important;
-                border: 3px solid rgba(0, 234, 255, 0.5) !important;
-                border-radius: 15px !important;
-                background: rgba(0, 234, 255, 0.2) !important;
-                transition: all 0.3s ease !important;
-              `;
-            }
-          });
-          
-          console.log('💥 NUCLEAR MENU DISPLAYED:', menuId);
-        } else {
-          console.error('❌ Nuclear menu not found:', menuId);
-        }
-      });
-    });
-    
-    console.log('💥 MEGA NUCLEAR OVERRIDE COMPLETE');
-  }, 1000);
-});
-
-// 🎯 MOBILE-OPTIMIZED NAVIGATION SYSTEM
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(() => {
-    console.log('� INITIALIZING MOBILE-OPTIMIZED NAVIGATION');
-    
-    // REPLACE ALL DROPDOWN TRIGGERS WITH MOBILE-OPTIMIZED HANDLERS
-    document.querySelectorAll('.dropdown-trigger').forEach((trigger, index) => {
-      console.log(`🔧 Mobile-optimizing navigation trigger ${index}:`, trigger.textContent);
-      
-      // Remove ALL existing events by cloning
-      const newTrigger = trigger.cloneNode(true);
-      trigger.parentNode.replaceChild(newTrigger, trigger);
-      
-      // Add mobile-optimized event handlers
-      const handleInteraction = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('📱 NAVIGATION CLICK:', this.textContent);
-        
-        // Hide all dropdowns first
-        hideAllDropdowns();
-        
-        // Determine which menu to show
-        let menuType = '';
-        if (this.textContent.includes('Launch')) menuType = 'launch';
-        if (this.textContent.includes('Staking')) menuType = 'staking';
-        if (this.textContent.includes('Token Locking')) menuType = 'locking';
-        
-        if (menuType) {
-          showNavigationDropdown(menuType);
-        }
-      };
-      
-      // Add both touch and click events for maximum compatibility
-      newTrigger.addEventListener('touchend', handleInteraction, { passive: false });
-      newTrigger.addEventListener('click', handleInteraction, { passive: false });
-      
-      // Visual feedback for touch
-      newTrigger.addEventListener('touchstart', function() {
-        this.style.transform = 'scale(0.95)';
-        this.style.opacity = '0.8';
-      }, { passive: true });
-      
-      newTrigger.addEventListener('touchend', function() {
-        setTimeout(() => {
-          this.style.transform = 'scale(1)';
-          this.style.opacity = '1';
-        }, 100);
-      }, { passive: true });
-    });
-    
-    // Navigation dropdown function
-    window.showNavigationDropdown = function(type) {
-      console.log('📱 SHOWING NAVIGATION DROPDOWN:', type);
-      
-      // Remove any existing overlay
-      const existingOverlay = document.getElementById('navigation-overlay');
-      if (existingOverlay) {
-        existingOverlay.remove();
-      }
-      
-      // Create mobile-friendly navigation overlay
-      const overlay = document.createElement('div');
-      overlay.id = 'navigation-overlay';
-      overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0,0,0,0.9);
-        z-index: 999999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(5px);
-      `;
-      
-      const menuHTML = `
-        <div style="
-          background: linear-gradient(135deg, #1a1a2e, #16213e);
-          border: 3px solid #00eaff;
-          border-radius: 20px;
-          padding: 30px;
-          max-width: 350px;
-          width: 85%;
-          text-align: center;
-          box-shadow: 0 0 50px rgba(0, 234, 255, 0.5);
-          font-family: 'Orbitron', Arial, sans-serif;
-        ">
-          <h3 style="color: #00eaff; margin: 0 0 30px 0; font-size: 24px; font-weight: bold;">
-            ${type === 'launch' ? 'Launch Token' : type === 'staking' ? 'Staking' : type === 'locking' ? 'Token Locking' : type.charAt(0).toUpperCase() + type.slice(1)}
-          </h3>
-          
-          <button onclick="navigateToPage('base-${type}');" style="
-            display: block;
-            width: 100%;
-            margin: 0 0 20px 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-            transition: all 0.3s ease;
-          ">🔵 Base Network</button>
-          
-          <button onclick="navigateToPage('solana-${type}');" style="
-            display: block;
-            width: 100%;
-            margin: 0 0 30px 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #9945ff, #7c3aed);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 4px 15px rgba(153, 69, 255, 0.3);
-            transition: all 0.3s ease;
-          ">🟣 Solana Network</button>
-          
-          <button onclick="closeNavigationDropdown();" style="
-            display: block;
-            width: 100%;
-            margin: 0;
-            padding: 15px;
-            background: transparent;
-            color: #00eaff;
-            border: 2px solid #00eaff;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            transition: all 0.3s ease;
-          ">✕ Close</button>
-        </div>
-      `;
-      
-      overlay.innerHTML = menuHTML;
-      document.body.appendChild(overlay);
-      
-      // Close on background tap
-      overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-          closeNavigationDropdown();
-        }
-      });
-      
-      // Close on escape key
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          closeNavigationDropdown();
-        }
-      });
-    };
-    
-    // Navigation function
-    window.navigateToPage = function(page) {
-      console.log('📱 NAVIGATING TO:', `pages/${page}.html`);
-      closeNavigationDropdown();
-      window.location.href = `pages/${page}.html`;
-    };
-    
-    // Close navigation dropdown
-    window.closeNavigationDropdown = function() {
-      const overlay = document.getElementById('navigation-overlay');
-      if (overlay) {
-        overlay.remove();
-        console.log('📱 Navigation dropdown closed');
-      }
-    };
-    
-    // Enhanced hideAllDropdowns for navigation
-    window.hideAllDropdowns = function() {
-      console.log('🔽 HIDING ALL DROPDOWNS');
-      
-      // Hide navigation overlay
-      const navOverlay = document.getElementById('navigation-overlay');
-      if (navOverlay) navOverlay.remove();
-      
-      // Hide backdrop
-      const backdrop = document.getElementById('dropdown-backdrop');
-      if (backdrop) backdrop.classList.remove('show');
-      
-      // Hide all traditional dropdown menus
-      document.querySelectorAll('.dropdown-menu').forEach(menu => {
-        menu.classList.remove('show');
-        menu.style.display = 'none';
-      });
-    };
-    
-    console.log('✅ MOBILE-OPTIMIZED NAVIGATION READY!');
-  }, 1000);
-});
-</script>
-
 </body>
 </html>
