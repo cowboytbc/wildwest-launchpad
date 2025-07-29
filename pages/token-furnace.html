@@ -1470,31 +1470,41 @@
     <!-- --- Wallet Connect Logic --- -->
     <script>
 // --- CONFIG: QuickNode Endpoints (Using centralized RPC config) ---
-// Use RPC endpoints directly when needed (like Base locking page)
-console.log('🔧 Token Furnace: RPC configuration ready - endpoints will be fetched when needed');
+let SOLANA_RPC = 'https://api.mainnet-beta.solana.com'; // Default fallback
+let BASE_RPC = 'https://mainnet.base.org'; // Default fallback
 
-// Helper functions to get RPC endpoints when needed (matching Base locking pattern)
-async function getSolanaRPC() {
+// Initialize RPC endpoints asynchronously
+async function initializeRPCEndpoints() {
   try {
-    return await window.RPC_CONFIG.getSolanaEndpoint();
+    if (window.RPC_CONFIG) {
+      SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
+      BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
+      console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
+    } else {
+      throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+    }
   } catch (error) {
-    console.error('❌ Failed to get Solana endpoint:', error);
+    console.error('❌ Failed to initialize RPC endpoints:', error);
     throw error;
+    // Ensure we have working fallbacks
+    SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+    BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
   }
 }
 
-function getBaseRPC() {
-  if (!window.RPC_CONFIG || !window.RPC_CONFIG.getBaseEndpoint) {
-    console.error('❌ RPC_CONFIG not ready - Base endpoint unavailable');
-    throw new Error('RPC_CONFIG not initialized');
+// Call initialization
+initializeRPCEndpoints();
+
+console.log('🔧 RPC Configuration loaded:', {
+  SOLANA_RPC,
+  BASE_RPC,
+  hasRPCConfig: !!window.RPC_CONFIG,
+  hasProductionConfig: !!window.PRODUCTION_CONFIG,
+  productionRPC: {
+    solana: window.PRODUCTION_CONFIG?.rpc?.solana,
+    base: window.PRODUCTION_CONFIG?.rpc?.base
   }
-  try {
-    return window.RPC_CONFIG.getBaseEndpoint();
-  } catch (error) {
-    console.error('❌ Failed to get Base endpoint:', error);
-    throw error;
-  }
-}
+});
 
 // --- GLOBAL STATE ---
 let currentChain = null; // 'base' or 'solana'
@@ -1596,7 +1606,7 @@ function detectTokenType(address) {
 
 // --- WALLET SELECTION HANDLERS ---
 async function handleEvmTokenBurn(tokenAddress, amount) {
-  console.log('🔵 Handling EVM token burn...', { tokenAddress, amount, currentChain, currentAddress });
+  console.log('🔵 Handling EVM token burn...');
   
   // Check if we already have a connected Base/EVM wallet
   if (currentChain === 'base' && currentAddress && window.wildWestWallet?.account) {
@@ -2037,7 +2047,7 @@ function showSolanaWalletSelectionModal(wallets, tokenAddress, amount) {
 
 // --- WALLET CONNECTION AND BURN FUNCTIONS ---
 async function connectAndBurnEvm(wallet, tokenAddress, amount) {
-  console.log('🔵 Connecting to EVM wallet:', wallet.name, { tokenAddress, amount });
+  console.log('🔵 Connecting to EVM wallet:', wallet.name);
   
   try {
     // Set the selected provider
@@ -2045,11 +2055,8 @@ async function connectAndBurnEvm(wallet, tokenAddress, amount) {
     currentProvider = wallet.provider;
     currentChain = 'base';
     
-    console.log('🔗 Requesting account connection...');
     // Request connection
     const accounts = await wallet.provider.request({ method: 'eth_requestAccounts' });
-    console.log('📋 Received accounts:', accounts);
-    
     if (accounts && accounts.length > 0) {
       currentAddress = accounts[0];
       console.log('✅ Connected to', wallet.name, 'with address:', currentAddress);
@@ -2057,11 +2064,9 @@ async function connectAndBurnEvm(wallet, tokenAddress, amount) {
       updateTokenFurnaceUI();
       showBurnSuccess(`Connected to ${wallet.name}!`, false);
       
-      console.log('🔥 Proceeding with burn...', { tokenAddress, amount, currentAddress });
       // Proceed with burning
       await burnEvmToken(tokenAddress, amount);
     } else {
-      console.error('❌ No accounts returned from wallet');
       showBurnSuccess('Failed to get account from ' + wallet.name, true);
     }
   } catch (error) {
@@ -2148,260 +2153,56 @@ document.addEventListener('DOMContentLoaded', function() {
   function showChainSelectionModal() {
     console.log('🚀 showChainSelectionModal called!');
     
-    // Create modal with chain selection
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      backdrop-filter: blur(5px);
-    `;
+    // Detect available wallets
+    const availableWallets = {
+      ethereum: [],
+      solana: []
+    };
     
-    modal.innerHTML = `
-      <div style="
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border-radius: 20px;
-        padding: 2rem;
-        max-width: 400px;
-        width: 90%;
-        text-align: center;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        position: relative;
-      ">
-        <button class="close-modal" style="
-          position: absolute;
-          top: 15px;
-          right: 20px;
-          background: none;
-          border: none;
-          color: #999;
-          font-size: 24px;
-          cursor: pointer;
-          width: 30px;
-          height: 30px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          transition: all 0.2s ease;
-        " onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='#999'; this.style.background='none'">×</button>
-        
-        <h3 style="color: white; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 600;">Select Network</h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <button class="chain-option" data-chain="base" style="
-            background: rgba(0, 122, 255, 0.1);
-            border: 2px solid rgba(0, 122, 255, 0.3);
-            border-radius: 12px;
-            padding: 1rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            text-align: left;
-            font-family: inherit;
-            width: 100%;
-            box-sizing: border-box;
-          ">
-            <div style="
-              background: #007AFF;
-              width: 40px;
-              height: 40px;
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 12px;
-            ">B</div>
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
-              <span style="font-weight: 600; font-size: 1.1rem;">BASE NETWORK</span>
-              <span style="font-size: 0.85rem; color: #888; margin-top: 2px;">Connect to Base Mainnet</span>
-            </div>
-            <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
-          </button>
-          
-          <button class="chain-option" data-chain="solana" style="
-            background: rgba(156, 39, 176, 0.1);
-            border: 2px solid rgba(156, 39, 176, 0.3);
-            border-radius: 12px;
-            padding: 1rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            text-align: left;
-            font-family: inherit;
-            width: 100%;
-            box-sizing: border-box;
-          ">
-            <div style="
-              background: #9C27B0;
-              width: 40px;
-              height: 40px;
-              border-radius: 8px;
-              margin-right: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              color: white;
-              font-size: 12px;
-            ">S</div>
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
-              <span style="font-weight: 600; font-size: 1.1rem;">SOLANA NETWORK</span>
-              <span style="font-size: 0.85rem; color: #888; margin-top: 2px;">Connect to Solana Mainnet</span>
-            </div>
-            <div style="color: #00eaff; font-weight: bold; margin-left: 1rem;">→</div>
-          </button>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Handle chain selection
-    modal.querySelectorAll('.chain-option').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const chain = btn.dataset.chain;
-        document.body.removeChild(modal);
-        
-        if (chain === 'base') {
-          console.log('Base chain selected'); // Debug
-          // Direct Base connection - no dependency on wildWestWallet
-          if (window.ethereum) {
-            try {
-              console.log('🔵 Connecting directly to Base wallet...');
-              
-              // Request account access
-              const accounts = await window.ethereum.request({ 
-                method: 'eth_requestAccounts' 
-              });
-              
-              if (accounts && accounts.length > 0) {
-                console.log('🔵 Accounts received:', accounts);
-                
-                // Set up provider
-                const provider = new window.ethers.providers.Web3Provider(window.ethereum);
-                
-                // Switch to Base network first
-                try {
-                  await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x2105' }], // Base mainnet
-                  });
-                  console.log('✅ Switched to Base network');
-                } catch (switchError) {
-                  if (switchError.code === 4902) {
-                    console.log('🔵 Base network not found, adding it...');
-                    // Add Base network if it doesn't exist
-                    await window.ethereum.request({
-                      method: 'wallet_addEthereumChain',
-                      params: [{
-                        chainId: '0x2105',
-                        chainName: 'Base',
-                        nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-                        rpcUrls: ['https://mainnet.base.org'],
-                        blockExplorerUrls: ['https://basescan.org']
-                      }]
-                    });
-                    console.log('✅ Base network added');
-                  } else {
-                    console.log('⚠️ Network switch error:', switchError);
-                  }
-                }
-                
-                // Get the connected account
-                const signer = provider.getSigner();
-                const address = await signer.getAddress();
-                
-                console.log('✅ Base wallet connected:', address);
-                
-                // Update Token Furnace state
-                currentChain = 'base';
-                currentAddress = address;
-                currentProvider = provider;
-                currentEvmProvider = provider;
-                currentSolanaProvider = null;
-                
-                console.log('🔄 Token furnace state updated:', {
-                  chain: currentChain,
-                  address: currentAddress,
-                  hasProvider: !!currentProvider
-                });
-                
-                // Update UI and balance
-                updateTokenFurnaceUI();
-                setTimeout(updateBalance, 200);
-                
-                showBurnSuccess('Base wallet connected successfully!', false);
-              } else {
-                console.log('❌ No accounts returned from wallet');
-                showBurnSuccess('Failed to get wallet accounts. Please try again.', true);
-              }
-            } catch (error) {
-              console.error('❌ Direct Base wallet connection error:', error);
-              showBurnSuccess('Base wallet connection error: ' + (error.message || error), true);
-            }
-          } else {
-            console.log('❌ No Ethereum provider found');
-            showBurnSuccess('No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.', true);
-          }
-        } else if (chain === 'solana') {
-          console.log('Solana chain selected');
-          await connectSolanaWallet();
+    // Detect Ethereum/Base wallets
+    if (window.ethereum) {
+      // Check for multiple providers
+      const providers = window.ethereum.providers || [window.ethereum];
+      
+      providers.forEach(provider => {
+        if (provider.isMetaMask) {
+          availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
+        }
+        if (provider.isCoinbaseWallet) {
+          availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
+        }
+        if (provider.isRabby) {
+          availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
+        }
+        if (provider.isTrust) {
+          availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
         }
       });
       
-      btn.addEventListener('mouseenter', () => {
-        if (btn.dataset.chain === 'base') {
-          btn.style.background = 'rgba(0, 122, 255, 0.2)';
-          btn.style.borderColor = 'rgba(0, 122, 255, 0.5)';
-        } else {
-          btn.style.background = 'rgba(156, 39, 176, 0.2)';
-          btn.style.borderColor = 'rgba(156, 39, 176, 0.5)';
-        }
-        btn.style.transform = 'translateY(-1px)';
-        btn.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
-      });
-      
-      btn.addEventListener('mouseleave', () => {
-        if (btn.dataset.chain === 'base') {
-          btn.style.background = 'rgba(0, 122, 255, 0.1)';
-          btn.style.borderColor = 'rgba(0, 122, 255, 0.3)';
-        } else {
-          btn.style.background = 'rgba(156, 39, 176, 0.1)';
-          btn.style.borderColor = 'rgba(156, 39, 176, 0.3)';
-        }
-        btn.style.transform = 'translateY(0)';
-        btn.style.boxShadow = 'none';
-      });
-    });
-    
-    // Handle close
-    modal.querySelector('.close-modal').addEventListener('click', () => {
-      document.body.removeChild(modal);
-    });
-    
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        document.body.removeChild(modal);
+      // If no specific wallet detected but ethereum exists, add as generic
+      if (availableWallets.ethereum.length === 0) {
+        availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
       }
-    });
+    }
     
-    console.log('Chain selection modal created and added to page'); // Debug
+    // Detect Solana wallets - be very specific about providers
+    const solanaWallets = [];
+    
+    // Phantom - check multiple locations
+    if (window.phantom?.solana?.isPhantom) {
+      solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
+    } else if (window.solana?.isPhantom) {
+      solanaWallets.push({name: 'Phantom', provider: window.solana});
+    }
+    
+    // Other Solana wallets
+    if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
+      solanaWallets.push({name: 'Solflare', provider: window.solflare});
+    }
+    if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
+      solanaWallets.push({name: 'Backpack', provider: window.backpack});
+    }
+    if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
       solanaWallets.push({name: 'Glow', provider: window.glow});
     }
     if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
@@ -2614,14 +2415,6 @@ document.addEventListener('DOMContentLoaded', function() {
           currentEvmProvider = wallet.provider;
           currentSolanaProvider = null;
           
-          // Also update wildWestWallet for compatibility
-          if (!window.wildWestWallet) {
-            window.wildWestWallet = {};
-          }
-          window.wildWestWallet.account = accounts[0];
-          window.wildWestWallet.currentChain = 'base';
-          window.wildWestWallet.provider = wallet.provider;
-          
           updateTokenFurnaceUI();
           updateBalance();
           
@@ -2654,14 +2447,6 @@ document.addEventListener('DOMContentLoaded', function() {
         currentProvider = wallet.provider;
         currentSolanaProvider = wallet.provider;
         currentEvmProvider = null;
-        
-        // Also update wildWestWallet for compatibility
-        if (!window.wildWestWallet) {
-          window.wildWestWallet = {};
-        }
-        window.wildWestWallet.account = currentAddress;
-        window.wildWestWallet.currentChain = 'solana';
-        window.wildWestWallet.provider = wallet.provider;
         
         updateTokenFurnaceUI();
         updateBalance();
@@ -2748,18 +2533,39 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-
-// Cleaned up - removed duplicate function content
-
-}
-
-// Cleaned up - removed broken duplicate function that was causing JavaScript syntax errors
-
-}
-
-// All duplicate function content cleaned up
-
-function updateTokenFurnaceUI() {
+function showChainSelectionModal() {
+  console.log('showChainSelectionModal() called'); // Debug
+  
+  const modal = document.createElement('div');
+  modal.className = 'wallet-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+  `;
+  
+  modal.innerHTML = `
+    <div class="chain-selection-modal" style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 2px solid #00eaff;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+      max-width: 400px;
+      width: 90vw;
+      max-height: 80vh;
+      overflow: hidden;
+      animation: slideUp 0.3s ease-out;
+    ">
+      <div class="modal-header" style="
+        padding: 1.5rem;
         border-bottom: 1px solid rgba(0, 234, 255, 0.2);
         display: flex;
         justify-content: space-between;
@@ -3320,16 +3126,7 @@ document.getElementById('tokenAddress').addEventListener('change', updateBalance
 
 async function updateBalance() {
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
-  console.log('🔍 updateBalance called with:', { 
-    tokenAddress,
-    currentChain,
-    currentAddress,
-    wildWestWalletAccount: window.wildWestWallet?.account,
-    wildWestWalletChain: window.wildWestWallet?.currentChain,
-    ethereumAddress: window.ethereum?.selectedAddress,
-    solanaPublicKey: window.solana?.publicKey?.toString(),
-    phantomPublicKey: window.phantom?.solana?.publicKey?.toString()
-  });
+  console.log('🔍 updateBalance called with:', { tokenAddress });
   
   if (!tokenAddress) {
     document.getElementById('tokenBalance').textContent = '';
@@ -3345,45 +3142,36 @@ async function updateBalance() {
     // Base (EVM) token - fetch EVM balance
     if (!await safeLoad(loadEthers)) return;
     
-    // Check if we have EVM wallet connection - improved logic
+    // Check if we have EVM wallet connection
     let addressToUse = null;
-    if (window.wildWestWallet?.account && window.wildWestWallet?.currentChain === 'base') {
+    if (window.wildWestWallet?.account) {
       addressToUse = window.wildWestWallet.account;
-      console.log('🔍 Using wildWestWallet account for Base:', addressToUse);
     } else if (currentAddress && (currentChain === 'base' || currentChain === 'ethereum')) {
       addressToUse = currentAddress;
-      console.log('🔍 Using currentAddress for Base:', addressToUse);
     } else if (window.ethereum?.selectedAddress) {
       addressToUse = window.ethereum.selectedAddress;
-      console.log('🔍 Using ethereum.selectedAddress for Base:', addressToUse);
     }
     
     if (!addressToUse) {
-      console.log('❌ No Base wallet connected - showing connect message');
-      document.getElementById('tokenBalance').textContent = 'Connect Base wallet to see balance';
+      document.getElementById('tokenBalance').textContent = 'Connect EVM wallet to see balance';
       return;
     }
-
-    // Check if RPC_CONFIG is ready before proceeding
-    if (!window.RPC_CONFIG || !window.RPC_CONFIG.getBaseEndpoint) {
-      console.log('⚠️ RPC_CONFIG not ready for Base balance fetch, waiting...');
-      document.getElementById('tokenBalance').textContent = 'Loading...';
-      return;
-    }
-
+    
     try {
       console.log('🔍 Fetching Base token balance for:', { 
         tokenAddress, 
         wallet: addressToUse,
         currentChain,
-        BASE_RPC: getBaseRPC(),
+        BASE_RPC: BASE_RPC,
         hasEthereum: !!window.ethereum,
         hasRPCConfig: !!window.RPC_CONFIG,
         actualQuickNodeEndpoint: window.RPC_CONFIG?.getBaseEndpoint(),
         productionConfigBase: window.PRODUCTION_CONFIG?.rpc?.base
-      });      // Always use QuickNode endpoint for balance checking (more reliable than wallet RPC)
-      const provider = new window.ethers.providers.JsonRpcProvider(getBaseRPC());
-      console.log('📡 Using QuickNode JsonRpcProvider for balance check:', getBaseRPC());
+      });
+      
+      // Always use QuickNode endpoint for balance checking (more reliable than wallet RPC)
+      const provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      console.log('📡 Using QuickNode JsonRpcProvider for balance check:', BASE_RPC);
       
       // First, check if this address is actually a contract
       try {
@@ -3393,7 +3181,7 @@ async function updateBalance() {
           hasCode: code !== '0x', 
           codeLength: code.length,
           provider: provider.connection?.url || 'unknown',
-          rpcEndpoint: getBaseRPC()
+          rpcEndpoint: BASE_RPC
         });
         
         if (code === '0x') {
@@ -3549,24 +3337,17 @@ async function updateBalance() {
     if (!await safeLoad(loadSolanaWeb3)) return;
     if (!await safeLoad(loadBN)) return;
     
-    // Check if we have Solana wallet connection - improved logic
+    // Check if we have Solana wallet connection
     let addressToUse = null;
-    if (window.wildWestWallet?.account && window.wildWestWallet?.currentChain === 'solana') {
-      addressToUse = window.wildWestWallet.account;
-      console.log('🔍 Using wildWestWallet account for Solana:', addressToUse);
-    } else if (currentChain === 'solana' && currentAddress) {
+    if (currentChain === 'solana' && currentAddress) {
       addressToUse = currentAddress;
-      console.log('🔍 Using currentAddress for Solana:', addressToUse);
     } else if (window.solana?.publicKey) {
       addressToUse = window.solana.publicKey.toString();
-      console.log('🔍 Using window.solana.publicKey for Solana:', addressToUse);
     } else if (window.phantom?.solana?.publicKey) {
       addressToUse = window.phantom.solana.publicKey.toString();
-      console.log('🔍 Using phantom.solana.publicKey for Solana:', addressToUse);
     }
     
     if (!addressToUse) {
-      console.log('❌ No Solana wallet connected - showing connect message');
       document.getElementById('tokenBalance').textContent = 'Connect Solana wallet to see balance';
       return;
     }
@@ -3606,51 +3387,108 @@ async function updateBalance() {
 
 // --- BURN LOGIC ---
 async function burnEvmToken(tokenAddress, amount) {
-  console.log('🔥 burnEvmToken called with:', { tokenAddress, amount, currentAddress, currentChain });
-  
   if (!await safeLoad(loadEthers)) {
-    console.error('❌ Failed to load Ethers library');
     showBurnSuccess('Failed to load Ethers library.', true);
     return;
   }
-  console.log('✅ Ethers library loaded successfully');
-  
-  // Check if RPC_CONFIG is ready before proceeding
-  if (!window.RPC_CONFIG || !window.RPC_CONFIG.getBaseEndpoint) {
-    console.error('❌ RPC_CONFIG not ready');
-    showBurnSuccess('RPC configuration not ready. Please wait a moment and try again.', true);
-    return;
-  }
-  console.log('✅ RPC_CONFIG ready');
   
   console.log('🔥 Starting Base token burn:', { tokenAddress, amount, currentAddress });
   
-  try {
-    let provider, signer;
-    if (window.ethereum) {
-      console.log('� Using current EVM provider for burn:', {
-        hasCurrentEvmProvider: !!currentEvmProvider,
-        hasWindowEthereum: !!window.ethereum,
-        currentChain: currentChain,
-        currentAddress: currentAddress
+  // COMPREHENSIVE WALLET ISOLATION SYSTEM
+  console.log('🔒 Initializing wallet isolation system...');
+  
+  let isolatedMetaMaskProvider = null;
+  let isolatedPhantomProvider = null;
+  
+  // Step 1: Catalog all available wallet providers
+  const walletCatalog = {
+    metamask: [],
+    phantom: [],
+    other: []
+  };
+  
+  if (window.ethereum) {
+    if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+      console.log('📋 Multiple providers detected, cataloging...');
+      window.ethereum.providers.forEach((provider, index) => {
+        console.log(`🔍 Provider ${index}:`, {
+          isMetaMask: provider.isMetaMask,
+          isPhantom: provider.isPhantom,
+          isCoinbaseWallet: provider.isCoinbaseWallet,
+          isRainbow: provider.isRainbow,
+          isTrust: provider.isTrust
+        });
+        
+        if (provider.isMetaMask && !provider.isPhantom) {
+          walletCatalog.metamask.push(provider);
+        } else if (provider.isPhantom && !provider.isMetaMask) {
+          walletCatalog.phantom.push(provider);
+        } else if (provider.isMetaMask && provider.isPhantom) {
+          // Handle edge case where both are detected
+          console.log('⚠️ Provider claims to be both MetaMask and Phantom');
+          if (provider._metamask) {
+            walletCatalog.metamask.push(provider);
+          } else if (provider._phantom) {
+            walletCatalog.phantom.push(provider);
+          } else {
+            walletCatalog.other.push(provider);
+          }
+        } else {
+          walletCatalog.other.push(provider);
+        }
       });
+    } else {
+      // Single provider object
+      console.log('📋 Single provider detected, analyzing...');
+      if (window.ethereum.isMetaMask && !window.ethereum.isPhantom) {
+        walletCatalog.metamask.push(window.ethereum);
+      } else if (window.ethereum.isPhantom && !window.ethereum.isMetaMask) {
+        walletCatalog.phantom.push(window.ethereum);
+      } else if (window.ethereum.isMetaMask && window.ethereum.isPhantom) {
+        // Both detected in single object - try to isolate
+        if (window.ethereum._metamask) {
+          walletCatalog.metamask.push(window.ethereum);
+        } else {
+          console.log('⚠️ Cannot isolate MetaMask from mixed provider');
+          walletCatalog.other.push(window.ethereum);
+        }
+      }
+    }
+  }
   
-  // Use the provider that was selected during wallet connection instead of forcing MetaMask
-  let ethProvider = currentEvmProvider || window.ethereum;
+  console.log('📊 Wallet catalog complete:', {
+    metamask: walletCatalog.metamask.length,
+    phantom: walletCatalog.phantom.length,
+    other: walletCatalog.other.length
+  });
   
-  if (!ethProvider) {
-    console.error('🚨 NO EVM PROVIDER FOUND');
-    showBurnSuccess('No wallet provider found. Please make sure your wallet is connected.', true);
+  // Step 2: Select ONLY MetaMask provider for Base transactions
+  if (walletCatalog.metamask.length > 0) {
+    isolatedMetaMaskProvider = walletCatalog.metamask[0];
+    console.log('✅ Isolated MetaMask provider selected');
+  } else if (walletCatalog.other.length > 0) {
+    // Try to find MetaMask in 'other' category
+    const possibleMetaMask = walletCatalog.other.find(p => p.isMetaMask || p._metamask);
+    if (possibleMetaMask) {
+      isolatedMetaMaskProvider = possibleMetaMask;
+      console.log('✅ Found MetaMask in mixed providers');
+    }
+  }
+  
+  if (!isolatedMetaMaskProvider) {
+    console.error('🚨 NO METAMASK PROVIDER FOUND');
+    showWalletManagementModal(walletCatalog);
     return;
   }
   
-  console.log('🎯 Using selected EVM provider:', {
-    isMetaMask: ethProvider.isMetaMask,
-    isCoinbaseWallet: ethProvider.isCoinbaseWallet,
-    isRainbow: ethProvider.isRainbow,
-    isTrust: ethProvider.isTrust,
-    isPhantom: ethProvider.isPhantom
-  });
+  // Step 3: Verify isolation - ensure we're not using Phantom
+  if (isolatedMetaMaskProvider.isPhantom && !isolatedMetaMaskProvider.isMetaMask) {
+    console.error('🚨 PHANTOM CONTAMINATION DETECTED');
+    showBurnSuccess('ERROR: System isolated Phantom instead of MetaMask. Please disable other wallet extensions temporarily and refresh the page.', true);
+    return;
+  }
+  
+  console.log('🔒 Wallet isolation complete - MetaMask secured for Base transactions');
   
   try {
     let provider, signer;
@@ -3663,12 +3501,32 @@ async function burnEvmToken(tokenAddress, amount) {
         selectedAddress: window.ethereum.selectedAddress
       });
       
-      // USE SELECTED EVM PROVIDER (respects user's wallet choice)
-      console.log('🎯 Using selected wallet provider for transaction');
+      // USE ISOLATED METAMASK PROVIDER ONLY
+      let ethProvider = isolatedMetaMaskProvider;
+      
+      console.log('🎯 Using isolated MetaMask provider:', {
+        isMetaMask: ethProvider.isMetaMask,
+        isPhantom: ethProvider.isPhantom,
+        hasRequest: !!ethProvider.request,
+        hasMetaMaskProperty: !!ethProvider._metamask
+      });
+      
+      // Final safety check on isolated provider
+      if (!ethProvider.isMetaMask) {
+        console.error('� ISOLATED PROVIDER IS NOT METAMASK');
+        showBurnSuccess('ERROR: Failed to isolate MetaMask provider. Please disable other wallet extensions and refresh the page.', true);
+        return;
+      }
+      
+      if (ethProvider.isPhantom && !ethProvider._metamask) {
+        console.error('🚨 ISOLATED PROVIDER CONTAMINATED WITH PHANTOM');
+        showBurnSuccess('ERROR: MetaMask provider contaminated with Phantom. Please disable Phantom extension and refresh the page.', true);
+        return;
+      }
       
       provider = new window.ethers.providers.Web3Provider(ethProvider);
       signer = provider.getSigner();
-      console.log('🔗 Using Web3Provider with selected wallet signer');
+      console.log('🔗 Using Web3Provider with MetaMask signer');
       
       // IMMEDIATELY verify this is the correct provider
       try {
@@ -3890,7 +3748,7 @@ async function burnEvmToken(tokenAddress, amount) {
       currentAddress = await signer.getAddress();
       console.log('✅ Verified transaction will be sent from:', currentAddress);
     } else {
-      provider = new window.ethers.providers.JsonRpcProvider(getBaseRPC());
+      provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
       console.log('🔗 Using JsonRpcProvider (read-only)');
       // No signer, can't send txs
       showBurnSuccess('No wallet connected. Cannot burn tokens in read-only mode.', true);
@@ -4586,7 +4444,6 @@ function showTransactionHashModal(txHash, network) {
     justify-content: center;
     z-index: 10000;
     animation: fadeIn 0.2s ease-out;
-    padding: 1rem;
   `;
   
   const explorerUrl = network === 'solana' 
@@ -4594,63 +4451,75 @@ function showTransactionHashModal(txHash, network) {
     : `https://basescan.org/tx/${txHash}`;
   
   const networkName = network === 'solana' ? 'Solana' : 'Base';
-  const shortHash = `${txHash.substring(0, 8)}...${txHash.substring(txHash.length - 8)}`;
   
   modal.innerHTML = `
     <div style="
       background: linear-gradient(135deg, #1a1a2e, #16213e);
       border: 2px solid #00ff00;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-      max-width: 400px;
-      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+      max-width: 600px;
+      width: 90vw;
       overflow: hidden;
-      animation: slideUp 0.3s ease-out;
+      animation: bounceIn 0.4s ease-out;
     ">
       <div style="
-        padding: 1rem;
+        padding: 1.5rem;
         border-bottom: 1px solid rgba(0, 255, 0, 0.2);
-        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       ">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔥</div>
-        <h3 style="margin: 0; color: #00ff00; font-size: 1.1rem; font-weight: 600;">Burn Successful!</h3>
-        <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.85rem;">${networkName} Network</p>
+        <h3 style="margin: 0; color: #00ff00; font-size: 1.25rem;">🔥 Token Burn Successful!</h3>
+        <button class="close-modal" style="
+          background: none;
+          border: none;
+          color: #00ff00;
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: transform 0.2s;
+        ">×</button>
       </div>
-      
-      <div style="padding: 1rem;">
-        <div style="
-          background: #2a2a2a;
-          padding: 0.75rem;
-          border-radius: 8px;
-          margin-bottom: 1rem;
-          text-align: center;
-        ">
-          <div style="color: #ffae00; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem;">
-            TRANSACTION HASH
+      <div style="padding: 1.5rem; color: white;">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 1s;">✅</div>
+          <div style="color: #00ff00; font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">
+            Transaction Confirmed on ${networkName}
           </div>
-          <div style="
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-            line-height: 1.3;
-          ">${shortHash}</div>
+          <div style="color: #ccc; font-size: 0.9rem;">
+            Your tokens have been permanently burned
+          </div>
         </div>
         
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <button class="copy-hash-btn" style="
+        <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="color: #ffae00; font-weight: bold; margin-bottom: 0.5rem;">Transaction Hash:</div>
+          <div style="
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            line-height: 1.4;
+            background: #1a1a1a;
             padding: 0.75rem;
-            border: none;
+            border-radius: 4px;
+            border: 1px solid #444;
+          ">${txHash}</div>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="copy-hash-btn" style="
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ffae00;
             border-radius: 8px;
             background: #ffae00;
             color: #000;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-weight: bold;
             transition: all 0.2s;
-          ">📋 Copy Full Hash</button>
-          
+          ">📋 Copy Transaction Hash</button>
           <button class="view-explorer-btn" style="
+            flex: 1;
             padding: 0.75rem;
             border: 1px solid #00eaff;
             border-radius: 8px;
@@ -4658,50 +4527,39 @@ function showTransactionHashModal(txHash, network) {
             color: #00eaff;
             cursor: pointer;
             font-weight: 500;
-            font-size: 0.9rem;
             transition: all 0.2s;
-          ">🔍 View on ${networkName}scan</button>
-          
+          ">🔍 View on Explorer</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1rem;">
           <button class="close-modal" style="
-            padding: 0.5rem;
+            padding: 0.5rem 1.5rem;
             border: 1px solid #666;
             border-radius: 8px;
             background: transparent;
-            color: #999;
+            color: #ccc;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
           ">Close</button>
         </div>
       </div>
     </div>
-    
     <style>
-      @keyframes slideUp {
-        0% { opacity: 0; transform: translateY(20px); }
-        100% { opacity: 1; transform: translateY(0); }
+      @keyframes bounceIn {
+        0% { opacity: 0; transform: scale(0.3); }
+        50% { opacity: 1; transform: scale(1.05); }
+        70% { transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
       }
-      
-      @media (max-width: 480px) {
-        .wallet-modal-overlay > div {
-          margin: 0 0.5rem;
-          max-width: none;
-        }
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
       }
-      
-      .copy-hash-btn:hover { 
-        background: #fff !important; 
-        transform: translateY(-1px); 
-      }
-      .view-explorer-btn:hover { 
-        background: #00eaff; 
-        color: #000; 
-        transform: translateY(-1px); 
-      }
-      .close-modal:hover { 
-        border-color: #999; 
-        color: #fff; 
-      }
+      .close-modal:hover { transform: scale(1.1); }
+      .copy-hash-btn:hover { background: #fff; transform: translateY(-2px); }
+      .view-explorer-btn:hover { background: #00eaff; color: #000; transform: translateY(-2px); }
     </style>
   `;
   
@@ -4721,8 +4579,13 @@ function showTransactionHashModal(txHash, network) {
       }, 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
-      // Fallback: show the full hash in an alert
-      alert(`Transaction Hash: ${txHash}`);
+      // Fallback: select the text
+      const hashElement = modal.querySelector('div[style*="font-family: \'Courier New\'"]');
+      const range = document.createRange();
+      range.selectNodeContents(hashElement);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
   });
   
@@ -4971,12 +4834,6 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     // Base (EVM) token
     if (!await safeLoad(loadEthers)) return;
     
-    // Check if RPC_CONFIG is ready before proceeding
-    if (!window.RPC_CONFIG || !window.RPC_CONFIG.getBaseEndpoint) {
-      showBurnSuccess('RPC configuration not ready. Please wait a moment and try again.', true);
-      return;
-    }
-    
     // Check if we have EVM wallet connection
     let addressToUse = null;
     if (window.wildWestWallet?.account) {
@@ -4994,7 +4851,7 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     
     try {
       // Always use QuickNode endpoint for better reliability
-      const provider = new window.ethers.providers.JsonRpcProvider(getBaseRPC());
+      const provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
       const erc20 = new window.ethers.Contract(tokenAddress, [
         'function balanceOf(address) view returns (uint256)',
         'function decimals() view returns (uint8)'
@@ -5082,9 +4939,26 @@ window.useQuickNodeForDev = function() {
   console.log('� Setting up QuickNode endpoints for development testing...');
   
   // Temporarily inject QuickNode endpoints for development
-  console.log('⚠️ Development mode: QuickNode endpoints can only be loaded via GitHub Secrets');
-  console.log('❌ No hardcoded endpoints available for security reasons');
-  console.log('💡 Deploy to production to use QuickNode endpoints');
+  window.PRODUCTION_CONFIG = {
+    rpc: {
+      solana: 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ac83d6b4ecf2a8fa8d0a6894210ede33b1b7495/',
+      base: 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/d9b8b93b1b8b7cc6b8993c4ef5c6e7a70a6e9ad8/'
+    },
+    source: 'development-override'
+  };
+  
+  console.log('✅ QuickNode endpoints injected for development:', window.PRODUCTION_CONFIG);
+  
+  // Reinitialize RPC endpoints
+  initializeRPCEndpoints();
+  
+  console.log('💡 Now try your token operations - they will use QuickNode endpoints!');
+  
+  // Update balance if there's a token address
+  const tokenAddress = document.getElementById('tokenAddress')?.value;
+  if (tokenAddress) {
+    updateBalance();
+  }
 };
 
 console.log('�💡 Token Furnace Debug functions available:');
