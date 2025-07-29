@@ -1470,55 +1470,27 @@
     <!-- --- Wallet Connect Logic --- -->
     <script>
 // --- CONFIG: QuickNode Endpoints (Using centralized RPC config) ---
-let SOLANA_RPC = 'https://api.mainnet-beta.solana.com'; // Default fallback
-let BASE_RPC = 'https://mainnet.base.org'; // Default fallback
+// Use RPC endpoints directly when needed (like Base locking page)
+console.log('🔧 Token Furnace: RPC configuration ready - endpoints will be fetched when needed');
 
-// Initialize RPC endpoints asynchronously
-async function initializeRPCEndpoints() {
+// Helper functions to get RPC endpoints when needed (matching Base locking pattern)
+async function getSolanaRPC() {
   try {
-    if (window.RPC_CONFIG) {
-      SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
-      BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
-      console.log('✅ QuickNode RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
-    } else {
-      throw new Error('RPC_CONFIG not available - Configuration system failed');
-    }
+    return await window.RPC_CONFIG.getSolanaEndpoint();
   } catch (error) {
-    console.error('❌ Failed to initialize QuickNode RPC endpoints:', error);
-    throw error; // Don't use fallbacks - QuickNode is required
+    console.error('❌ Failed to get Solana endpoint:', error);
+    throw error;
   }
 }
 
-// Call initialization with proper waiting for production config
-(async () => {
-  // Wait for production config to load on mobile devices
-  let retries = 0;
-  const maxRetries = 20; // Wait up to 2 seconds
-  
-  while (!window.PRODUCTION_CONFIG && retries < maxRetries) {
-    console.log(`⏳ Waiting for production config... (${retries + 1}/${maxRetries})`);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    retries++;
+function getBaseRPC() {
+  try {
+    return window.RPC_CONFIG.getBaseEndpoint();
+  } catch (error) {
+    console.error('❌ Failed to get Base endpoint:', error);
+    throw error;
   }
-  
-  if (window.PRODUCTION_CONFIG) {
-    console.log('✅ Production config found, initializing RPC endpoints');
-  } else {
-    console.warn('⚠️ Production config not found after waiting, QuickNode endpoints may not be available');
-  }
-  
-  await initializeRPCEndpoints();
-  console.log('🔧 RPC Configuration loaded:', {
-    SOLANA_RPC,
-    BASE_RPC,
-    hasRPCConfig: !!window.RPC_CONFIG,
-    hasProductionConfig: !!window.PRODUCTION_CONFIG,
-    productionRPC: {
-      solana: window.PRODUCTION_CONFIG?.rpc?.solana,
-      base: window.PRODUCTION_CONFIG?.rpc?.base
-    }
-  });
-})();
+}
 
 // --- GLOBAL STATE ---
 let currentChain = null; // 'base' or 'solana'
@@ -3205,7 +3177,7 @@ async function updateBalance() {
         tokenAddress, 
         wallet: addressToUse,
         currentChain,
-        BASE_RPC: BASE_RPC,
+        BASE_RPC: getBaseRPC(),
         hasEthereum: !!window.ethereum,
         hasRPCConfig: !!window.RPC_CONFIG,
         actualQuickNodeEndpoint: window.RPC_CONFIG?.getBaseEndpoint(),
@@ -3213,8 +3185,8 @@ async function updateBalance() {
       });
       
       // Always use QuickNode endpoint for balance checking (more reliable than wallet RPC)
-      const provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
-      console.log('📡 Using QuickNode JsonRpcProvider for balance check:', BASE_RPC);
+      const provider = new window.ethers.providers.JsonRpcProvider(getBaseRPC());
+      console.log('📡 Using QuickNode JsonRpcProvider for balance check:', getBaseRPC());
       
       // First, check if this address is actually a contract
       try {
@@ -3224,7 +3196,7 @@ async function updateBalance() {
           hasCode: code !== '0x', 
           codeLength: code.length,
           provider: provider.connection?.url || 'unknown',
-          rpcEndpoint: BASE_RPC
+          rpcEndpoint: getBaseRPC()
         });
         
         if (code === '0x') {
@@ -3798,7 +3770,7 @@ async function burnEvmToken(tokenAddress, amount) {
       currentAddress = await signer.getAddress();
       console.log('✅ Verified transaction will be sent from:', currentAddress);
     } else {
-      provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      provider = new window.ethers.providers.JsonRpcProvider(getBaseRPC());
       console.log('🔗 Using JsonRpcProvider (read-only)');
       // No signer, can't send txs
       showBurnSuccess('No wallet connected. Cannot burn tokens in read-only mode.', true);
@@ -4901,7 +4873,7 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     
     try {
       // Always use QuickNode endpoint for better reliability
-      const provider = new window.ethers.providers.JsonRpcProvider(BASE_RPC);
+      const provider = new window.ethers.providers.JsonRpcProvider(getBaseRPC());
       const erc20 = new window.ethers.Contract(tokenAddress, [
         'function balanceOf(address) view returns (uint256)',
         'function decimals() view returns (uint8)'
