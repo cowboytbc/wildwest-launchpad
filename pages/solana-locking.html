@@ -195,12 +195,12 @@
       
       try {
         if (network === 'solana') {
-          const wallet = window.availableWallets.solana[walletIndex];
-          if (!wallet) {
+          const selectedWallet = window.availableWallets.solana[walletIndex];
+          if (!selectedWallet) {
             throw new Error(`Wallet not found at index ${walletIndex}`);
           }
           
-          console.log(`📋 Solana Locking: Connecting to ${wallet.name}`);
+          console.log(`📋 Solana Locking: Connecting to ${selectedWallet.name}`);
           
           // Restore wallets from hidden state
           if (window.__restoreWalletsForConnection) {
@@ -209,14 +209,14 @@
           }
           
           // Connect to the wallet
-          const response = await wallet.provider.connect();
+          const response = await selectedWallet.provider.connect();
           let retrievedPublicKey;
           
           // Handle different wallet response formats
           if (response?.publicKey) {
             retrievedPublicKey = response.publicKey;
-          } else if (wallet.provider.publicKey) {
-            retrievedPublicKey = wallet.provider.publicKey;
+          } else if (selectedWallet.provider.publicKey) {
+            retrievedPublicKey = selectedWallet.provider.publicKey;
           }
           
           // Convert to string format
@@ -233,10 +233,10 @@
           
           if (finalPublicKey) {
             // Set global variables for the page
-            window.wallet = wallet.provider;
+            window.wallet = selectedWallet.provider;
             window.publicKey = finalPublicKey;
             // Also set the non-window variables for backward compatibility
-            wallet = wallet.provider;
+            wallet = selectedWallet.provider;
             publicKey = finalPublicKey;
             
             // Update UI
@@ -245,7 +245,7 @@
             // Close modal
             document.querySelector('[style*="position: fixed"]').remove();
             
-            console.log(`✅ Solana Locking: ${wallet.name} connected successfully!`);
+            console.log(`✅ Solana Locking: ${selectedWallet.name} connected successfully!`);
           } else {
             throw new Error('No public key returned from wallet');
           }
