@@ -1489,8 +1489,24 @@ async function initializeRPCEndpoints() {
   }
 }
 
-// Call initialization
+// Call initialization with proper waiting for production config
 (async () => {
+  // Wait for production config to load on mobile devices
+  let retries = 0;
+  const maxRetries = 20; // Wait up to 2 seconds
+  
+  while (!window.PRODUCTION_CONFIG && retries < maxRetries) {
+    console.log(`⏳ Waiting for production config... (${retries + 1}/${maxRetries})`);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    retries++;
+  }
+  
+  if (window.PRODUCTION_CONFIG) {
+    console.log('✅ Production config found, initializing RPC endpoints');
+  } else {
+    console.warn('⚠️ Production config not found after waiting, QuickNode endpoints may not be available');
+  }
+  
   await initializeRPCEndpoints();
   console.log('🔧 RPC Configuration loaded:', {
     SOLANA_RPC,
