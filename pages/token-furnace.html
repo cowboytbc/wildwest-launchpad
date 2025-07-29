@@ -2415,6 +2415,14 @@ document.addEventListener('DOMContentLoaded', function() {
           currentEvmProvider = wallet.provider;
           currentSolanaProvider = null;
           
+          // Also update wildWestWallet for compatibility
+          if (!window.wildWestWallet) {
+            window.wildWestWallet = {};
+          }
+          window.wildWestWallet.account = accounts[0];
+          window.wildWestWallet.currentChain = 'base';
+          window.wildWestWallet.provider = wallet.provider;
+          
           updateTokenFurnaceUI();
           updateBalance();
           
@@ -2447,6 +2455,14 @@ document.addEventListener('DOMContentLoaded', function() {
         currentProvider = wallet.provider;
         currentSolanaProvider = wallet.provider;
         currentEvmProvider = null;
+        
+        // Also update wildWestWallet for compatibility
+        if (!window.wildWestWallet) {
+          window.wildWestWallet = {};
+        }
+        window.wildWestWallet.account = currentAddress;
+        window.wildWestWallet.currentChain = 'solana';
+        window.wildWestWallet.provider = wallet.provider;
         
         updateTokenFurnaceUI();
         updateBalance();
@@ -3126,7 +3142,16 @@ document.getElementById('tokenAddress').addEventListener('change', updateBalance
 
 async function updateBalance() {
   const tokenAddress = document.getElementById('tokenAddress').value.trim();
-  console.log('🔍 updateBalance called with:', { tokenAddress });
+  console.log('🔍 updateBalance called with:', { 
+    tokenAddress,
+    currentChain,
+    currentAddress,
+    wildWestWalletAccount: window.wildWestWallet?.account,
+    wildWestWalletChain: window.wildWestWallet?.currentChain,
+    ethereumAddress: window.ethereum?.selectedAddress,
+    solanaPublicKey: window.solana?.publicKey?.toString(),
+    phantomPublicKey: window.phantom?.solana?.publicKey?.toString()
+  });
   
   if (!tokenAddress) {
     document.getElementById('tokenBalance').textContent = '';
@@ -3142,18 +3167,22 @@ async function updateBalance() {
     // Base (EVM) token - fetch EVM balance
     if (!await safeLoad(loadEthers)) return;
     
-    // Check if we have EVM wallet connection
+    // Check if we have EVM wallet connection - improved logic
     let addressToUse = null;
-    if (window.wildWestWallet?.account) {
+    if (window.wildWestWallet?.account && window.wildWestWallet?.currentChain === 'base') {
       addressToUse = window.wildWestWallet.account;
+      console.log('🔍 Using wildWestWallet account for Base:', addressToUse);
     } else if (currentAddress && (currentChain === 'base' || currentChain === 'ethereum')) {
       addressToUse = currentAddress;
+      console.log('🔍 Using currentAddress for Base:', addressToUse);
     } else if (window.ethereum?.selectedAddress) {
       addressToUse = window.ethereum.selectedAddress;
+      console.log('🔍 Using ethereum.selectedAddress for Base:', addressToUse);
     }
     
     if (!addressToUse) {
-      document.getElementById('tokenBalance').textContent = 'Connect EVM wallet to see balance';
+      console.log('❌ No Base wallet connected - showing connect message');
+      document.getElementById('tokenBalance').textContent = 'Connect Base wallet to see balance';
       return;
     }
     
@@ -3337,17 +3366,24 @@ async function updateBalance() {
     if (!await safeLoad(loadSolanaWeb3)) return;
     if (!await safeLoad(loadBN)) return;
     
-    // Check if we have Solana wallet connection
+    // Check if we have Solana wallet connection - improved logic
     let addressToUse = null;
-    if (currentChain === 'solana' && currentAddress) {
+    if (window.wildWestWallet?.account && window.wildWestWallet?.currentChain === 'solana') {
+      addressToUse = window.wildWestWallet.account;
+      console.log('🔍 Using wildWestWallet account for Solana:', addressToUse);
+    } else if (currentChain === 'solana' && currentAddress) {
       addressToUse = currentAddress;
+      console.log('🔍 Using currentAddress for Solana:', addressToUse);
     } else if (window.solana?.publicKey) {
       addressToUse = window.solana.publicKey.toString();
+      console.log('🔍 Using window.solana.publicKey for Solana:', addressToUse);
     } else if (window.phantom?.solana?.publicKey) {
       addressToUse = window.phantom.solana.publicKey.toString();
+      console.log('🔍 Using phantom.solana.publicKey for Solana:', addressToUse);
     }
     
     if (!addressToUse) {
+      console.log('❌ No Solana wallet connected - showing connect message');
       document.getElementById('tokenBalance').textContent = 'Connect Solana wallet to see balance';
       return;
     }
