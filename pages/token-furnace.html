@@ -1596,7 +1596,7 @@ function detectTokenType(address) {
 
 // --- WALLET SELECTION HANDLERS ---
 async function handleEvmTokenBurn(tokenAddress, amount) {
-  console.log('🔵 Handling EVM token burn...');
+  console.log('🔵 Handling EVM token burn...', { tokenAddress, amount, currentChain, currentAddress });
   
   // Check if we already have a connected Base/EVM wallet
   if (currentChain === 'base' && currentAddress && window.wildWestWallet?.account) {
@@ -2037,7 +2037,7 @@ function showSolanaWalletSelectionModal(wallets, tokenAddress, amount) {
 
 // --- WALLET CONNECTION AND BURN FUNCTIONS ---
 async function connectAndBurnEvm(wallet, tokenAddress, amount) {
-  console.log('🔵 Connecting to EVM wallet:', wallet.name);
+  console.log('🔵 Connecting to EVM wallet:', wallet.name, { tokenAddress, amount });
   
   try {
     // Set the selected provider
@@ -2045,8 +2045,11 @@ async function connectAndBurnEvm(wallet, tokenAddress, amount) {
     currentProvider = wallet.provider;
     currentChain = 'base';
     
+    console.log('🔗 Requesting account connection...');
     // Request connection
     const accounts = await wallet.provider.request({ method: 'eth_requestAccounts' });
+    console.log('📋 Received accounts:', accounts);
+    
     if (accounts && accounts.length > 0) {
       currentAddress = accounts[0];
       console.log('✅ Connected to', wallet.name, 'with address:', currentAddress);
@@ -2054,9 +2057,11 @@ async function connectAndBurnEvm(wallet, tokenAddress, amount) {
       updateTokenFurnaceUI();
       showBurnSuccess(`Connected to ${wallet.name}!`, false);
       
+      console.log('🔥 Proceeding with burn...', { tokenAddress, amount, currentAddress });
       // Proceed with burning
       await burnEvmToken(tokenAddress, amount);
     } else {
+      console.error('❌ No accounts returned from wallet');
       showBurnSuccess('Failed to get account from ' + wallet.name, true);
     }
   } catch (error) {
@@ -3418,114 +3423,51 @@ async function updateBalance() {
 
 // --- BURN LOGIC ---
 async function burnEvmToken(tokenAddress, amount) {
+  console.log('🔥 burnEvmToken called with:', { tokenAddress, amount, currentAddress, currentChain });
+  
   if (!await safeLoad(loadEthers)) {
+    console.error('❌ Failed to load Ethers library');
     showBurnSuccess('Failed to load Ethers library.', true);
     return;
   }
+  console.log('✅ Ethers library loaded successfully');
   
   // Check if RPC_CONFIG is ready before proceeding
   if (!window.RPC_CONFIG || !window.RPC_CONFIG.getBaseEndpoint) {
+    console.error('❌ RPC_CONFIG not ready');
     showBurnSuccess('RPC configuration not ready. Please wait a moment and try again.', true);
     return;
   }
+  console.log('✅ RPC_CONFIG ready');
   
   console.log('🔥 Starting Base token burn:', { tokenAddress, amount, currentAddress });
   
-  // COMPREHENSIVE WALLET ISOLATION SYSTEM
-  console.log('🔒 Initializing wallet isolation system...');
-  
-  let isolatedMetaMaskProvider = null;
-  let isolatedPhantomProvider = null;
-  
-  // Step 1: Catalog all available wallet providers
-  const walletCatalog = {
-    metamask: [],
-    phantom: [],
-    other: []
-  };
-  
-  if (window.ethereum) {
-    if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
-      console.log('📋 Multiple providers detected, cataloging...');
-      window.ethereum.providers.forEach((provider, index) => {
-        console.log(`🔍 Provider ${index}:`, {
-          isMetaMask: provider.isMetaMask,
-          isPhantom: provider.isPhantom,
-          isCoinbaseWallet: provider.isCoinbaseWallet,
-          isRainbow: provider.isRainbow,
-          isTrust: provider.isTrust
-        });
-        
-        if (provider.isMetaMask && !provider.isPhantom) {
-          walletCatalog.metamask.push(provider);
-        } else if (provider.isPhantom && !provider.isMetaMask) {
-          walletCatalog.phantom.push(provider);
-        } else if (provider.isMetaMask && provider.isPhantom) {
-          // Handle edge case where both are detected
-          console.log('⚠️ Provider claims to be both MetaMask and Phantom');
-          if (provider._metamask) {
-            walletCatalog.metamask.push(provider);
-          } else if (provider._phantom) {
-            walletCatalog.phantom.push(provider);
-          } else {
-            walletCatalog.other.push(provider);
-          }
-        } else {
-          walletCatalog.other.push(provider);
-        }
+  try {
+    let provider, signer;
+    if (window.ethereum) {
+      console.log('� Using current EVM provider for burn:', {
+        hasCurrentEvmProvider: !!currentEvmProvider,
+        hasWindowEthereum: !!window.ethereum,
+        currentChain: currentChain,
+        currentAddress: currentAddress
       });
-    } else {
-      // Single provider object
-      console.log('📋 Single provider detected, analyzing...');
-      if (window.ethereum.isMetaMask && !window.ethereum.isPhantom) {
-        walletCatalog.metamask.push(window.ethereum);
-      } else if (window.ethereum.isPhantom && !window.ethereum.isMetaMask) {
-        walletCatalog.phantom.push(window.ethereum);
-      } else if (window.ethereum.isMetaMask && window.ethereum.isPhantom) {
-        // Both detected in single object - try to isolate
-        if (window.ethereum._metamask) {
-          walletCatalog.metamask.push(window.ethereum);
-        } else {
-          console.log('⚠️ Cannot isolate MetaMask from mixed provider');
-          walletCatalog.other.push(window.ethereum);
-        }
-      }
-    }
+  
+  // Use the provider that was selected during wallet connection instead of forcing MetaMask
+  let ethProvider = currentEvmProvider || window.ethereum;
+  
+  if (!ethProvider) {
+    console.error('🚨 NO EVM PROVIDER FOUND');
+    showBurnSuccess('No wallet provider found. Please make sure your wallet is connected.', true);
+    return;
   }
   
-  console.log('📊 Wallet catalog complete:', {
-    metamask: walletCatalog.metamask.length,
-    phantom: walletCatalog.phantom.length,
-    other: walletCatalog.other.length
+  console.log('🎯 Using selected EVM provider:', {
+    isMetaMask: ethProvider.isMetaMask,
+    isCoinbaseWallet: ethProvider.isCoinbaseWallet,
+    isRainbow: ethProvider.isRainbow,
+    isTrust: ethProvider.isTrust,
+    isPhantom: ethProvider.isPhantom
   });
-  
-  // Step 2: Select ONLY MetaMask provider for Base transactions
-  if (walletCatalog.metamask.length > 0) {
-    isolatedMetaMaskProvider = walletCatalog.metamask[0];
-    console.log('✅ Isolated MetaMask provider selected');
-  } else if (walletCatalog.other.length > 0) {
-    // Try to find MetaMask in 'other' category
-    const possibleMetaMask = walletCatalog.other.find(p => p.isMetaMask || p._metamask);
-    if (possibleMetaMask) {
-      isolatedMetaMaskProvider = possibleMetaMask;
-      console.log('✅ Found MetaMask in mixed providers');
-    }
-  }
-  
-  if (!isolatedMetaMaskProvider) {
-    console.error('🚨 NO METAMASK PROVIDER FOUND');
-    showWalletManagementModal(walletCatalog);
-    return;
-  }
-  
-  // Step 3: Verify isolation - ensure we're not using Phantom
-  if (isolatedMetaMaskProvider.isPhantom && !isolatedMetaMaskProvider.isMetaMask) {
-    console.error('🚨 PHANTOM CONTAMINATION DETECTED');
-    showBurnSuccess('ERROR: System isolated Phantom instead of MetaMask. Please disable other wallet extensions temporarily and refresh the page.', true);
-    return;
-  }
-  
-  console.log('🔒 Wallet isolation complete - MetaMask secured for Base transactions');
   
   try {
     let provider, signer;
@@ -3538,32 +3480,12 @@ async function burnEvmToken(tokenAddress, amount) {
         selectedAddress: window.ethereum.selectedAddress
       });
       
-      // USE ISOLATED METAMASK PROVIDER ONLY
-      let ethProvider = isolatedMetaMaskProvider;
-      
-      console.log('🎯 Using isolated MetaMask provider:', {
-        isMetaMask: ethProvider.isMetaMask,
-        isPhantom: ethProvider.isPhantom,
-        hasRequest: !!ethProvider.request,
-        hasMetaMaskProperty: !!ethProvider._metamask
-      });
-      
-      // Final safety check on isolated provider
-      if (!ethProvider.isMetaMask) {
-        console.error('� ISOLATED PROVIDER IS NOT METAMASK');
-        showBurnSuccess('ERROR: Failed to isolate MetaMask provider. Please disable other wallet extensions and refresh the page.', true);
-        return;
-      }
-      
-      if (ethProvider.isPhantom && !ethProvider._metamask) {
-        console.error('🚨 ISOLATED PROVIDER CONTAMINATED WITH PHANTOM');
-        showBurnSuccess('ERROR: MetaMask provider contaminated with Phantom. Please disable Phantom extension and refresh the page.', true);
-        return;
-      }
+      // USE SELECTED EVM PROVIDER (respects user's wallet choice)
+      console.log('🎯 Using selected wallet provider for transaction');
       
       provider = new window.ethers.providers.Web3Provider(ethProvider);
       signer = provider.getSigner();
-      console.log('🔗 Using Web3Provider with MetaMask signer');
+      console.log('🔗 Using Web3Provider with selected wallet signer');
       
       // IMMEDIATELY verify this is the correct provider
       try {
