@@ -72,6 +72,13 @@ class MobileWalletIntegration {
   }
 
   enhanceWalletConnection() {
+    // DISABLED: Override wallet connection for pages with custom modal systems
+    // The solana-locking, base-locking, and token-furnace pages have their own
+    // showChainSelectionModal systems that work properly on mobile
+    
+    console.log('🔗 Mobile wallet connection override disabled - using page-specific modals');
+    return;
+    
     if (!window.wildWestWallet) return;
     
     // Store original connect method
@@ -94,10 +101,10 @@ class MobileWalletIntegration {
   async handleMobileWalletConnection(walletType, originalConnect) {
     console.log('📱 Handling mobile wallet connection...');
     
-    // FORCE SHOW MODAL FOR DEBUGGING
-    console.log('🚨 FORCING MODAL TO SHOW FOR DEBUG');
-    this.showWalletBrowserGuidance();
-    return false;
+    // DISABLED: Debug modal override - allow normal connection flow
+    // console.log('🚨 FORCING MODAL TO SHOW FOR DEBUG');
+    // this.showWalletBrowserGuidance();
+    // return false;
     
     // First try standard connection (works in wallet browsers)
     try {
