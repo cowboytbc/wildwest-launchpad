@@ -1481,30 +1481,34 @@ async function initializeRPCEndpoints() {
       BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
       console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
     } else {
-      throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+      console.warn('⚠️ RPC_CONFIG not available - using fallback endpoints');
+      // Use working fallbacks
+      SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+      BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
-    throw error;
     // Ensure we have working fallbacks
     SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
     BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
+    console.log('🔄 Using fallback RPC endpoints:', { SOLANA_RPC, BASE_RPC });
   }
 }
 
 // Call initialization
-initializeRPCEndpoints();
-
-console.log('🔧 RPC Configuration loaded:', {
-  SOLANA_RPC,
-  BASE_RPC,
-  hasRPCConfig: !!window.RPC_CONFIG,
-  hasProductionConfig: !!window.PRODUCTION_CONFIG,
-  productionRPC: {
-    solana: window.PRODUCTION_CONFIG?.rpc?.solana,
-    base: window.PRODUCTION_CONFIG?.rpc?.base
-  }
-});
+(async () => {
+  await initializeRPCEndpoints();
+  console.log('🔧 RPC Configuration loaded:', {
+    SOLANA_RPC,
+    BASE_RPC,
+    hasRPCConfig: !!window.RPC_CONFIG,
+    hasProductionConfig: !!window.PRODUCTION_CONFIG,
+    productionRPC: {
+      solana: window.PRODUCTION_CONFIG?.rpc?.solana,
+      base: window.PRODUCTION_CONFIG?.rpc?.base
+    }
+  });
+})();
 
 // --- GLOBAL STATE ---
 let currentChain = null; // 'base' or 'solana'
