@@ -5,67 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solana SPL Token Lock</title>
   
-  <!-- CRITICAL: Block auto-connection BEFORE any wallet scripts load -->
+  <!-- Simple anti-auto-connection for Solana locking page -->
   <script>
-    // NUCLEAR META-LEVEL BLOCKING: Prevent wallet injection at the deepest level
-    console.log('🚫 NUCLEAR META-LEVEL WALLET BLOCKING INITIATED');
-    
-    // Block at the Object.defineProperty level
-    const originalDefineProperty = Object.defineProperty;
-    const blockedWalletProps = ['solana', 'phantom', 'solflare', 'backpack', 'nightly', 'slope', 'torus'];
-    
-    Object.defineProperty = function(obj, prop, descriptor) {
-      if (obj === window && blockedWalletProps.includes(prop)) {
-        console.log(`🚫 INTERCEPTED wallet injection: ${prop}`);
-        // Hide the wallet but store it
-        window[`__hidden_${prop}`] = descriptor.value || descriptor.get?.();
-        return obj; // Prevent actual assignment
-      }
-      return originalDefineProperty.call(this, obj, prop, descriptor);
-    };
-    
-    // Block direct assignment with getters/setters
-    blockedWalletProps.forEach(prop => {
-      Object.defineProperty(window, prop, {
-        get() {
-          console.log(`🚫 BLOCKED read access to: ${prop}`);
-          return { isBlocked: true, connect: () => Promise.reject('Wallet blocked') };
-        },
-        set(value) {
-          console.log(`🚫 BLOCKED write access to: ${prop}, storing as hidden`);
-          window[`__hidden_${prop}`] = value;
-        },
-        configurable: true
-      });
-    });
-    
-    // EMERGENCY RESTORE FUNCTION
-    window.__emergencyRestoreWallets = function() {
-      console.log('🚨 EMERGENCY WALLET RESTORE INITIATED');
-      blockedWalletProps.forEach(prop => {
-        if (window[`__hidden_${prop}`]) {
-          delete window[prop]; // Remove blocker
-          window[prop] = window[`__hidden_${prop}`]; // Restore wallet
-          console.log(`🚨 EMERGENCY RESTORED: ${prop}`);
-        }
-      });
-    };
-    
-    // FUNCTION TO RESTORE WALLETS FOR CONNECTION (called when user clicks connect)
-    window.__restoreWalletsForConnection = function() {
-      console.log('🔓 RESTORING wallets for user-initiated connection...');
-      blockedWalletProps.forEach(prop => {
-        if (window[`__hidden_${prop}`]) {
-          delete window[prop]; // Remove blocker
-          window[prop] = window[`__hidden_${prop}`]; // Restore wallet
-          console.log(`🔓 RESTORED for connection: ${prop}`);
-        }
-      });
-    };
-    
-    // MAXIMUM SECURITY: Block wallet auto-connection immediately
+    // Simple flag to prevent auto-connection - no wallet blocking
     window.WALLET_AUTO_CONNECTION_BLOCKED = true;
-    console.log('🚫 NUCLEAR META-LEVEL BLOCKING ACTIVE - ZERO wallet access possible');
+    console.log('� Solana locking: Auto-connection disabled - user must click connect');
   </script>
   
   <!-- Console Filter - Universal console control -->
@@ -388,50 +332,10 @@
           connectBtn.replaceWith(connectBtn.cloneNode(true));
           const newConnectBtn = document.getElementById('connectWalletBtn');
           
-          newConnectBtn.onclick = async function() {
-            console.log('� USER CLICKED CONNECT - EMERGENCY WALLET RESTORE INITIATED');
-            
-            // STEP 1: EMERGENCY RESTORE WALLETS FROM HIDDEN STATE
-            if (window.__emergencyRestoreWallets) {
-              window.__emergencyRestoreWallets();
-              // Wait a moment for wallets to be restored
-              await new Promise(resolve => setTimeout(resolve, 200));
-            } else {
-              console.error('❌ Emergency restore function not available!');
-            }
-            
-            // STEP 2: Use the centralized wallet system for Solana
-            try {
-              console.log('🟣 Using centralized wallet system for Solana connection...');
-              newConnectBtn.textContent = 'CONNECTING...';
-              newConnectBtn.disabled = true;
-              
-              // Use the centralized wallet system
-              const connected = await window.wildWestWallet.connectToSpecificChain('solana');
-              
-              if (connected && window.wildWestWallet.currentChain === 'solana') {
-                wallet = window.wildWestWallet.provider;
-                publicKey = window.wildWestWallet.account;
-                
-                console.log('✅ Connected via centralized system:', publicKey);
-                document.getElementById('walletAddress').textContent = 'CONNECTED: ' + publicKey;
-                newConnectBtn.textContent = 'WALLET CONNECTED';
-                newConnectBtn.disabled = false;
-                
-                // Update UI
-                loadUserLocks();
-                loadLockCreationFee();
-                
-                console.log('🎉 Solana wallet connected successfully');
-              } else {
-                throw new Error('Failed to connect to Solana network');
-              }
-            } catch (error) {
-              console.error('❌ Connection failed:', error);
-              newConnectBtn.textContent = 'CONNECTION FAILED';
-              newConnectBtn.disabled = false;
-              alert('Failed to connect wallet: ' + error.message);
-            }
+          // Use the modal-based wallet connection from showChainSelectionModal
+          newConnectBtn.onclick = function() {
+            console.log('🚀 Solana Locking: Using modal-based wallet connection');
+            showChainSelectionModal();
           };
         }
       } else {
@@ -1156,78 +1060,7 @@
     <ul id="userLocks"></ul>
   </div>
   <script>
-    // EXTREME ANTI-AUTO-CONNECTION: Block ALL wallet objects immediately
-    console.log('🚫 IMPLEMENTING EXTREME WALLET BLOCKING...');
-    
-    // Store original wallet objects before blocking them
-    const originalWalletObjects = {};
-    
-    // NUCLEAR OPTION: Completely hide all wallet objects from the page
-    function blockAllWallets() {
-      const walletProperties = ['solana', 'phantom', 'solflare', 'backpack', 'nightly', 'blocto', 'torus', 'sollet', 'slope', 'ledger', 'coin98', 'okxwallet', 'bitget', 'xdefi'];
-      
-      walletProperties.forEach(prop => {
-        if (window[prop]) {
-          console.log(`🚫 BLOCKING wallet property: ${prop}`);
-          originalWalletObjects[prop] = window[prop];
-          
-          // Replace with a blocked version
-          window[prop] = {
-            isBlocked: true,
-            originalWallet: originalWalletObjects[prop],
-            connect: () => {
-              throw new Error(`Wallet ${prop} is blocked. Use the connect button to enable.`);
-            },
-            disconnect: () => {
-              throw new Error(`Wallet ${prop} is blocked. Use the connect button to enable.`);
-            }
-          };
-        }
-      });
-      
-      console.log('🚫 ALL WALLETS BLOCKED - No auto-connection possible');
-    }
-    
-    // UNBLOCK wallets when user explicitly requests connection
-    function unblockAllWallets() {
-      console.log('✅ UNBLOCKING ALL WALLETS for user-requested connection...');
-      
-      Object.keys(originalWalletObjects).forEach(prop => {
-        window[prop] = originalWalletObjects[prop];
-        console.log(`✅ RESTORED wallet property: ${prop}`);
-      });
-      
-      console.log('✅ ALL WALLETS UNBLOCKED');
-    }
-    
-    // Block immediately when page loads
-    blockAllWallets();
-    
-    // Set up a watcher to block any wallets that load after page load
-    const walletBlocker = setInterval(() => {
-      const walletProperties = ['solana', 'phantom', 'solflare', 'backpack', 'nightly', 'blocto', 'torus', 'sollet', 'slope', 'ledger', 'coin98', 'okxwallet', 'bitget', 'xdefi'];
-      
-      walletProperties.forEach(prop => {
-        if (window[prop] && !window[prop].isBlocked && !originalWalletObjects[prop]) {
-          console.log(`🚫 LATE-LOADING WALLET DETECTED AND BLOCKED: ${prop}`);
-          originalWalletObjects[prop] = window[prop];
-          window[prop] = {
-            isBlocked: true,
-            originalWallet: originalWalletObjects[prop],
-            connect: () => {
-              throw new Error(`Wallet ${prop} is blocked. Use the connect button to enable.`);
-            }
-          };
-        }
-      });
-    }, 100); // Check every 100ms for new wallets
-    
-    // Make unblock function globally available
-    window.unblockWallets = unblockAllWallets;
-    window.blockWallets = blockAllWallets;
-    
-    console.log('🚫 EXTREME WALLET BLOCKING SYSTEM ACTIVE');
-    console.log('💡 Use unblockWallets() to restore wallet access');
+    console.log('� Solana Locking: Page initialized without wallet blocking');
     
     // --- SOLANA PROGRAM ADDRESS (replace with your deployed program address) ---
     const PROGRAM_ID = new solanaWeb3.PublicKey("8AqhFyokcMouAf9rruTdnDxVmnNyvn5f4Gf71FJDLXyV");
@@ -1826,84 +1659,12 @@
       };
     };
 
-    // NUCLEAR OPTION: Function to completely reset and force fresh wallet approval
-    window.nukeWalletConnection = function() {
-      console.log('💥 NUCLEAR WALLET RESET - Clearing ALL wallet state...');
-      
-      // First, re-block all wallets
-      blockWallets();
-      
-      // Clear all wallet-related localStorage
-      Object.keys(localStorage).forEach(key => {
-        if (key.includes('phantom') || key.includes('solana') || key.includes('wallet') || key.includes('wildwest')) {
-          localStorage.removeItem(key);
-          console.log('🗑️ Nuked localStorage key:', key);
-        }
-      });
-      
-      // Clear sessionStorage too
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.includes('phantom') || key.includes('solana') || key.includes('wallet')) {
-          sessionStorage.removeItem(key);
-          console.log('🗑️ Nuked sessionStorage key:', key);
-        }
-      });
-      
-      // Reset wallet system
-      if (window.wildWestWallet) {
-        window.wildWestWallet.resetWalletState();
-      }
-      
-      console.log('💥 NUCLEAR RESET COMPLETE - All wallets blocked and page refresh recommended');
-      
-      // Ask user if they want to refresh the page
-      if (confirm('Nuclear wallet reset complete. Refresh page now to ensure clean state?')) {
-        window.location.reload();
-      }
-    };
-
-    // NEW: Function to test if wallets are properly blocked
-    window.testWalletBlocking = function() {
-      console.log('🧪 TESTING WALLET BLOCKING STATUS...');
-      
-      const walletProperties = ['solana', 'phantom', 'solflare', 'backpack', 'nightly'];
-      
-      walletProperties.forEach(prop => {
-        if (window[prop]) {
-          console.log(`🔍 ${prop}:`, {
-            exists: !!window[prop],
-            isBlocked: window[prop].isBlocked,
-            hasConnect: !!window[prop].connect,
-            hasOriginal: !!window[prop].originalWallet
-          });
-          
-          if (window[prop].isBlocked) {
-            console.log(`✅ ${prop} is PROPERLY BLOCKED`);
-          } else {
-            console.log(`❌ ${prop} is NOT BLOCKED - potential auto-connection risk!`);
-          }
-        } else {
-          console.log(`⚪ ${prop}: Not installed`);
-        }
-      });
-      
-      return {
-        walletsBlocked: walletProperties.filter(prop => window[prop]?.isBlocked).length,
-        walletsUnblocked: walletProperties.filter(prop => window[prop] && !window[prop]?.isBlocked).length,
-        walletsNotInstalled: walletProperties.filter(prop => !window[prop]).length
-      };
-    };
-
-    console.log('💡 Solana Debug functions available:');
+    console.log(' Solana Debug functions available:');
     console.log('• debugSolanaWalletSystem() - Check wallet system status');
     console.log('• debugProductionConfig() - Check production config status');
     console.log('• testSolanaConnection() - Manually test wallet connection');
     console.log('• refreshSolanaConnection() - Refresh connection with QuickNode endpoints');
     console.log('• forceLoadProductionConfig() - Force reload config from deployed site');
-    console.log('• nukeWalletConnection() - NUCLEAR OPTION: Clear all wallet state and refresh page');
-    console.log('• testWalletBlocking() - Test if wallets are properly blocked');
-    console.log('• unblockWallets() - Manually unblock wallets');
-    console.log('• blockWallets() - Manually re-block wallets');
 
     // Load and display the lock creation fee
     async function loadLockCreationFee() {
