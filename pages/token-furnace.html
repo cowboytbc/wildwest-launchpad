@@ -1479,19 +1479,13 @@ async function initializeRPCEndpoints() {
     if (window.RPC_CONFIG) {
       SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
       BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
-      console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
+      console.log('✅ QuickNode RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
     } else {
-      console.warn('⚠️ RPC_CONFIG not available - using fallback endpoints');
-      // Use working fallbacks
-      SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
-      BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
+      throw new Error('RPC_CONFIG not available - Configuration system failed');
     }
   } catch (error) {
-    console.error('❌ Failed to initialize RPC endpoints:', error);
-    // Ensure we have working fallbacks
-    SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
-    BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
-    console.log('🔄 Using fallback RPC endpoints:', { SOLANA_RPC, BASE_RPC });
+    console.error('❌ Failed to initialize QuickNode RPC endpoints:', error);
+    throw error; // Don't use fallbacks - QuickNode is required
   }
 }
 
