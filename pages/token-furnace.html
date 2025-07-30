@@ -1479,27 +1479,54 @@ async function initializeRPCEndpoints() {
     if (window.RPC_CONFIG) {
       SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
       BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
-      console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
+      console.log('✅ RPC endpoints initialized from RPC_CONFIG:', { SOLANA_RPC, BASE_RPC });
+    } else if (window.PRODUCTION_CONFIG?.rpc) {
+      // Fallback to production config if RPC_CONFIG not available
+      SOLANA_RPC = window.PRODUCTION_CONFIG.rpc.solana || SOLANA_RPC;
+      BASE_RPC = window.PRODUCTION_CONFIG.rpc.base || BASE_RPC;
+      console.log('✅ RPC endpoints initialized from PRODUCTION_CONFIG:', { SOLANA_RPC, BASE_RPC });
     } else {
-      throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+      console.warn('⚠️ No RPC configuration available - using public fallbacks');
+      // Keep default fallbacks
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
-    throw error;
-    // Ensure we have working fallbacks
-    SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
-    BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
+    // Keep using the default fallbacks
+    console.log('🔄 Using default fallback endpoints:', { SOLANA_RPC, BASE_RPC });
   }
 }
 
 // Call initialization
 initializeRPCEndpoints();
 
-console.log('🔧 RPC Configuration loaded:', {
+// Add mobile-specific RPC verification
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+if (isMobile) {
+  console.log('� Mobile device detected - verifying RPC configuration...');
+  setTimeout(() => {
+    console.log('🔍 Mobile RPC Status Check:', {
+      SOLANA_RPC,
+      BASE_RPC,
+      hasRPCConfig: !!window.RPC_CONFIG,
+      hasProductionConfig: !!window.PRODUCTION_CONFIG,
+      isUsingQuickNode: BASE_RPC.includes('quiknode') || SOLANA_RPC.includes('quiknode'),
+      isUsingSecrets: (BASE_RPC !== 'https://mainnet.base.org' && SOLANA_RPC !== 'https://api.mainnet-beta.solana.com')
+    });
+    
+    // Force re-initialization if mobile didn't get QuickNode endpoints
+    if (!BASE_RPC.includes('quiknode') && window.RPC_CONFIG) {
+      console.log('🔄 Mobile: Re-attempting RPC initialization...');
+      initializeRPCEndpoints();
+    }
+  }, 1000);
+}
+
+console.log('�🔧 RPC Configuration loaded:', {
   SOLANA_RPC,
   BASE_RPC,
   hasRPCConfig: !!window.RPC_CONFIG,
   hasProductionConfig: !!window.PRODUCTION_CONFIG,
+  isMobile,
   productionRPC: {
     solana: window.PRODUCTION_CONFIG?.rpc?.solana,
     base: window.PRODUCTION_CONFIG?.rpc?.base
@@ -2049,6 +2076,22 @@ function showSolanaWalletSelectionModal(wallets, tokenAddress, amount) {
 async function connectAndBurnEvm(wallet, tokenAddress, amount) {
   console.log('🔵 Connecting to EVM wallet:', wallet.name);
   
+  // Force mobile RPC re-check before wallet connection
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile && (!BASE_RPC.includes('quiknode') || !SOLANA_RPC.includes('quiknode'))) {
+    console.log('📱 Mobile: Forcing RPC re-initialization before wallet connection...');
+    initializeRPCEndpoints();
+    
+    // Give it a moment to process
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('📱 Mobile: Post-refresh RPC status:', {
+      BASE_RPC,
+      SOLANA_RPC,
+      hasQuickNode: BASE_RPC.includes('quiknode') || SOLANA_RPC.includes('quiknode')
+    });
+  }
+  
   try {
     // Set the selected provider
     currentEvmProvider = wallet.provider;
@@ -2077,6 +2120,22 @@ async function connectAndBurnEvm(wallet, tokenAddress, amount) {
 
 async function connectAndBurnSolana(wallet, tokenAddress, amount) {
   console.log('🟣 Connecting to Solana wallet:', wallet.name);
+  
+  // Force mobile RPC re-check before wallet connection
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile && (!BASE_RPC.includes('quiknode') || !SOLANA_RPC.includes('quiknode'))) {
+    console.log('📱 Mobile: Forcing RPC re-initialization before Solana connection...');
+    initializeRPCEndpoints();
+    
+    // Give it a moment to process
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('📱 Mobile: Post-refresh RPC status for Solana:', {
+      BASE_RPC,
+      SOLANA_RPC,
+      hasQuickNode: BASE_RPC.includes('quiknode') || SOLANA_RPC.includes('quiknode')
+    });
+  }
   
   try {
     // Set the selected provider
