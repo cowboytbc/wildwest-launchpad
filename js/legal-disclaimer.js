@@ -4,24 +4,7 @@
 (function() {
   'use strict';
   
-  // Check if disclai        <!-- Legal disclaimer text -->
-        <div style="
-          background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(0, 234, 255, 0.3);
-          border-radius: 10px;
-          padding: ${isMobile ? '1.2rem' : '1rem'};
-          margin-bottom: 1rem;
-          text-align: left;
-          line-height: 1.5;
-          font-size: ${isMobile ? '0.9rem' : '0.8rem'};
-          color: #e0e0e0;
-          max-height: ${isMobile ? '220px' : '180px'};
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-        ">
-          <div style="text-align: center; margin-bottom: 1rem; color: #00eaff; font-weight: 700; font-size: ${isMobile ? '0.95rem' : '0.85rem'};">
-            ⚠️ IMPORTANT INFORMATION
-          </div>⚠️ IMPORTANT LEGAL NOTICEs been shown in this session
+  // Check if disclaimer has been shown in this session
   const DISCLAIMER_KEY = 'wildwest_disclaimer_acknowledged';
   const SESSION_KEY = 'wildwest_session_disclaimer';
   
