@@ -16,16 +16,18 @@
   // High-quality fallback RPC endpoints that work without GitHub Secrets
   const FALLBACK_RPC_ENDPOINTS = {
     solana: [
-      "https://api.mainnet-beta.solana.com",
-      "https://solana-api.projectserum.com", 
-      "https://api.metaplex.solana.com",
-      "https://rpc.ankr.com/solana"
+      "https://rpc.ankr.com/solana",                    // Best rate limits
+      "https://solana-mainnet.rpc.extrnode.com",       // High performance
+      "https://api.mainnet-beta.solana.com",           // Official (rate limited)
+      "https://solana.public-rpc.com",                 // Good backup
+      "https://api.metaplex.solana.com"                // Metaplex backup
     ],
     base: [
-      "https://mainnet.base.org",
-      "https://base.blockpi.network/v1/rpc/public",
-      "https://base-mainnet.public.blastapi.io",
-      "https://base.llamarpc.com"
+      "https://base-rpc.publicnode.com",               // Best rate limits
+      "https://base.llamarpc.com",                     // High performance
+      "https://mainnet.base.org",                      // Official
+      "https://base.blockpi.network/v1/rpc/public",    // Good backup
+      "https://base-mainnet.public.blastapi.io"        // Blast backup
     ]
   };
   
