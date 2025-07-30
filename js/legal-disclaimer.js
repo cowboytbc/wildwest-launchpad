@@ -4,7 +4,24 @@
 (function() {
   'use strict';
   
-  // Check if disclaimer h            ⚠️ IMPORTANT LEGAL NOTICEs been shown in this session
+  // Check if disclai        <!-- Legal disclaimer text -->
+        <div style="
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(0, 234, 255, 0.3);
+          border-radius: 10px;
+          padding: ${isMobile ? '1.2rem' : '1rem'};
+          margin-bottom: 1rem;
+          text-align: left;
+          line-height: 1.5;
+          font-size: ${isMobile ? '0.9rem' : '0.8rem'};
+          color: #e0e0e0;
+          max-height: ${isMobile ? '220px' : '180px'};
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        ">
+          <div style="text-align: center; margin-bottom: 1rem; color: #00eaff; font-weight: 700; font-size: ${isMobile ? '0.95rem' : '0.85rem'};">
+            ⚠️ IMPORTANT INFORMATION
+          </div>⚠️ IMPORTANT LEGAL NOTICEs been shown in this session
   const DISCLAIMER_KEY = 'wildwest_disclaimer_acknowledged';
   const SESSION_KEY = 'wildwest_session_disclaimer';
   
@@ -57,9 +74,9 @@
         border: 3px solid #00eaff;
         border-radius: 15px;
         padding: 1.5rem 1rem;
-        max-width: 400px;
-        width: 90vw;
-        max-height: 85vh;
+        max-width: ${isMobile ? '95vw' : '420px'};
+        width: ${isMobile ? '95vw' : '90vw'};
+        max-height: ${isMobile ? '95vh' : '85vh'};
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
@@ -73,7 +90,6 @@
         position: relative;
         animation: disclaimerSlideIn 0.6s ease-out;
         box-sizing: border-box;
-        overflow: hidden;
       ">
         <!-- Close button -->
         <button onclick="
@@ -85,10 +101,10 @@
           background: rgba(255, 255, 255, 0.1);
           border: 1px solid rgba(0, 234, 255, 0.3);
           border-radius: 50%;
-          width: 40px;
-          height: 40px;
+          width: ${isMobile ? '44px' : '40px'};
+          height: ${isMobile ? '44px' : '40px'};
           color: #00eaff;
-          font-size: 1.4rem;
+          font-size: ${isMobile ? '1.6rem' : '1.4rem'};
           font-weight: bold;
           cursor: pointer;
           display: flex;
@@ -97,6 +113,7 @@
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
           z-index: 10;
+          touch-action: manipulation;
         " onmouseover="this.style.background='rgba(0, 234, 255, 0.2)'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 0 15px rgba(0, 234, 255, 0.5)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='scale(1)'; this.style.boxShadow='none'">
           ×
         </button>
@@ -136,14 +153,14 @@
         <h1 style="
           color: #00eaff;
           margin-bottom: 0.8rem;
-          font-size: 1.3rem;
+          font-size: ${isMobile ? '1.1rem' : '1.3rem'};
           font-weight: 900;
           text-shadow: 0 0 15px rgba(0, 234, 255, 0.7);
           letter-spacing: 1px;
           text-transform: uppercase;
           line-height: 1.2;
         ">
-          Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em; font-size: 3rem;">WILDWEST</span>
+          Welcome to <span style="font-family: 'Ewert', 'UnifrakturMaguntia', 'Creepster', cursive; letter-spacing: 0.05em; font-size: ${isMobile ? '2.2rem' : '3rem'};">WILDWEST</span>
         </h1>
         
         <!-- Legal disclaimer text -->
@@ -181,19 +198,19 @@
           background: rgba(0, 234, 255, 0.1);
           border: 2px solid #00eaff;
           border-radius: 10px;
-          padding: 0.8rem;
+          padding: ${isMobile ? '1rem' : '0.8rem'};
           margin-bottom: 1rem;
           animation: mobilePulse 3s infinite;
         ">
           <div style="
-            font-size: 1.5rem;
-            margin-bottom: 0.3rem;
+            font-size: ${isMobile ? '1.8rem' : '1.5rem'};
+            margin-bottom: 0.4rem;
             filter: drop-shadow(0 0 10px #00eaff);
           ">📱</div>
-          <div style="color: #00eaff; font-weight: 700; margin-bottom: 0.3rem; font-size: 0.95rem;">
+          <div style="color: #00eaff; font-weight: 700; margin-bottom: 0.4rem; font-size: ${isMobile ? '1rem' : '0.95rem'};">
             MOBILE USERS - IMPORTANT!
           </div>
-          <div style="font-size: 0.8rem; color: #e0e0e0; line-height: 1.3;">
+          <div style="font-size: ${isMobile ? '0.9rem' : '0.8rem'}; color: #e0e0e0; line-height: 1.4;">
             For proper functionality, open this site in your <strong style="color: #00eaff;">wallet's built-in browser</strong> 
             (MetaMask, Phantom, Trust Wallet, Coinbase Wallet, etc.) instead of your regular mobile browser.
           </div>
@@ -205,11 +222,11 @@
           background: rgba(0, 234, 255, 0.1);
           border: 1px solid rgba(0, 234, 255, 0.3);
           border-radius: 8px;
-          padding: 0.8rem;
+          padding: ${isMobile ? '1rem' : '0.8rem'};
           margin-bottom: 1rem;
-          font-size: 0.8rem;
+          font-size: ${isMobile ? '0.9rem' : '0.8rem'};
           color: #e0e0e0;
-          line-height: 1.3;
+          line-height: 1.4;
         ">
           <strong>By continuing, you confirm that you understand these terms and are ready to explore the Wild West responsibly!</strong>
         </div>
@@ -225,18 +242,20 @@
             background: linear-gradient(135deg, #00eaff 0%, #0099dd 100%);
             color: white;
             border: 2px solid #00eaff;
-            padding: 10px 24px;
+            padding: ${isMobile ? '14px 28px' : '10px 24px'};
             border-radius: 8px;
             font-family: 'Orbitron', Arial, sans-serif;
             font-weight: 600;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: ${isMobile ? '0.95rem' : '0.85rem'};
             transition: all 0.3s ease;
             box-shadow: 0 3px 12px rgba(0, 234, 255, 0.3);
             text-transform: uppercase;
             letter-spacing: 0.3px;
             width: 100%;
-            max-width: 200px;
+            max-width: ${isMobile ? '250px' : '200px'};
+            touch-action: manipulation;
+            min-height: ${isMobile ? '48px' : 'auto'};
           " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 15px rgba(0, 234, 255, 0.5)'; this.style.background='linear-gradient(135deg, #00fff7 0%, #00ccee 100%)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 12px rgba(0, 234, 255, 0.3)'; this.style.background='linear-gradient(135deg, #00eaff 0%, #0099dd 100%)'">
             I Agree & Continue
           </button>
@@ -260,7 +279,7 @@
         }
         @keyframes disclaimerSlideIn {
           from { 
-            transform: translateY(-100px) scale(0.8); 
+            transform: translateY(-50px) scale(0.9); 
             opacity: 0; 
           }
           to { 
@@ -290,6 +309,26 @@
           50% { 
             border-color: #00fff7; 
             box-shadow: 0 0 20px rgba(0, 234, 255, 0.6);
+          }
+        }
+        
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+          #legal-disclaimer-backdrop {
+            padding: 10px !important;
+          }
+          
+          #legal-disclaimer-backdrop > div {
+            border-radius: 12px !important;
+            max-height: 95vh !important;
+          }
+        }
+        
+        /* Ensure proper scrolling on mobile */
+        @media (max-height: 600px) {
+          #legal-disclaimer-backdrop > div {
+            max-height: 98vh !important;
+            padding: 1rem 0.8rem !important;
           }
         }
       `;
