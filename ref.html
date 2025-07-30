@@ -1485,44 +1485,21 @@ async function initializeRPCEndpoints() {
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
+    throw error;
     // Ensure we have working fallbacks
     SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
     BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
-    console.log('🔄 Using fallback endpoints:', { SOLANA_RPC, BASE_RPC });
   }
 }
 
 // Call initialization
 initializeRPCEndpoints();
 
-// Add mobile-specific RPC verification
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-if (isMobile) {
-  console.log('� Mobile device detected - verifying RPC configuration...');
-  setTimeout(() => {
-    console.log('🔍 Mobile RPC Status Check:', {
-      SOLANA_RPC,
-      BASE_RPC,
-      hasRPCConfig: !!window.RPC_CONFIG,
-      hasProductionConfig: !!window.PRODUCTION_CONFIG,
-      isUsingQuickNode: BASE_RPC.includes('quiknode') || SOLANA_RPC.includes('quiknode'),
-      isUsingSecrets: (BASE_RPC !== 'https://mainnet.base.org' && SOLANA_RPC !== 'https://api.mainnet-beta.solana.com')
-    });
-    
-    // Force re-initialization if mobile didn't get QuickNode endpoints
-    if (!BASE_RPC.includes('quiknode') && window.RPC_CONFIG) {
-      console.log('🔄 Mobile: Re-attempting RPC initialization...');
-      initializeRPCEndpoints();
-    }
-  }, 1000);
-}
-
-console.log('�🔧 RPC Configuration loaded:', {
+console.log('🔧 RPC Configuration loaded:', {
   SOLANA_RPC,
   BASE_RPC,
   hasRPCConfig: !!window.RPC_CONFIG,
   hasProductionConfig: !!window.PRODUCTION_CONFIG,
-  isMobile,
   productionRPC: {
     solana: window.PRODUCTION_CONFIG?.rpc?.solana,
     base: window.PRODUCTION_CONFIG?.rpc?.base
