@@ -9,6 +9,8 @@
   <script src="../js/console-filter.js"></script>
   <!-- Legal Disclaimer System - Must load first for compliance -->
   <script src="../js/legal-disclaimer.js"></script>
+  <!-- Mobile Debug System - Comprehensive mobile debugging -->
+  <script src="../js/mobile-debug.js"></script>
   <!-- Core wallet dependencies -->
   <script src="../js/wallet.js"></script>
   <!-- Mobile Wallet Integration - Clean mobile experience -->
@@ -1479,33 +1481,82 @@ function isMobile() {
          (window.innerWidth <= 768);
 }
 
-// Initialize RPC endpoints asynchronously
+// Enhanced mobile RPC initialization with multiple retry strategies
 async function initializeRPCEndpoints() {
+  console.log('🔧 Initializing RPC endpoints...', { isMobile: isMobile() });
+  
   try {
     if (window.RPC_CONFIG) {
       SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
       BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
       console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
       
-      // Mobile-specific RPC optimization
+      // Mobile-specific RPC optimization with validation
       if (isMobile()) {
         console.log('📱 Mobile detected - ensuring QuickNode endpoints');
-        // Force reload RPC config on mobile to ensure we get QuickNode
-        await new Promise(resolve => setTimeout(resolve, 100));
-        if (window.RPC_CONFIG) {
-          SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
-          BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
-          console.log('📱 Mobile RPC refresh:', { SOLANA_RPC, BASE_RPC });
+        
+        // Multiple validation attempts for mobile
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          console.log(`📱 Mobile RPC validation attempt ${attempt}/3`);
+          
+          await new Promise(resolve => setTimeout(resolve, attempt * 100));
+          
+          if (window.RPC_CONFIG) {
+            const solanaEndpoint = await window.RPC_CONFIG.getSolanaEndpoint();
+            const baseEndpoint = window.RPC_CONFIG.getBaseEndpoint();
+            
+            // Validate endpoints contain expected domains
+            const hasQuickNodeSolana = solanaEndpoint && solanaEndpoint.includes('solana');
+            const hasQuickNodeBase = baseEndpoint && (baseEndpoint.includes('base') || baseEndpoint.includes('8453'));
+            
+            console.log(`📱 Attempt ${attempt} validation:`, {
+              solanaEndpoint,
+              baseEndpoint,
+              hasQuickNodeSolana,
+              hasQuickNodeBase
+            });
+            
+            if (hasQuickNodeSolana && hasQuickNodeBase) {
+              SOLANA_RPC = solanaEndpoint;
+              BASE_RPC = baseEndpoint;
+              console.log('✅ Mobile RPC validation successful:', { SOLANA_RPC, BASE_RPC });
+              break;
+            }
+          }
+          
+          if (attempt === 3) {
+            console.warn('⚠️ Mobile RPC validation incomplete after 3 attempts');
+          }
         }
       }
     } else {
-      throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+      console.warn('⚠️ RPC_CONFIG not available - checking production config...');
+      
+      // Fallback to production config if available
+      if (window.PRODUCTION_CONFIG && window.PRODUCTION_CONFIG.rpc) {
+        if (window.PRODUCTION_CONFIG.rpc.solana) {
+          SOLANA_RPC = window.PRODUCTION_CONFIG.rpc.solana;
+          console.log('🔄 Using production Solana RPC:', SOLANA_RPC);
+        }
+        if (window.PRODUCTION_CONFIG.rpc.base) {
+          BASE_RPC = window.PRODUCTION_CONFIG.rpc.base;
+          console.log('🔄 Using production Base RPC:', BASE_RPC);
+        }
+      } else {
+        throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+      }
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
     // Ensure we have working fallbacks
     SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
-    BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
+    BASE_RPC = 'https://mainnet.base.org';
+    
+    // Mobile-specific fallback handling
+    if (isMobile()) {
+      console.warn('📱 Mobile RPC initialization failed - using fallback endpoints');
+      console.warn('💡 QuickNode endpoints may not be available on mobile');
+    }
   }
 }
 
