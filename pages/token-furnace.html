@@ -20,6 +20,8 @@
   <script src="../js/env-config.js"></script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="../js/production-config.js?v=20250727"></script>
+  <!-- Wallet Browser RPC Fallback - Ensures RPC works in wallet browsers -->
+  <script src="../js/wallet-browser-rpc-fallback.js"></script>
   <!-- RPC Configuration (must load before API calls) -->
   <script src="../js/rpc-config.js"></script>
   <!-- Performance optimizations for wallet browsers -->
@@ -1506,20 +1508,27 @@ async function initializeRPCEndpoints() {
             const baseEndpoint = window.RPC_CONFIG.getBaseEndpoint();
             
             // Validate endpoints contain expected domains
-            const hasQuickNodeSolana = solanaEndpoint && solanaEndpoint.includes('solana');
-            const hasQuickNodeBase = baseEndpoint && (baseEndpoint.includes('base') || baseEndpoint.includes('8453'));
+            const hasValidSolana = solanaEndpoint && solanaEndpoint.includes('solana');
+            const hasValidBase = baseEndpoint && (baseEndpoint.includes('base') || baseEndpoint.includes('8453'));
             
             console.log(`📱 Attempt ${attempt} validation:`, {
               solanaEndpoint,
               baseEndpoint,
-              hasQuickNodeSolana,
-              hasQuickNodeBase
+              hasValidSolana,
+              hasValidBase,
+              isWalletBrowser: window.RPC_CONFIG.isWalletBrowser,
+              fallbackMode: window.RPC_CONFIG.fallbackMode
             });
             
-            if (hasQuickNodeSolana && hasQuickNodeBase) {
+            if (hasValidSolana && hasValidBase) {
               SOLANA_RPC = solanaEndpoint;
               BASE_RPC = baseEndpoint;
               console.log('✅ Mobile RPC validation successful:', { SOLANA_RPC, BASE_RPC });
+              
+              // Show success message for wallet browsers using fallbacks
+              if (window.RPC_CONFIG.fallbackMode) {
+                console.log('ℹ️ Using high-quality public RPC endpoints (wallet browser mode)');
+              }
               break;
             }
           }
@@ -1543,19 +1552,30 @@ async function initializeRPCEndpoints() {
           console.log('🔄 Using production Base RPC:', BASE_RPC);
         }
       } else {
-        throw new Error('RPC_CONFIG not available - GitHub Secrets required');
+        // Final fallback for wallet browsers
+        console.log('⚠️ No production config available - using public endpoints for wallet browser');
+        SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+        BASE_RPC = 'https://mainnet.base.org';
       }
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
+    
     // Ensure we have working fallbacks
     SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
     BASE_RPC = 'https://mainnet.base.org';
     
-    // Mobile-specific fallback handling
+    // Mobile-specific fallback handling with user-friendly message
     if (isMobile()) {
       console.warn('📱 Mobile RPC initialization failed - using fallback endpoints');
-      console.warn('💡 QuickNode endpoints may not be available on mobile');
+      
+      // Check if this is a wallet browser
+      const isWalletBrowser = /MetaMask|Trust|Coinbase|Rainbow|WalletConnect|Phantom/i.test(navigator.userAgent);
+      if (isWalletBrowser) {
+        console.log('ℹ️ Wallet browser detected - this is normal, using public RPC endpoints');
+      } else {
+        console.warn('💡 For optimal performance, try opening this page in your wallet app');
+      }
     }
   }
 }
