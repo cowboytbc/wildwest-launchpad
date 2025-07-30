@@ -1473,6 +1473,12 @@
 let SOLANA_RPC = 'https://api.mainnet-beta.solana.com'; // Default fallback
 let BASE_RPC = 'https://mainnet.base.org'; // Default fallback
 
+// Mobile detection
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+         (window.innerWidth <= 768);
+}
+
 // Initialize RPC endpoints asynchronously
 async function initializeRPCEndpoints() {
   try {
@@ -1480,12 +1486,23 @@ async function initializeRPCEndpoints() {
       SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
       BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
       console.log('✅ RPC endpoints initialized:', { SOLANA_RPC, BASE_RPC });
+      
+      // Mobile-specific RPC optimization
+      if (isMobile()) {
+        console.log('📱 Mobile detected - ensuring QuickNode endpoints');
+        // Force reload RPC config on mobile to ensure we get QuickNode
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (window.RPC_CONFIG) {
+          SOLANA_RPC = await window.RPC_CONFIG.getSolanaEndpoint();
+          BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
+          console.log('📱 Mobile RPC refresh:', { SOLANA_RPC, BASE_RPC });
+        }
+      }
     } else {
       throw new Error('RPC_CONFIG not available - GitHub Secrets required');
     }
   } catch (error) {
     console.error('❌ Failed to initialize RPC endpoints:', error);
-    throw error;
     // Ensure we have working fallbacks
     SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
     BASE_RPC = 'https://base.blockpi.network/v1/rpc/public';
@@ -1500,6 +1517,8 @@ console.log('🔧 RPC Configuration loaded:', {
   BASE_RPC,
   hasRPCConfig: !!window.RPC_CONFIG,
   hasProductionConfig: !!window.PRODUCTION_CONFIG,
+  isMobile: isMobile(),
+  userAgent: navigator.userAgent,
   productionRPC: {
     solana: window.PRODUCTION_CONFIG?.rpc?.solana,
     base: window.PRODUCTION_CONFIG?.rpc?.base
@@ -2061,6 +2080,13 @@ async function connectAndBurnEvm(wallet, tokenAddress, amount) {
       currentAddress = accounts[0];
       console.log('✅ Connected to', wallet.name, 'with address:', currentAddress);
       
+      // Mobile RPC validation after wallet connection
+      if (isMobile()) {
+        console.log('📱 Mobile EVM wallet connected - validating QuickNode endpoints');
+        await initializeRPCEndpoints(); // Re-initialize to ensure QuickNode
+        console.log('📱 Post-connection EVM RPC check:', { SOLANA_RPC, BASE_RPC });
+      }
+      
       updateTokenFurnaceUI();
       showBurnSuccess(`Connected to ${wallet.name}!`, false);
       
@@ -2092,6 +2118,13 @@ async function connectAndBurnSolana(wallet, tokenAddress, amount) {
     if (pubkey) {
       currentAddress = pubkey;
       console.log('✅ Connected to', wallet.name, 'with address:', currentAddress);
+      
+      // Mobile RPC validation after wallet connection
+      if (isMobile()) {
+        console.log('📱 Mobile Solana wallet connected (burn) - validating QuickNode endpoints');
+        await initializeRPCEndpoints(); // Re-initialize to ensure QuickNode
+        console.log('📱 Post-connection Solana RPC check (burn):', { SOLANA_RPC, BASE_RPC });
+      }
       
       updateTokenFurnaceUI();
       showBurnSuccess(`Connected to ${wallet.name}!`, false);
@@ -2141,6 +2174,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   optimizeForWalletBrowser();
+  
+  // Mobile-specific RPC validation on page load
+  if (isMobile()) {
+    console.log('📱 Mobile device detected on page load - validating RPC configuration');
+    setTimeout(async () => {
+      try {
+        await initializeRPCEndpoints();
+        console.log('📱 Mobile page load RPC validation complete:', { SOLANA_RPC, BASE_RPC });
+      } catch (error) {
+        console.error('📱 Mobile RPC validation failed:', error);
+      }
+    }, 1000); // Give time for RPC config to load
+  }
   
   // Completely independent wallet connection for Token Furnace
   setupTokenFurnaceWallet();
@@ -2414,6 +2460,13 @@ document.addEventListener('DOMContentLoaded', function() {
           currentProvider = wallet.provider;
           currentEvmProvider = wallet.provider;
           currentSolanaProvider = null;
+          
+          // Mobile RPC validation after main wallet connection
+          if (isMobile()) {
+            console.log('📱 Mobile main wallet connected - validating QuickNode endpoints');
+            await initializeRPCEndpoints(); // Re-initialize to ensure QuickNode
+            console.log('📱 Post-connection main RPC check:', { SOLANA_RPC, BASE_RPC });
+          }
           
           updateTokenFurnaceUI();
           updateBalance();
@@ -2804,6 +2857,13 @@ async function connectSolanaWallet() {
         currentSolanaProvider = window.wildWestWallet.provider;
         currentEvmProvider = null;
         
+        // Mobile RPC validation after wallet connection
+        if (isMobile()) {
+          console.log('📱 Mobile wallet connected - validating QuickNode endpoints');
+          await initializeRPCEndpoints(); // Re-initialize to ensure QuickNode
+          console.log('📱 Post-connection RPC check:', { SOLANA_RPC, BASE_RPC });
+        }
+        
         updateTokenFurnaceUI();
         updateBalance();
         showBurnSuccess('Solana wallet connected successfully!', false);
@@ -2838,6 +2898,13 @@ async function connectSolanaWallet() {
           currentProvider = provider;
           currentSolanaProvider = provider;
           currentEvmProvider = null;
+          
+          // Mobile RPC validation after wallet connection
+          if (isMobile()) {
+            console.log('📱 Mobile wallet connected (fallback) - validating QuickNode endpoints');
+            await initializeRPCEndpoints(); // Re-initialize to ensure QuickNode
+            console.log('📱 Post-connection RPC check (fallback):', { SOLANA_RPC, BASE_RPC });
+          }
           
           updateTokenFurnaceUI();
           updateBalance();
