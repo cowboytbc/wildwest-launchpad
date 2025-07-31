@@ -1473,68 +1473,38 @@
     </script>
     <!-- --- Wallet Connect Logic --- -->
     <script>
-// --- CONFIG: QuickNode Endpoints (Using working token lock pattern) ---
+// --- CONFIG: QuickNode Endpoints (Using exact working token lock pattern) ---
 let SOLANA_RPC = 'https://api.mainnet-beta.solana.com'; // Default fallback
 let BASE_RPC = 'https://mainnet.base.org'; // Default fallback
 
-// Initialize RPC endpoints using the exact pattern from working token lock pages
-async function initializeSolanaRPC() {
-  console.log('🔧 INITIALIZING SOLANA CONNECTION...');
+// Use the exact same RPC initialization pattern as working token lock pages
+function initializeRPCEndpoints() {
+  console.log('🔧 Initializing RPC endpoints...');
   
-  let endpoint;
-  
-  // Try QuickNode from GitHub Secrets first
-  if (window.RPC_CONFIG) {
-    try {
-      endpoint = await window.RPC_CONFIG.getSolanaEndpoint();
-      console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
-    } catch (error) {
-      console.log('⚠️ QuickNode not available, using fallback');
-      endpoint = null;
+  // Initialize Solana RPC (same pattern as base-locking.html)
+  try {
+    if (window.RPC_CONFIG) {
+      SOLANA_RPC = window.RPC_CONFIG.getSolanaEndpoint();
+      console.log('✅ Using QuickNode Solana endpoint');
     }
+  } catch (error) {
+    console.log('⚠️ QuickNode Solana not available, using fallback');
+    SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
   }
   
-  // Fallback to public RPC if QuickNode fails
-  if (!endpoint) {
-    endpoint = 'https://api.mainnet-beta.solana.com';
-    console.log('🔄 Using fallback Solana RPC:', endpoint);
-  }
-  
-  SOLANA_RPC = endpoint;
-  return endpoint;
-}
-
-async function initializeBaseRPC() {
-  console.log('🔧 INITIALIZING BASE CONNECTION...');
-  
-  let endpoint;
-  
-  // Try QuickNode from GitHub Secrets first
-  if (window.RPC_CONFIG) {
-    try {
-      endpoint = window.RPC_CONFIG.getBaseEndpoint();
-      console.log('✅ Using QuickNode Base endpoint from GitHub Secrets');
-    } catch (error) {
-      console.log('⚠️ QuickNode not available, using fallback');
-      endpoint = null;
+  // Initialize Base RPC (same pattern as base-locking.html)  
+  try {
+    if (window.RPC_CONFIG) {
+      BASE_RPC = window.RPC_CONFIG.getBaseEndpoint();
+      console.log('✅ Using QuickNode Base endpoint');
     }
+  } catch (error) {
+    console.log('⚠️ QuickNode Base not available, using fallback');
+    BASE_RPC = 'https://mainnet.base.org';
   }
   
-  // Fallback to public RPC if QuickNode fails
-  if (!endpoint) {
-    endpoint = 'https://mainnet.base.org';
-    console.log('🔄 Using fallback Base RPC:', endpoint);
-  }
-  
-  BASE_RPC = endpoint;
-  return endpoint;
-}
-
-// Initialize both RPCs
-initializeSolanaRPC();
-initializeBaseRPC();
-
-console.log('🔧 RPC Configuration loaded:', {
+  console.log('🔄 Final RPC endpoints:', { SOLANA_RPC, BASE_RPC });
+}console.log('🔧 RPC Configuration loaded:', {
   SOLANA_RPC,
   BASE_RPC,
   hasRPCConfig: !!window.RPC_CONFIG,
@@ -2157,6 +2127,10 @@ async function connectAndBurnSolana(wallet, tokenAddress, amount) {
 
 // Wait for wallet.js to initialize
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize RPC endpoints first
+  console.log('🔧 Initializing RPC endpoints on page load...');
+  initializeRPCEndpoints();
+  
   // Performance optimization for wallet browsers
   function optimizeForWalletBrowser() {
     const isWalletBrowser = /MetaMask|Trust|Coinbase|Rainbow|WalletConnect|Phantom/i.test(navigator.userAgent) || 
@@ -3403,9 +3377,8 @@ async function updateBalance() {
     try {
       console.log('🔍 Fetching Solana token balance for:', { tokenAddress, wallet: addressToUse });
       
-      // Get the current RPC endpoint (async) - ONLY QuickNode
-      const solanaRPC = await window.RPC_CONFIG.getSolanaEndpoint();
-      const connection = new window.solanaWeb3.Connection(solanaRPC);
+      // Get the current RPC endpoint - using initialized endpoint
+      const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
       const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
       const ownerPubkey = new window.solanaWeb3.PublicKey(addressToUse);
       const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
@@ -4052,29 +4025,10 @@ async function burnSolanaToken(tokenAddress, amount) {
   console.log('🔒 Solana wallet isolation complete');
   
   try {
-    // Get the current RPC endpoint using working token lock pattern
-    console.log('� INITIALIZING SOLANA CONNECTION...');
+    // Use the initialized RPC endpoint
+    console.log('🔧 Using initialized Solana RPC endpoint');
     
-    let solanaRPC;
-    
-    // Try QuickNode from GitHub Secrets first
-    if (window.RPC_CONFIG) {
-      try {
-        solanaRPC = await window.RPC_CONFIG.getSolanaEndpoint();
-        console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
-      } catch (error) {
-        console.log('⚠️ QuickNode not available, using fallback');
-        solanaRPC = null;
-      }
-    }
-    
-    // Fallback to public RPC if QuickNode fails
-    if (!solanaRPC) {
-      solanaRPC = 'https://api.mainnet-beta.solana.com';
-      console.log('🔄 Using fallback Solana RPC:', solanaRPC);
-    }
-    
-    const connection = new window.solanaWeb3.Connection(solanaRPC, 'confirmed');
+    const connection = new window.solanaWeb3.Connection(SOLANA_RPC, 'confirmed');
     console.log('✅ Solana connection established');
     
     // Verify current address matches wallet
@@ -4952,9 +4906,8 @@ document.getElementById('burnAllBtn').addEventListener('click', async function()
     }
     
     try {
-      // Get the current RPC endpoint (async) - ONLY QuickNode
-      const solanaRPC = await window.RPC_CONFIG.getSolanaEndpoint();
-      const connection = new window.solanaWeb3.Connection(solanaRPC);
+      // Use the initialized RPC endpoint
+      const connection = new window.solanaWeb3.Connection(SOLANA_RPC);
       const mintPubkey = new window.solanaWeb3.PublicKey(tokenAddress);
       const ownerPubkey = new window.solanaWeb3.PublicKey(addressToUse);
       const tokenAccounts = await connection.getTokenAccountsByOwner(ownerPubkey, { mint: mintPubkey });
@@ -4990,8 +4943,7 @@ window.forceLoadProductionConfig = async function() {
     console.log('✅ Production config force loaded:', window.PRODUCTION_CONFIG);
     
     // Re-initialize RPC endpoints
-    await initializeSolanaRPC();
-    await initializeBaseRPC();
+    initializeRPCEndpoints();
     
     return window.PRODUCTION_CONFIG;
   } catch (error) {
