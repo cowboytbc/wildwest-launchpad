@@ -3187,7 +3187,7 @@ async function updateBalance() {
         BASE_RPC: BASE_RPC,
         hasEthereum: !!window.ethereum,
         hasRPCConfig: !!window.RPC_CONFIG,
-        actualQuickNodeEndpoint: window.RPC_CONFIG?.getBaseEndpoint(),
+        usingFallbackRPC: BASE_RPC === 'https://mainnet.base.org',
         productionConfigBase: window.PRODUCTION_CONFIG?.rpc?.base
       });
       
