@@ -448,10 +448,10 @@
           console.log('📱 Mobile detected, using enhanced wallet detection...');
           // Give mobile wallets extra time to inject
           setTimeout(() => {
-            showChainSelectionModal();
+            showDirectWalletModal();
           }, 500);
         } else {
-          showChainSelectionModal();
+          showDirectWalletModal();
         }
       });
       

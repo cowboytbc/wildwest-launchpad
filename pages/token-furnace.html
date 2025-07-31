@@ -4747,36 +4747,72 @@ function showTransactionHashModal(txHash, network) {
       @media (max-width: 768px) {
         .modal-content {
           width: 95vw !important;
-          max-height: 85vh !important;
-          margin: 2.5vh auto !important;
+          max-height: 80vh !important;
+          margin: 10vh auto !important;
         }
         .modal-header {
-          padding: 1rem !important;
+          padding: 0.75rem !important;
         }
         .modal-header h3 {
-          font-size: 1.1rem !important;
+          font-size: 1rem !important;
         }
         .modal-body {
-          padding: 1rem !important;
+          padding: 0.75rem !important;
         }
         .success-icon {
-          font-size: 2rem !important;
+          font-size: 1.8rem !important;
           margin-bottom: 0.25rem !important;
         }
         .tx-hash-container {
-          margin-bottom: 1rem !important;
+          margin-bottom: 0.75rem !important;
+          padding: 0.75rem !important;
         }
         .tx-hash-text {
-          font-size: 0.75rem !important;
+          font-size: 0.7rem !important;
           padding: 0.5rem !important;
+          line-height: 1.2 !important;
         }
         .button-row {
           flex-direction: column !important;
           gap: 0.5rem !important;
+          margin-bottom: 0.5rem !important;
         }
         .modal-button {
           padding: 0.6rem !important;
+          font-size: 0.85rem !important;
+        }
+      }
+      
+      /* Extra small screens */
+      @media (max-width: 480px) {
+        .modal-content {
+          width: 98vw !important;
+          max-height: 75vh !important;
+          margin: 12.5vh auto !important;
+        }
+        .modal-header {
+          padding: 0.5rem !important;
+        }
+        .modal-header h3 {
           font-size: 0.9rem !important;
+        }
+        .modal-body {
+          padding: 0.5rem !important;
+        }
+        .success-icon {
+          font-size: 1.5rem !important;
+        }
+        .tx-hash-container {
+          padding: 0.5rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+        .tx-hash-text {
+          font-size: 0.65rem !important;
+          padding: 0.4rem !important;
+        }
+        .modal-button {
+          padding: 0.5rem !important;
+          font-size: 0.8rem !important;
         }
       }
     </style>
