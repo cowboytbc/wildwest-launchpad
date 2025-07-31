@@ -25,8 +25,6 @@
   </script>
   <!-- Production Configuration (GitHub Secrets injection) -->
   <script src="js/production-config.js"></script>
-  <!-- Development Configuration (Fallback endpoints for mobile/wallet browsers) -->
-  <script src="js/dev-config.js"></script>
   <!-- RPC Configuration -->
   <script src="js/rpc-config.js"></script>
   <!-- Performance optimizations for wallet browsers -->
@@ -70,56 +68,13 @@
   <script src="js/multi-wallet-manager.js"></script>
   <!-- Wallet Integration -->
   <script src="js/wallet.js"></script>
-  <!-- Unified Wallet Connection System -->
-  <script src="js/unified-wallet-connection.js"></script>
   <!-- Token Furnace Style Wallet Modal System -->
   <script>
-    // Completely independent wallet connection for Index Page (Token Furnace approach)
-    
-    function setupIndexWallet() {
-      console.log('🔧 Setting up index wallet connection (token furnace approach)');
-      
-      // Wait a moment for DOM to be fully ready and wallet.js to load
-      setTimeout(() => {
-        const connectBtn = document.getElementById('connectWalletBtn');
-        if (!connectBtn) {
-          console.error('❌ Connect wallet button not found');
-          return;
-        }
-        
-        console.log('✅ Connect button found, setting up simple click handler');
-        
-        // Force remove any event listeners from main wallet system (token furnace approach)
-        const newButton = connectBtn.cloneNode(true);
-        connectBtn.parentNode.replaceChild(newButton, connectBtn);
-        
-        // Add simple click handler (like token furnace)
-        newButton.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          console.log('🔘 Index wallet button clicked (token furnace approach)');
-          
-          if (currentAddress && currentChain) {
-            console.log('Already connected, showing wallet details');
-            // For now, just show address - can enhance later
-            alert(`Connected: ${currentAddress.substring(0, 6)}...${currentAddress.substring(currentAddress.length - 4)}`);
-          } else {
-            console.log('Not connected, showing wallet selection modal');
-            showDirectWalletModal();
-          }
-        });
-        
-        console.log('✅ Index wallet setup complete (token furnace approach)');
-      }, 500); // Give time for wallet.js to load but then take over
-    }
-    
-    // Direct call like token furnace
-    setupIndexWallet();
-    
-    // Make functions globally accessible for debugging
-    window.showDirectWalletModal = showDirectWalletModal;
-    window.setupIndexWallet = setupIndexWallet;
+    // Token Furnace Style Wallet Modal Implementation
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM loaded, deferring wallet setup to avoid conflicts');
+      // Removed early setupIndexWallet() call to prevent dropdown conflicts
+    });
 
     function showDirectWalletModal() {
       console.log('🚀 showDirectWalletModal called!');
@@ -131,7 +86,7 @@
         console.log('🧹 Removed existing modal');
       }
       
-      // Detect available wallets (using token furnace approach)
+      // Detect available wallets
       const availableWallets = {
         ethereum: [],
         solana: []
@@ -189,14 +144,11 @@
       
       availableWallets.solana = solanaWallets;
       
-      console.log('� Detected wallets:', availableWallets);
+      console.log('🔍 Detected wallets:', availableWallets);
       
-      // Store globally for wallet connection
-      window.availableWallets = availableWallets;
-      
-      // Create modal with consistent styling (token furnace approach)
+      // Create modal with consistent styling
       const modal = document.createElement('div');
-      modal.id = 'chainSelectionModal';
+      modal.id = 'chainSelectionModal'; // Add unique ID for reliable targeting
       modal.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
@@ -363,7 +315,7 @@
       window.availableWallets = availableWallets;
     }
 
-    // Specific wallet connection function (using token furnace approach)
+    // Specific wallet connection function
     window.connectSpecificWallet = async function(network, walletIndex) {
       console.log(`🔗 Connecting to wallet ${walletIndex} on ${network} network`);
       
@@ -410,9 +362,14 @@
             
             updateWalletDisplay();
             
-            // Close modal reliably (token furnace approach)
-            const modal = document.querySelector('[style*="position: fixed"]');
-            if (modal) modal.remove();
+            // Close modal reliably
+            if (window.closeChainSelectionModal) {
+              window.closeChainSelectionModal();
+            } else {
+              // Fallback
+              const modal = document.getElementById('chainSelectionModal');
+              if (modal) modal.remove();
+            }
             
             console.log(`✅ ${wallet.name} connected successfully!`);
           }
@@ -426,29 +383,9 @@
           
           // Use the specific provider for this wallet
           const response = await wallet.provider.connect();
-          console.log('[DEBUG] solana connect() result:', response);
-          
-          // Handle different response formats from different Solana wallets
-          let pubkey;
-          if (response && response.publicKey) {
-            // Standard format (Phantom, Backpack)
-            pubkey = response.publicKey.toString();
-            console.log('[DEBUG] Using response.publicKey:', pubkey);
-          } else if (response && typeof response === 'string') {
-            // Direct string format
-            pubkey = response;
-            console.log('[DEBUG] Using direct response string:', pubkey);
-          } else if (wallet.provider.publicKey) {
-            // Provider property format (some wallets store it here after connect)
-            pubkey = wallet.provider.publicKey.toString();
-            console.log('[DEBUG] Using wallet.provider.publicKey:', pubkey);
-          } else {
-            console.error('[DEBUG] No publicKey found in response:', response);
-            throw new Error(`No publicKey returned from ${wallet.name}. Response: ${JSON.stringify(response)}`);
-          }
           
           // Update UI
-          currentAddress = pubkey;
+          currentAddress = response.publicKey.toString();
           currentChain = 'solana';
           currentProvider = wallet.provider;
           currentSolanaProvider = wallet.provider;
@@ -456,9 +393,14 @@
           
           updateWalletDisplay();
           
-          // Close modal reliably (token furnace approach)
-          const modal = document.querySelector('[style*="position: fixed"]');
-          if (modal) modal.remove();
+          // Close modal reliably
+          if (window.closeChainSelectionModal) {
+            window.closeChainSelectionModal();
+          } else {
+            // Fallback
+            const modal = document.getElementById('chainSelectionModal');
+            if (modal) modal.remove();
+          }
           
           console.log(`✅ ${wallet.name} connected successfully!`);
         }
@@ -467,7 +409,6 @@
           window.availableWallets.ethereum[walletIndex]?.name : 
           window.availableWallets.solana[walletIndex]?.name;
         console.error(`❌ ${walletName} connection failed:`, error);
-        alert(`${walletName} connection failed: ${error.message}`);
       }
     };
 
@@ -480,7 +421,7 @@
     }
 
     function setupIndexWallet() {
-      console.log('🔧 Setting up index wallet connection (token furnace approach)');
+      console.log('🔧 Setting up index wallet connection');
       
       const connectBtn = document.getElementById('connectWalletBtn');
       if (!connectBtn) {
@@ -488,30 +429,18 @@
         return;
       }
       
-      console.log('✅ Connect button found, setting up simple click handler');
-      
-      // Force remove any event listeners from main wallet system (token furnace approach)
+      // Remove existing event listeners and set up new one
       const newButton = connectBtn.cloneNode(true);
       connectBtn.parentNode.replaceChild(newButton, connectBtn);
       
-      // Add simple click handler (like token furnace)
       newButton.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
-        console.log('� Index wallet button clicked (token furnace approach)');
-        
-        if (currentAddress && currentChain) {
-          console.log('Already connected, showing wallet details');
-          // For now, just show address - can enhance later
-          alert(`Connected: ${currentAddress.substring(0, 6)}...${currentAddress.substring(currentAddress.length - 4)}`);
-        } else {
-          console.log('Not connected, showing wallet selection modal');
-          showDirectWalletModal();
-        }
+        console.log('🔗 Connect button clicked, showing modal');
+        showChainSelectionModal();
       });
       
-      console.log('✅ Index wallet setup complete (token furnace approach)');
+      console.log('✅ Index wallet setup complete');
     }
 
     // Global variables for wallet state
@@ -524,46 +453,6 @@
     // Make functions globally accessible
     window.showDirectWalletModal = showDirectWalletModal;
     window.setupIndexWallet = setupIndexWallet;
-    
-    // Initialize wallet connection setup
-    let walletSetupInitialized = false;
-    
-    function initializeWalletSetup() {
-      console.log('🎯 initializeWalletSetup called!');
-      console.log('🔍 walletSetupInitialized flag:', walletSetupInitialized);
-      
-      if (walletSetupInitialized) {
-        console.log('⏭️ Wallet setup already initialized, skipping...');
-        return;
-      }
-      walletSetupInitialized = true;
-      console.log('✅ Setting walletSetupInitialized to true');
-      
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const delay = isMobile ? 1000 : 200;
-      
-      console.log(`📱 Mobile detected: ${isMobile}, using ${delay}ms delay`);
-      
-      setTimeout(() => {
-        console.log('🎯 Timeout reached, calling setupIndexWallet...');
-        setupIndexWallet();
-      }, delay);
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 DOM loaded, initializing index wallet setup...');
-      initializeWalletSetup();
-    });
-
-    // Fallback initialization in case DOM is already loaded
-    if (document.readyState === 'loading') {
-      // DOM not ready yet, listener above will handle it
-      console.log('⏳ DOM still loading, event listener will handle initialization');
-    } else {
-      // DOM already loaded, initialize immediately
-      console.log('🚀 DOM already loaded, initializing index wallet setup...');
-      initializeWalletSetup();
-    }
   </script>
   <!-- GitHub Actions Uploader (core functionality) -->
   <script src="js/github-actions-uploader.js"></script>
@@ -698,12 +587,6 @@
         text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7, 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
         filter: none !important;
       }
-    }
-    
-    /* Loading spinner animation */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
     
     /* Mobile-optimized keyframes - Crisp and eye-catching */
@@ -3014,11 +2897,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }, 500);
   
-  // Override any unified wallet system calls to prevent conflicts
+  // Override any unified wallet system calls to prevent network selection modal
   window.addEventListener('load', () => {
-    console.log('🚫 Disabling conflicting wallet systems for mobile compatibility');
-    
-    // Disable unified wallet system
     if (window.wildWestWallet && window.wildWestWallet.connectWallet) {
       const originalConnectWallet = window.wildWestWallet.connectWallet;
       window.wildWestWallet.connectWallet = function(chain) {
@@ -3028,11 +2908,6 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       console.log('✅ Overrode wildWestWallet.connectWallet to use direct modal');
     }
-    
-    // Disable the initializeWalletConnection function
-    window.initializeWalletConnection = function() {
-      console.log('🚫 initializeWalletConnection disabled - using mobile-enhanced system');
-    };
   });
   
   // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
@@ -3295,9 +3170,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // DISABLED: Initialize wallet connection when wallet.js is ready (conflicts with mobile-enhanced system)
-  console.log('🚫 Unified wallet initialization disabled - using mobile-enhanced direct modal system');
-  /*
+  // Initialize wallet connection when wallet.js is ready
   if (window.wildWestWallet) {
     console.log('🚀 wildWestWallet already available - initializing immediately');
     initializeWalletConnection();
@@ -3319,8 +3192,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(checkWalletInterval);
       }
     }, 10000);
-  }
-  */
+  } // End of disabled inline wallet code - using unified system instead
   
   // Initialize Secure Configuration System
   console.log('🔒 Initializing secure configuration...');
