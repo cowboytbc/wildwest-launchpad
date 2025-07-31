@@ -1633,11 +1633,41 @@ async function handleEvmTokenBurn(tokenAddress, amount) {
   if (hasConnectedEvmWallet) {
     const connectedAddress = window.wildWestWallet?.account || currentAddress || window.ethereum?.selectedAddress;
     console.log('✅ Using already connected EVM wallet:', connectedAddress);
+    
+    // Use the specific provider that was used for connection
+    let walletProvider = null;
+    let walletName = 'EVM Wallet';
+    let walletIcon = '💼';
+    
+    if (window.wildWestWallet?.provider) {
+      walletProvider = window.wildWestWallet.provider;
+      walletName = window.wildWestWallet.provider?.isMetaMask ? 'MetaMask' : 'EVM Wallet';
+      walletIcon = window.wildWestWallet.provider?.isMetaMask ? '🦊' : '💼';
+    } else if (currentEvmProvider) {
+      walletProvider = currentEvmProvider;
+      walletName = currentEvmProvider?.isMetaMask ? 'MetaMask' : 'EVM Wallet';
+      walletIcon = currentEvmProvider?.isMetaMask ? '🦊' : '💼';
+    } else if (currentProvider) {
+      walletProvider = currentProvider;
+      walletName = currentProvider?.isMetaMask ? 'MetaMask' : 'EVM Wallet';
+      walletIcon = currentProvider?.isMetaMask ? '🦊' : '💼';
+    } else {
+      walletProvider = window.ethereum;
+      walletName = window.ethereum?.isMetaMask ? 'MetaMask' : 'EVM Wallet';
+      walletIcon = window.ethereum?.isMetaMask ? '🦊' : '💼';
+    }
+    
+    console.log('🎯 Using wallet provider:', {
+      name: walletName,
+      isMetaMask: walletProvider?.isMetaMask,
+      isCoinbaseWallet: walletProvider?.isCoinbaseWallet
+    });
+    
     // Create wallet object from current state
     const connectedWallet = {
-      name: window.ethereum?.isMetaMask ? 'MetaMask' : 'EVM Wallet',
-      icon: window.ethereum?.isMetaMask ? '🦊' : '💼',
-      provider: window.ethereum,
+      name: walletName,
+      icon: walletIcon,
+      provider: walletProvider,
       type: 'evm'
     };
     await connectAndBurnEvm(connectedWallet, tokenAddress, amount);
@@ -3513,15 +3543,37 @@ async function burnEvmToken(tokenAddress, amount) {
   
   if (hasConnectedWallet) {
     console.log('✅ Using already connected wallet, skipping detection');
-    // Use the connected wallet directly
-    const provider = new window.ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
+    
+    // Use the specific provider that was used for connection
+    let walletProvider = null;
+    
+    if (window.wildWestWallet?.provider) {
+      console.log('🎯 Using wildWestWallet provider');
+      walletProvider = window.wildWestWallet.provider;
+    } else if (currentEvmProvider) {
+      console.log('🎯 Using currentEvmProvider');
+      walletProvider = currentEvmProvider;
+    } else if (currentProvider) {
+      console.log('🎯 Using currentProvider');
+      walletProvider = currentProvider;
+    } else {
+      console.log('🎯 Falling back to window.ethereum');
+      walletProvider = window.ethereum;
+    }
     
     try {
+      const provider = new window.ethers.providers.Web3Provider(walletProvider);
+      const signer = provider.getSigner();
       const signerAddress = await signer.getAddress();
-      console.log('🔒 Using connected wallet address:', signerAddress);
       
-      // Proceed with burn using connected wallet
+      console.log('🔒 Using connected wallet address:', signerAddress);
+      console.log('🔒 Wallet provider info:', {
+        isMetaMask: walletProvider?.isMetaMask,
+        isCoinbaseWallet: walletProvider?.isCoinbaseWallet,
+        isPhantom: walletProvider?.isPhantom
+      });
+      
+      // Proceed with burn using the correct wallet provider
       await performEvmBurn(provider, signer, tokenAddress, amount, signerAddress);
       return;
     } catch (error) {

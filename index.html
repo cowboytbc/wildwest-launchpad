@@ -470,12 +470,17 @@
     window.setupIndexWallet = setupIndexWallet;
     
     // Initialize wallet connection setup
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 DOM loaded, initializing index wallet setup...');
+    let walletSetupInitialized = false;
+    
+    function initializeWalletSetup() {
+      if (walletSetupInitialized) {
+        console.log('⏭️ Wallet setup already initialized, skipping...');
+        return;
+      }
+      walletSetupInitialized = true;
       
-      // Check if we're on mobile for longer delay
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const delay = isMobile ? 1000 : 200; // Longer delay for mobile
+      const delay = isMobile ? 1000 : 200;
       
       console.log(`📱 Mobile detected: ${isMobile}, using ${delay}ms delay`);
       
@@ -483,6 +488,11 @@
         console.log('🎯 Calling setupIndexWallet...');
         setupIndexWallet();
       }, delay);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM loaded, initializing index wallet setup...');
+      initializeWalletSetup();
     });
 
     // Fallback initialization in case DOM is already loaded
@@ -492,16 +502,7 @@
     } else {
       // DOM already loaded, initialize immediately
       console.log('🚀 DOM already loaded, initializing index wallet setup...');
-      
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const delay = isMobile ? 1000 : 200;
-      
-      console.log(`📱 Mobile detected: ${isMobile}, using ${delay}ms delay`);
-      
-      setTimeout(() => {
-        console.log('🎯 Calling setupIndexWallet (fallback)...');
-        setupIndexWallet();
-      }, delay);
+      initializeWalletSetup();
     }
   </script>
   <!-- GitHub Actions Uploader (core functionality) -->
