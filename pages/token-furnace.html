@@ -4466,17 +4466,19 @@ function showTransactionHashModal(txHash, network) {
   const networkName = network === 'solana' ? 'Solana' : 'Base';
   
   modal.innerHTML = `
-    <div style="
+    <div class="modal-content" style="
       background: linear-gradient(135deg, #1a1a2e, #16213e);
       border: 2px solid #00ff00;
       border-radius: 16px;
       box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
       max-width: 600px;
       width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
       overflow: hidden;
       animation: bounceIn 0.4s ease-out;
     ">
-      <div style="
+      <div class="modal-header" style="
         padding: 1.5rem;
         border-bottom: 1px solid rgba(0, 255, 0, 0.2);
         display: flex;
@@ -4493,9 +4495,9 @@ function showTransactionHashModal(txHash, network) {
           transition: transform 0.2s;
         ">×</button>
       </div>
-      <div style="padding: 1.5rem; color: white;">
+      <div class="modal-body" style="padding: 1.5rem; color: white;">
         <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div style="font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 1s;">✅</div>
+          <div class="success-icon" style="font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 1s;">✅</div>
           <div style="color: #00ff00; font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">
             Transaction Confirmed on ${networkName}
           </div>
@@ -4504,9 +4506,9 @@ function showTransactionHashModal(txHash, network) {
           </div>
         </div>
         
-        <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <div class="tx-hash-container" style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
           <div style="color: #ffae00; font-weight: bold; margin-bottom: 0.5rem;">Transaction Hash:</div>
-          <div style="
+          <div class="tx-hash-text" style="
             color: white;
             font-family: 'Courier New', monospace;
             font-size: 0.85rem;
@@ -4519,8 +4521,8 @@ function showTransactionHashModal(txHash, network) {
           ">${txHash}</div>
         </div>
         
-        <div style="display: flex; gap: 0.75rem;">
-          <button class="copy-hash-btn" style="
+        <div class="button-row" style="display: flex; gap: 0.75rem;">
+          <button class="copy-hash-btn modal-button" style="
             flex: 1;
             padding: 0.75rem;
             border: 1px solid #ffae00;
@@ -4531,7 +4533,7 @@ function showTransactionHashModal(txHash, network) {
             font-weight: bold;
             transition: all 0.2s;
           ">📋 Copy Transaction Hash</button>
-          <button class="view-explorer-btn" style="
+          <button class="view-explorer-btn modal-button" style="
             flex: 1;
             padding: 0.75rem;
             border: 1px solid #00eaff;
@@ -4545,7 +4547,7 @@ function showTransactionHashModal(txHash, network) {
         </div>
         
         <div style="text-align: center; margin-top: 1rem;">
-          <button class="close-modal" style="
+          <button class="close-modal modal-button" style="
             padding: 0.5rem 1.5rem;
             border: 1px solid #666;
             border-radius: 8px;
@@ -4573,6 +4575,43 @@ function showTransactionHashModal(txHash, network) {
       .close-modal:hover { transform: scale(1.1); }
       .copy-hash-btn:hover { background: #fff; transform: translateY(-2px); }
       .view-explorer-btn:hover { background: #00eaff; color: #000; transform: translateY(-2px); }
+      
+      /* Mobile-specific styles for better fit */
+      @media (max-width: 768px) {
+        .modal-content {
+          width: 95vw !important;
+          max-height: 85vh !important;
+          margin: 2.5vh auto !important;
+        }
+        .modal-header {
+          padding: 1rem !important;
+        }
+        .modal-header h3 {
+          font-size: 1.1rem !important;
+        }
+        .modal-body {
+          padding: 1rem !important;
+        }
+        .success-icon {
+          font-size: 2rem !important;
+          margin-bottom: 0.25rem !important;
+        }
+        .tx-hash-container {
+          margin-bottom: 1rem !important;
+        }
+        .tx-hash-text {
+          font-size: 0.75rem !important;
+          padding: 0.5rem !important;
+        }
+        .button-row {
+          flex-direction: column !important;
+          gap: 0.5rem !important;
+        }
+        .modal-button {
+          padding: 0.6rem !important;
+          font-size: 0.9rem !important;
+        }
+      }
     </style>
   `;
   
