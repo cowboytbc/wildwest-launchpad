@@ -426,9 +426,29 @@
           
           // Use the specific provider for this wallet
           const response = await wallet.provider.connect();
+          console.log('[DEBUG] solana connect() result:', response);
+          
+          // Handle different response formats from different Solana wallets
+          let pubkey;
+          if (response && response.publicKey) {
+            // Standard format (Phantom, Backpack)
+            pubkey = response.publicKey.toString();
+            console.log('[DEBUG] Using response.publicKey:', pubkey);
+          } else if (response && typeof response === 'string') {
+            // Direct string format
+            pubkey = response;
+            console.log('[DEBUG] Using direct response string:', pubkey);
+          } else if (wallet.provider.publicKey) {
+            // Provider property format (some wallets store it here after connect)
+            pubkey = wallet.provider.publicKey.toString();
+            console.log('[DEBUG] Using wallet.provider.publicKey:', pubkey);
+          } else {
+            console.error('[DEBUG] No publicKey found in response:', response);
+            throw new Error(`No publicKey returned from ${wallet.name}. Response: ${JSON.stringify(response)}`);
+          }
           
           // Update UI
-          currentAddress = response.publicKey.toString();
+          currentAddress = pubkey;
           currentChain = 'solana';
           currentProvider = wallet.provider;
           currentSolanaProvider = wallet.provider;
