@@ -21,8 +21,8 @@
     };
     
     const sources = [
-      // Google Drive public file (you'll need to create this)
-      'https://drive.google.com/uc?export=download&id=YOUR_DRIVE_FILE_ID',
+      // Google Drive public file (your QuickNode endpoints)
+      'https://drive.google.com/uc?export=download&id=1g1YwQrtbbzkuHD-NbFqxmWB8nz41EXcb',
       // GitHub Gist fallback
       'https://gist.githubusercontent.com/cowboytbc/YOUR_GIST_ID/raw/quicknode-endpoints.json',
       // Pastebin fallback
