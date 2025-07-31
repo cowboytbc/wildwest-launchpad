@@ -1618,13 +1618,25 @@ function detectTokenType(address) {
 async function handleEvmTokenBurn(tokenAddress, amount) {
   console.log('🔵 Handling EVM token burn...');
   
-  // Check if we already have a connected Base/EVM wallet
-  if (currentChain === 'base' && currentAddress && window.wildWestWallet?.account) {
-    console.log('✅ Using already connected Base wallet:', currentAddress);
+  // Check if we already have a connected EVM wallet
+  const hasConnectedEvmWallet = (
+    // Check wildWestWallet state
+    (window.wildWestWallet?.account && (window.wildWestWallet?.currentChain === 'base' || window.wildWestWallet?.currentChain === 'ethereum')) ||
+    // Check current connection state
+    (currentAddress && (currentChain === 'base' || currentChain === 'ethereum')) ||
+    // Check if wallet is connected via ethereum provider
+    (window.ethereum?.selectedAddress) ||
+    // Check any other EVM wallet connection methods
+    (window.ethereum?.isConnected && window.ethereum.isConnected())
+  );
+
+  if (hasConnectedEvmWallet) {
+    const connectedAddress = window.wildWestWallet?.account || currentAddress || window.ethereum?.selectedAddress;
+    console.log('✅ Using already connected EVM wallet:', connectedAddress);
     // Create wallet object from current state
     const connectedWallet = {
-      name: 'MetaMask',
-      icon: '🦊',
+      name: window.ethereum?.isMetaMask ? 'MetaMask' : 'EVM Wallet',
+      icon: window.ethereum?.isMetaMask ? '🦊' : '💼',
       provider: window.ethereum,
       type: 'evm'
     };
@@ -3407,6 +3419,82 @@ async function updateBalance() {
 }
 
 // --- BURN LOGIC ---
+
+// Extracted burn logic for already connected wallets
+async function performEvmBurn(provider, signer, tokenAddress, amount, signerAddress) {
+  console.log('🔥 Performing EVM burn with connected wallet:', signerAddress);
+  
+  const dead = '0x000000000000000000000000000000000000dEaD';
+  
+  // Create ERC20 contract
+  const erc20 = new window.ethers.Contract(tokenAddress, [
+    'function transfer(address to, uint256 amount) returns (bool)',
+    'function decimals() view returns (uint8)',
+    'function balanceOf(address) view returns (uint256)',
+    'function name() view returns (string)',
+    'function symbol() view returns (string)',
+    'function burn(uint256 amount)',
+    'function totalSupply() view returns (uint256)'
+  ], signer);
+  
+  // Get token decimals
+  let decimals = currentTokenDecimals;
+  if (!decimals) {
+    console.log('🔢 Fetching token decimals...');
+    decimals = await erc20.decimals();
+    console.log('🔢 Token decimals:', decimals);
+  }
+  
+  // Check balance
+  const balance = await erc20.balanceOf(signerAddress);
+  const balanceFormatted = window.ethers.utils.formatUnits(balance, decimals);
+  console.log('💰 Current balance:', balanceFormatted);
+  
+  if (parseFloat(amount) > parseFloat(balanceFormatted)) {
+    showBurnSuccess(`Insufficient balance. You have ${balanceFormatted} tokens in the connected account.`, true);
+    return;
+  }
+  
+  // Check network
+  const network = await provider.getNetwork();
+  if (network.chainId !== 8453) {
+    showBurnSuccess('Wrong network! Please switch to Base network (Chain ID: 8453)', true);
+    return;
+  }
+  
+  // Convert amount to proper units
+  const value = window.ethers.utils.parseUnits(amount.toString(), decimals);
+  
+  console.log('🔥 Executing burn transaction...', {
+    to: dead,
+    amount: value.toString(),
+    from: signerAddress
+  });
+  
+  try {
+    // Estimate gas
+    const gasEstimate = await erc20.estimateGas.transfer(dead, value);
+    console.log('⛽ Gas estimate:', gasEstimate.toString());
+    
+    // Execute transaction
+    const tx = await erc20.transfer(dead, value, {
+      gasLimit: gasEstimate.mul(120).div(100) // Add 20% buffer
+    });
+    console.log('✅ Transaction submitted:', tx.hash);
+    
+    console.log('⏳ Waiting for transaction confirmation...');
+    await tx.wait();
+    console.log('✅ Transaction confirmed!');
+    
+    // Show success
+    showTransactionHashModal(tx.hash, 'base');
+    updateBalance();
+  } catch (error) {
+    console.error('❌ Burn transaction failed:', error);
+    showBurnSuccess('Transaction failed: ' + error.message, true);
+  }
+}
+
 async function burnEvmToken(tokenAddress, amount) {
   if (!await safeLoad(loadEthers)) {
     showBurnSuccess('Failed to load Ethers library.', true);
@@ -3415,8 +3503,35 @@ async function burnEvmToken(tokenAddress, amount) {
   
   console.log('🔥 Starting Base token burn:', { tokenAddress, amount, currentAddress });
   
-  // COMPREHENSIVE WALLET ISOLATION SYSTEM
-  console.log('🔒 Initializing wallet isolation system...');
+  // Check if we already have a connected wallet - SKIP WALLET DETECTION
+  const hasConnectedWallet = (
+    currentAddress || 
+    window.wildWestWallet?.account || 
+    window.ethereum?.selectedAddress ||
+    (window.ethereum?.isConnected && window.ethereum.isConnected())
+  );
+  
+  if (hasConnectedWallet) {
+    console.log('✅ Using already connected wallet, skipping detection');
+    // Use the connected wallet directly
+    const provider = new window.ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    
+    try {
+      const signerAddress = await signer.getAddress();
+      console.log('🔒 Using connected wallet address:', signerAddress);
+      
+      // Proceed with burn using connected wallet
+      await performEvmBurn(provider, signer, tokenAddress, amount, signerAddress);
+      return;
+    } catch (error) {
+      console.error('❌ Error using connected wallet:', error);
+      // Fall through to wallet detection if connected wallet fails
+    }
+  }
+  
+  // COMPREHENSIVE WALLET ISOLATION SYSTEM (only if no wallet connected)
+  console.log('🔒 No connected wallet found, initializing wallet detection...');
   
   let evmProvider = null;
   let isolatedPhantomProvider = null;
