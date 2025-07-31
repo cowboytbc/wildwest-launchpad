@@ -110,9 +110,35 @@ class UnifiedWalletConnection {
   async verifyRPCEndpoints(preferredChain) {
     try {
       const endpoints = {
-        solana: window.RPC_CONFIG?.getSolanaEndpoint?.() || 'https://api.mainnet-beta.solana.com',
-        base: window.RPC_CONFIG?.getBaseEndpoint?.() || 'https://mainnet.base.org'
+        solana: null,
+        base: null
       };
+
+      // Get Solana endpoint using working token lock pattern
+      if (window.RPC_CONFIG) {
+        try {
+          endpoints.solana = await window.RPC_CONFIG.getSolanaEndpoint();
+          console.log('✅ Using QuickNode Solana endpoint from GitHub Secrets');
+        } catch (error) {
+          console.log('⚠️ QuickNode Solana not available, using fallback');
+          endpoints.solana = 'https://api.mainnet-beta.solana.com';
+        }
+      } else {
+        endpoints.solana = 'https://api.mainnet-beta.solana.com';
+      }
+
+      // Get Base endpoint using working token lock pattern  
+      if (window.RPC_CONFIG) {
+        try {
+          endpoints.base = window.RPC_CONFIG.getBaseEndpoint();
+          console.log('✅ Using QuickNode Base endpoint from GitHub Secrets');
+        } catch (error) {
+          console.log('⚠️ QuickNode Base not available, using fallback');
+          endpoints.base = 'https://mainnet.base.org';
+        }
+      } else {
+        endpoints.base = 'https://mainnet.base.org';
+      }
 
       console.log('🔍 Verifying RPC endpoints:', endpoints);
 
