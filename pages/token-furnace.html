@@ -3418,7 +3418,7 @@ async function burnEvmToken(tokenAddress, amount) {
   // COMPREHENSIVE WALLET ISOLATION SYSTEM
   console.log('🔒 Initializing wallet isolation system...');
   
-  let isolatedMetaMaskProvider = null;
+  let evmProvider = null;
   let isolatedPhantomProvider = null;
   
   // Step 1: Catalog all available wallet providers
@@ -3483,33 +3483,24 @@ async function burnEvmToken(tokenAddress, amount) {
     other: walletCatalog.other.length
   });
   
-  // Step 2: Select ONLY MetaMask provider for Base transactions
+  // Step 2: Select ANY available EVM provider for Base transactions
+  
   if (walletCatalog.metamask.length > 0) {
-    isolatedMetaMaskProvider = walletCatalog.metamask[0];
-    console.log('✅ Isolated MetaMask provider selected');
+    evmProvider = walletCatalog.metamask[0];
+    console.log('✅ Using MetaMask provider');
   } else if (walletCatalog.other.length > 0) {
-    // Try to find MetaMask in 'other' category
-    const possibleMetaMask = walletCatalog.other.find(p => p.isMetaMask || p._metamask);
-    if (possibleMetaMask) {
-      isolatedMetaMaskProvider = possibleMetaMask;
-      console.log('✅ Found MetaMask in mixed providers');
-    }
+    // Use any EVM wallet (Coinbase, Trust, etc.)
+    evmProvider = walletCatalog.other[0];
+    console.log('✅ Using EVM wallet provider');
   }
   
-  if (!isolatedMetaMaskProvider) {
-    console.error('🚨 NO METAMASK PROVIDER FOUND');
+  if (!evmProvider) {
+    console.error('🚨 NO EVM WALLET PROVIDER FOUND');
     showWalletManagementModal(walletCatalog);
     return;
   }
   
-  // Step 3: Verify isolation - ensure we're not using Phantom
-  if (isolatedMetaMaskProvider.isPhantom && !isolatedMetaMaskProvider.isMetaMask) {
-    console.error('🚨 PHANTOM CONTAMINATION DETECTED');
-    showBurnSuccess('ERROR: System isolated Phantom instead of MetaMask. Please disable other wallet extensions temporarily and refresh the page.', true);
-    return;
-  }
-  
-  console.log('🔒 Wallet isolation complete - MetaMask secured for Base transactions');
+  console.log('🔒 Wallet selection complete - EVM wallet ready for Base transactions');
   
   try {
     let provider, signer;
@@ -3523,7 +3514,7 @@ async function burnEvmToken(tokenAddress, amount) {
       });
       
       // USE ISOLATED METAMASK PROVIDER ONLY
-      let ethProvider = isolatedMetaMaskProvider;
+      let ethProvider = evmProvider;
       
       console.log('🎯 Using isolated MetaMask provider:', {
         isMetaMask: ethProvider.isMetaMask,
@@ -4328,16 +4319,16 @@ function showWalletManagementModal(walletCatalog) {
           </div>
         </div>
         
-        ${metamaskCount === 0 ? `
+        ${metamaskCount === 0 && otherCount === 0 ? `
           <div style="background: #3a1a1a; border: 1px solid #ff6b6b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
             <p style="margin: 0 0 1rem 0; color: #ff6b6b; font-weight: bold;">
-              ❌ MetaMask Not Found
+              ❌ No EVM Wallet Found
             </p>
             <p style="margin: 0 0 1rem 0;">
-              Base token burning requires MetaMask. Please:
+              Base token burning requires an EVM-compatible wallet. Please:
             </p>
             <ol style="margin: 0; padding-left: 1.2rem; color: #ffae00;">
-              <li>Install MetaMask browser extension</li>
+              <li>Install a wallet (MetaMask, Coinbase Wallet, Trust Wallet, etc.)</li>
               <li>Refresh this page</li>
               <li>Try burning again</li>
             </ol>
@@ -4345,7 +4336,10 @@ function showWalletManagementModal(walletCatalog) {
         ` : `
           <div style="background: #1a3a1a; border: 1px solid #00ff00; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
             <p style="margin: 0; color: #00ff00; font-weight: bold;">
-              ✅ MetaMask Ready for Base Token Burning
+              ✅ EVM Wallet Ready for Base Token Burning
+            </p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9em; color: #cccccc;">
+              ${metamaskCount > 0 ? 'MetaMask detected' : otherCount > 0 ? 'EVM wallet detected' : 'Wallet ready'}
             </p>
           </div>
         `}
