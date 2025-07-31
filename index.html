@@ -90,65 +90,155 @@
         console.log('🧹 Removed existing modal');
       }
       
-      // Detect available wallets
-      const availableWallets = {
-        ethereum: [],
-        solana: []
+      // Mobile detection
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // Show loading modal for mobile immediately
+      if (isMobile) {
+        showLoadingModal();
+      }
+      
+      // Detect available wallets with mobile retry logic
+      const detectWallets = (attempt = 1, maxAttempts = isMobile ? 5 : 1) => {
+        console.log(`🔍 Wallet detection attempt ${attempt}/${maxAttempts} (mobile: ${isMobile})`);
+        
+        const availableWallets = {
+          ethereum: [],
+          solana: []
+        };
+        
+        // Detect Ethereum/Base wallets
+        if (window.ethereum) {
+          console.log('✅ window.ethereum detected');
+          // Check for multiple providers
+          const providers = window.ethereum.providers || [window.ethereum];
+          
+          providers.forEach(provider => {
+            if (provider.isMetaMask) {
+              availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
+            }
+            if (provider.isCoinbaseWallet) {
+              availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
+            }
+            if (provider.isRabby) {
+              availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
+            }
+            if (provider.isTrust) {
+              availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
+            }
+          });
+          
+          // If no specific wallet detected but ethereum exists, add as generic
+          if (availableWallets.ethereum.length === 0) {
+            availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
+          }
+        } else {
+          console.log('❌ window.ethereum not detected');
+        }
+        
+        // Detect Solana wallets
+        const solanaWallets = [];
+        
+        // Phantom - check multiple locations
+        if (window.phantom?.solana?.isPhantom) {
+          solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
+          console.log('✅ Phantom detected via window.phantom.solana');
+        } else if (window.solana?.isPhantom) {
+          solanaWallets.push({name: 'Phantom', provider: window.solana});
+          console.log('✅ Phantom detected via window.solana');
+        }
+        
+        // Other Solana wallets
+        if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
+          solanaWallets.push({name: 'Solflare', provider: window.solflare});
+          console.log('✅ Solflare detected');
+        }
+        if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
+          solanaWallets.push({name: 'Backpack', provider: window.backpack});
+          console.log('✅ Backpack detected');
+        }
+        if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
+          solanaWallets.push({name: 'Glow', provider: window.glow});
+          console.log('✅ Glow detected');
+        }
+        if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
+          solanaWallets.push({name: 'Slope', provider: window.slope});
+          console.log('✅ Slope detected');
+        }
+        
+        availableWallets.solana = solanaWallets;
+        
+        // Check if we found any wallets
+        const totalWallets = availableWallets.ethereum.length + availableWallets.solana.length;
+        console.log(`📊 Found ${totalWallets} wallets (ETH: ${availableWallets.ethereum.length}, SOL: ${availableWallets.solana.length})`);
+        
+        // If no wallets found and we're on mobile with attempts remaining, retry
+        if (totalWallets === 0 && isMobile && attempt < maxAttempts) {
+          console.log(`🔄 No wallets found, retrying in 800ms... (attempt ${attempt + 1}/${maxAttempts})`);
+          setTimeout(() => detectWallets(attempt + 1, maxAttempts), 800);
+          return;
+        }
+        
+        // Proceed with modal creation
+        createWalletModal(availableWallets);
+        
+        // Store globally for wallet connection
+        window.availableWallets = availableWallets;
       };
       
-      // Detect Ethereum/Base wallets
-      if (window.ethereum) {
-        // Check for multiple providers
-        const providers = window.ethereum.providers || [window.ethereum];
-        
-        providers.forEach(provider => {
-          if (provider.isMetaMask) {
-            availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
-          }
-          if (provider.isCoinbaseWallet) {
-            availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
-          }
-          if (provider.isRabby) {
-            availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
-          }
-          if (provider.isTrust) {
-            availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
-          }
-        });
-        
-        // If no specific wallet detected but ethereum exists, add as generic
-        if (availableWallets.ethereum.length === 0) {
-          availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
-        }
-      }
+      // Start wallet detection
+      detectWallets();
+    }
+    
+    function showLoadingModal() {
+      const modal = document.createElement('div');
+      modal.id = 'chainSelectionModal';
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+        z-index: 10000; animation: fadeIn 0.2s ease-out;
+      `;
       
-      // Detect Solana wallets
-      const solanaWallets = [];
+      modal.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #1a1a2e, #16213e);
+          border: 2px solid #00eaff;
+          border-radius: 16px;
+          box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+          max-width: 300px;
+          width: 90vw;
+          padding: 2rem;
+          text-align: center;
+          font-family: 'Orbitron', sans-serif;
+        ">
+          <div style="color: #00eaff; margin-bottom: 1rem;">
+            <div style="
+              width: 40px; height: 40px; margin: 0 auto 1rem auto;
+              border: 3px solid rgba(0, 234, 255, 0.2);
+              border-top: 3px solid #00eaff;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            "></div>
+            <h3 style="margin: 0; color: #00eaff; font-size: 1.1rem;">Detecting Wallets</h3>
+            <p style="margin: 0.5rem 0 0 0; color: #c0c0c0; font-size: 0.9rem;">
+              Searching for wallet providers...
+            </p>
+          </div>
+        </div>
+      `;
       
-      // Phantom - check multiple locations
-      if (window.phantom?.solana?.isPhantom) {
-        solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
-      } else if (window.solana?.isPhantom) {
-        solanaWallets.push({name: 'Phantom', provider: window.solana});
-      }
-      
-      // Other Solana wallets
-      if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
-        solanaWallets.push({name: 'Solflare', provider: window.solflare});
-      }
-      if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
-        solanaWallets.push({name: 'Backpack', provider: window.backpack});
-      }
-      if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
-        solanaWallets.push({name: 'Glow', provider: window.glow});
-      }
-      if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
-        solanaWallets.push({name: 'Slope', provider: window.slope});
-      }
-      
-      availableWallets.solana = solanaWallets;
+      document.body.appendChild(modal);
+    }
+    
+    function createWalletModal(availableWallets) {
       
       console.log('🔍 Detected wallets:', availableWallets);
+      
+      // Remove any existing modal (including loading modal)
+      const existingModal = document.getElementById('chainSelectionModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
       
       // Create modal with consistent styling
       const modal = document.createElement('div');
@@ -441,18 +531,7 @@
         e.preventDefault();
         e.stopPropagation();
         console.log('🔗 Connect button clicked, showing modal');
-        
-        // Mobile-specific wallet detection enhancement
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile) {
-          console.log('📱 Mobile detected, using enhanced wallet detection...');
-          // Give mobile wallets extra time to inject
-          setTimeout(() => {
-            showDirectWalletModal();
-          }, 500);
-        } else {
-          showDirectWalletModal();
-        }
+        showDirectWalletModal();
       });
       
       console.log('✅ Index wallet setup complete');
@@ -638,6 +717,12 @@
         text-shadow: 0 0 4px #00eaff, 0 0 2px #00fff7, 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
         filter: none !important;
       }
+    }
+    
+    /* Loading spinner animation */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     
     /* Mobile-optimized keyframes - Crisp and eye-catching */
