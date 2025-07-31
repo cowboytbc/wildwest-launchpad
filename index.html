@@ -441,7 +441,18 @@
         e.preventDefault();
         e.stopPropagation();
         console.log('🔗 Connect button clicked, showing modal');
-        showChainSelectionModal();
+        
+        // Mobile-specific wallet detection enhancement
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          console.log('📱 Mobile detected, using enhanced wallet detection...');
+          // Give mobile wallets extra time to inject
+          setTimeout(() => {
+            showChainSelectionModal();
+          }, 500);
+        } else {
+          showChainSelectionModal();
+        }
       });
       
       console.log('✅ Index wallet setup complete');
