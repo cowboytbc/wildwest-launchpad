@@ -82,8 +82,6 @@
 
     function showDirectWalletModal() {
       console.log('🚀 showDirectWalletModal called!');
-      console.log('📱 User agent:', navigator.userAgent);
-      console.log('🌐 Current URL:', window.location.href);
       
       // Remove any existing modal first
       const existingModal = document.getElementById('chainSelectionModal');
@@ -92,109 +90,70 @@
         console.log('🧹 Removed existing modal');
       }
       
-      // Mobile detection
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      console.log('📱 Mobile detected:', isMobile);
-      
-      // Show loading modal for mobile immediately
-      if (isMobile) {
-        console.log('📱 Showing loading modal for mobile...');
-        showLoadingModal();
-      }
-      
-      // Detect available wallets with mobile retry logic
-      const detectWallets = (attempt = 1, maxAttempts = isMobile ? 5 : 1) => {
-        console.log(`🔍 Wallet detection attempt ${attempt}/${maxAttempts} (mobile: ${isMobile})`);
-        
-        const availableWallets = {
-          ethereum: [],
-          solana: []
-        };
-        
-        // Detect Ethereum/Base wallets
-        if (window.ethereum) {
-          console.log('✅ window.ethereum detected');
-          // Check for multiple providers
-          const providers = window.ethereum.providers || [window.ethereum];
-          
-          providers.forEach(provider => {
-            if (provider.isMetaMask) {
-              availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
-            }
-            if (provider.isCoinbaseWallet) {
-              availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
-            }
-            if (provider.isRabby) {
-              availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
-            }
-            if (provider.isTrust) {
-              availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
-            }
-          });
-          
-          // If no specific wallet detected but ethereum exists, add as generic
-          if (availableWallets.ethereum.length === 0) {
-            availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
-          }
-        } else {
-          console.log('❌ window.ethereum not detected');
-        }
-        
-        // Detect Solana wallets
-        const solanaWallets = [];
-        
-        // Phantom - check multiple locations
-        if (window.phantom?.solana?.isPhantom) {
-          solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
-          console.log('✅ Phantom detected via window.phantom.solana');
-        } else if (window.solana?.isPhantom) {
-          solanaWallets.push({name: 'Phantom', provider: window.solana});
-          console.log('✅ Phantom detected via window.solana');
-        }
-        
-        // Other Solana wallets
-        if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
-          solanaWallets.push({name: 'Solflare', provider: window.solflare});
-          console.log('✅ Solflare detected');
-        }
-        if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
-          solanaWallets.push({name: 'Backpack', provider: window.backpack});
-          console.log('✅ Backpack detected');
-        }
-        if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
-          solanaWallets.push({name: 'Glow', provider: window.glow});
-          console.log('✅ Glow detected');
-        }
-        if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
-          solanaWallets.push({name: 'Slope', provider: window.slope});
-          console.log('✅ Slope detected');
-        }
-        
-        availableWallets.solana = solanaWallets;
-        
-        // Check if we found any wallets
-        const totalWallets = availableWallets.ethereum.length + availableWallets.solana.length;
-        console.log(`📊 Found ${totalWallets} wallets (ETH: ${availableWallets.ethereum.length}, SOL: ${availableWallets.solana.length})`);
-        
-        // If no wallets found and we're on mobile with attempts remaining, retry
-        if (totalWallets === 0 && isMobile && attempt < maxAttempts) {
-          console.log(`🔄 No wallets found, retrying in 800ms... (attempt ${attempt + 1}/${maxAttempts})`);
-          setTimeout(() => detectWallets(attempt + 1, maxAttempts), 800);
-          return;
-        }
-        
-        // Proceed with modal creation
-        createWalletModal(availableWallets);
-        
-        // Store globally for wallet connection
-        window.availableWallets = availableWallets;
+      // Detect available wallets (using token furnace approach)
+      const availableWallets = {
+        ethereum: [],
+        solana: []
       };
       
-      // Start wallet detection
-      detectWallets();
-    }
-    
-    function showLoadingModal() {
+      // Detect Ethereum/Base wallets
+      if (window.ethereum) {
+        // Check for multiple providers
+        const providers = window.ethereum.providers || [window.ethereum];
+        
+        providers.forEach(provider => {
+          if (provider.isMetaMask) {
+            availableWallets.ethereum.push({name: 'MetaMask', provider: provider});
+          }
+          if (provider.isCoinbaseWallet) {
+            availableWallets.ethereum.push({name: 'Coinbase Wallet', provider: provider});
+          }
+          if (provider.isRabby) {
+            availableWallets.ethereum.push({name: 'Rabby Wallet', provider: provider});
+          }
+          if (provider.isTrust) {
+            availableWallets.ethereum.push({name: 'Trust Wallet', provider: provider});
+          }
+        });
+        
+        // If no specific wallet detected but ethereum exists, add as generic
+        if (availableWallets.ethereum.length === 0) {
+          availableWallets.ethereum.push({name: 'Ethereum Wallet', provider: window.ethereum});
+        }
+      }
+      
+      // Detect Solana wallets
+      const solanaWallets = [];
+      
+      // Phantom - check multiple locations
+      if (window.phantom?.solana?.isPhantom) {
+        solanaWallets.push({name: 'Phantom', provider: window.phantom.solana});
+      } else if (window.solana?.isPhantom) {
+        solanaWallets.push({name: 'Phantom', provider: window.solana});
+      }
+      
+      // Other Solana wallets
+      if (window.solflare && !solanaWallets.find(w => w.name === 'Solflare')) {
+        solanaWallets.push({name: 'Solflare', provider: window.solflare});
+      }
+      if (window.backpack && !solanaWallets.find(w => w.name === 'Backpack')) {
+        solanaWallets.push({name: 'Backpack', provider: window.backpack});
+      }
+      if (window.glow && !solanaWallets.find(w => w.name === 'Glow')) {
+        solanaWallets.push({name: 'Glow', provider: window.glow});
+      }
+      if (window.slope && !solanaWallets.find(w => w.name === 'Slope')) {
+        solanaWallets.push({name: 'Slope', provider: window.slope});
+      }
+      
+      availableWallets.solana = solanaWallets;
+      
+      console.log('� Detected wallets:', availableWallets);
+      
+      // Store globally for wallet connection
+      window.availableWallets = availableWallets;
+      
+      // Create modal with consistent styling (token furnace approach)
       const modal = document.createElement('div');
       modal.id = 'chainSelectionModal';
       modal.style.cssText = `
@@ -203,58 +162,74 @@
         z-index: 10000; animation: fadeIn 0.2s ease-out;
       `;
       
-      modal.innerHTML = `
-        <div style="
-          background: linear-gradient(135deg, #1a1a2e, #16213e);
-          border: 2px solid #00eaff;
-          border-radius: 16px;
-          box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
-          max-width: 300px;
-          width: 90vw;
-          padding: 2rem;
-          text-align: center;
-          font-family: 'Orbitron', sans-serif;
-        ">
-          <div style="color: #00eaff; margin-bottom: 1rem;">
-            <div style="
-              width: 40px; height: 40px; margin: 0 auto 1rem auto;
-              border: 3px solid rgba(0, 234, 255, 0.2);
-              border-top: 3px solid #00eaff;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-            "></div>
-            <h3 style="margin: 0; color: #00eaff; font-size: 1.1rem;">Detecting Wallets</h3>
-            <p style="margin: 0.5rem 0 0 0; color: #c0c0c0; font-size: 0.9rem;">
-              Searching for wallet providers...
-            </p>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(modal);
-    }
-    
-    function createWalletModal(availableWallets) {
-      
-      console.log('🔍 Detected wallets:', availableWallets);
-      
-      // Remove any existing modal (including loading modal)
-      const existingModal = document.getElementById('chainSelectionModal');
-      if (existingModal) {
-        existingModal.remove();
-      }
-      
-      // Create modal with consistent styling
-      const modal = document.createElement('div');
-      modal.id = 'chainSelectionModal'; // Add unique ID for reliable targeting
-      modal.style.cssText = `
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
-        z-index: 10000; animation: fadeIn 0.2s ease-out;
-      `;
-      
       // Generate wallet options HTML
       let walletOptionsHTML = '';
+      
+      if (availableWallets.ethereum.length > 0) {
+        walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Base Network (Ethereum)</h4>';
+        availableWallets.ethereum.forEach((wallet, index) => {
+          walletOptionsHTML += `
+            <button onclick="connectSpecificWallet('ethereum', ${index})" style="
+              display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
+              background: linear-gradient(135deg, #0052ff, #0041cc);
+              color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+              cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+              transition: all 0.3s ease; text-align: center;
+            " onmouseover="this.style.background='linear-gradient(135deg, #0066ff, #0052ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #0052ff, #0041cc)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+              Connect ${wallet.name}
+            </button>
+          `;
+        });
+      }
+      
+      if (availableWallets.solana.length > 0) {
+        walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Solana Network</h4>';
+        availableWallets.solana.forEach((wallet, index) => {
+          walletOptionsHTML += `
+            <button onclick="connectSpecificWallet('solana', ${index})" style="
+              display: block; width: 100%; margin: 8px 0; padding: 12px 16px;
+              background: linear-gradient(135deg, #9945ff, #7c3aed);
+              color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+              cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
+              transition: all 0.3s ease; text-align: center;
+            " onmouseover="this.style.background='linear-gradient(135deg, #a855f7, #9945ff)'; this.style.borderColor='#00eaff'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #9945ff, #7c3aed)'; this.style.borderColor='rgba(0, 234, 255, 0.3)'; this.style.transform='translateY(0)'">
+              Connect ${wallet.name}
+            </button>
+          `;
+        });
+      }
+      
+      if (availableWallets.ethereum.length === 0 && availableWallets.solana.length === 0) {
+        // Check if user is on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        walletOptionsHTML = `
+          <div style="text-align: center; padding: 2rem; color: #ff6b6b;">
+            <h4 style="color: #ff6b6b; margin-bottom: 1rem;">No Wallets Detected</h4>
+            ${isMobile ? `
+              <div style="
+                background: rgba(0, 234, 255, 0.1);
+                border: 1px solid #00eaff;
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                text-align: center;
+              ">
+                <p style="margin: 0; color: #00eaff; font-weight: 600;">📱 Mobile User?</p>
+                <p style="margin: 0.5rem 0 0 0; color: #c0c0c0; font-size: 0.9rem;">
+                  Open this site inside your wallet browser (MetaMask, Phantom, etc.) instead of your regular browser.
+                </p>
+              </div>
+            ` : ''}
+            <p style="margin-bottom: 1rem; color: #c0c0c0;">Please install a wallet to continue:</p>
+            <div style="text-align: left;">
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://metamask.io" target="_blank" style="color: #00eaff;">MetaMask</a> (for Base/Ethereum)</p>
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://phantom.app" target="_blank" style="color: #00eaff;">Phantom</a> (for Solana + Ethereum)</p>
+              <p style="margin: 0.5rem 0; color: #c0c0c0;"><a href="https://wallet.coinbase.com" target="_blank" style="color: #00eaff;">Coinbase Wallet</a> (for Base/Ethereum)</p>
+            </div>
+          </div>
+        `;
+      }
       
       if (availableWallets.ethereum.length > 0) {
         walletOptionsHTML += '<h4 style="color: #00eaff; margin: 1rem 0 0.5rem 0; font-size: 1rem;">Base Network (Ethereum)</h4>';
@@ -413,7 +388,7 @@
       window.availableWallets = availableWallets;
     }
 
-    // Specific wallet connection function
+    // Specific wallet connection function (using token furnace approach)
     window.connectSpecificWallet = async function(network, walletIndex) {
       console.log(`🔗 Connecting to wallet ${walletIndex} on ${network} network`);
       
@@ -460,14 +435,9 @@
             
             updateWalletDisplay();
             
-            // Close modal reliably
-            if (window.closeChainSelectionModal) {
-              window.closeChainSelectionModal();
-            } else {
-              // Fallback
-              const modal = document.getElementById('chainSelectionModal');
-              if (modal) modal.remove();
-            }
+            // Close modal reliably (token furnace approach)
+            const modal = document.querySelector('[style*="position: fixed"]');
+            if (modal) modal.remove();
             
             console.log(`✅ ${wallet.name} connected successfully!`);
           }
@@ -491,14 +461,9 @@
           
           updateWalletDisplay();
           
-          // Close modal reliably
-          if (window.closeChainSelectionModal) {
-            window.closeChainSelectionModal();
-          } else {
-            // Fallback
-            const modal = document.getElementById('chainSelectionModal');
-            if (modal) modal.remove();
-          }
+          // Close modal reliably (token furnace approach)
+          const modal = document.querySelector('[style*="position: fixed"]');
+          if (modal) modal.remove();
           
           console.log(`✅ ${wallet.name} connected successfully!`);
         }
@@ -507,6 +472,7 @@
           window.availableWallets.ethereum[walletIndex]?.name : 
           window.availableWallets.solana[walletIndex]?.name;
         console.error(`❌ ${walletName} connection failed:`, error);
+        alert(`${walletName} connection failed: ${error.message}`);
       }
     };
 
@@ -519,7 +485,7 @@
     }
 
     function setupIndexWallet() {
-      console.log('🔧 Setting up index wallet connection');
+      console.log('🔧 Setting up index wallet connection (token furnace approach)');
       
       const connectBtn = document.getElementById('connectWalletBtn');
       if (!connectBtn) {
@@ -527,30 +493,30 @@
         return;
       }
       
-      console.log('✅ Connect button found:', connectBtn);
-      console.log('📊 Button current onclick:', connectBtn.onclick);
-      console.log('📊 Button current event listeners count:', connectBtn.getEventListeners ? connectBtn.getEventListeners().length : 'unknown');
+      console.log('✅ Connect button found, setting up simple click handler');
       
-      // Remove ALL existing event listeners and onclick handlers
+      // Force remove any event listeners from main wallet system (token furnace approach)
       const newButton = connectBtn.cloneNode(true);
       connectBtn.parentNode.replaceChild(newButton, connectBtn);
       
-      // Clear any onclick handler
-      newButton.onclick = null;
-      
-      console.log('🧹 Button replaced and cleaned. Adding new event listener...');
-      
+      // Add simple click handler (like token furnace)
       newButton.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔗 MOBILE-ENHANCED: Connect button clicked!');
-        console.log('🔗 Event target:', e.target);
-        console.log('🔗 Event type:', e.type);
-        console.log('🔗 Calling showDirectWalletModal...');
-        showDirectWalletModal();
+        
+        console.log('� Index wallet button clicked (token furnace approach)');
+        
+        if (currentAddress && currentChain) {
+          console.log('Already connected, showing wallet details');
+          // For now, just show address - can enhance later
+          alert(`Connected: ${currentAddress.substring(0, 6)}...${currentAddress.substring(currentAddress.length - 4)}`);
+        } else {
+          console.log('Not connected, showing wallet selection modal');
+          showDirectWalletModal();
+        }
       });
       
-      console.log('✅ Index wallet setup complete - mobile-enhanced system active');
+      console.log('✅ Index wallet setup complete (token furnace approach)');
     }
 
     // Global variables for wallet state
