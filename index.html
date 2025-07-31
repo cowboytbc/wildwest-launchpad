@@ -468,6 +468,26 @@
     // Make functions globally accessible
     window.showDirectWalletModal = showDirectWalletModal;
     window.setupIndexWallet = setupIndexWallet;
+    
+    // Initialize wallet connection setup
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM loaded, initializing index wallet setup...');
+      // Small delay to ensure all scripts are loaded
+      setTimeout(() => {
+        setupIndexWallet();
+      }, 100);
+    });
+
+    // Fallback initialization in case DOM is already loaded
+    if (document.readyState === 'loading') {
+      // DOM not ready yet, listener above will handle it
+    } else {
+      // DOM already loaded, initialize immediately
+      console.log('🚀 DOM already loaded, initializing index wallet setup...');
+      setTimeout(() => {
+        setupIndexWallet();
+      }, 100);
+    }
   </script>
   <!-- GitHub Actions Uploader (core functionality) -->
   <script src="js/github-actions-uploader.js"></script>
