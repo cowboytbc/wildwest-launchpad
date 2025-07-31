@@ -74,11 +74,52 @@
   <script src="js/unified-wallet-connection.js"></script>
   <!-- Token Furnace Style Wallet Modal System -->
   <script>
-    // Token Furnace Style Wallet Modal Implementation
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 DOM loaded, deferring wallet setup to avoid conflicts');
-      // Removed early setupIndexWallet() call to prevent dropdown conflicts
-    });
+    // Completely independent wallet connection for Index Page (Token Furnace approach)
+    
+    function setupIndexWallet() {
+      console.log('🔧 Setting up index wallet connection (token furnace approach)');
+      
+      // Wait a moment for DOM to be fully ready and wallet.js to load
+      setTimeout(() => {
+        const connectBtn = document.getElementById('connectWalletBtn');
+        if (!connectBtn) {
+          console.error('❌ Connect wallet button not found');
+          return;
+        }
+        
+        console.log('✅ Connect button found, setting up simple click handler');
+        
+        // Force remove any event listeners from main wallet system (token furnace approach)
+        const newButton = connectBtn.cloneNode(true);
+        connectBtn.parentNode.replaceChild(newButton, connectBtn);
+        
+        // Add simple click handler (like token furnace)
+        newButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          console.log('🔘 Index wallet button clicked (token furnace approach)');
+          
+          if (currentAddress && currentChain) {
+            console.log('Already connected, showing wallet details');
+            // For now, just show address - can enhance later
+            alert(`Connected: ${currentAddress.substring(0, 6)}...${currentAddress.substring(currentAddress.length - 4)}`);
+          } else {
+            console.log('Not connected, showing wallet selection modal');
+            showDirectWalletModal();
+          }
+        });
+        
+        console.log('✅ Index wallet setup complete (token furnace approach)');
+      }, 500); // Give time for wallet.js to load but then take over
+    }
+    
+    // Direct call like token furnace
+    setupIndexWallet();
+    
+    // Make functions globally accessible for debugging
+    window.showDirectWalletModal = showDirectWalletModal;
+    window.setupIndexWallet = setupIndexWallet;
 
     function showDirectWalletModal() {
       console.log('🚀 showDirectWalletModal called!');
@@ -460,48 +501,12 @@
     let currentEvmProvider = null;
     let currentSolanaProvider = null;
 
-    // Make functions globally accessible
-    window.showDirectWalletModal = showDirectWalletModal;
-    window.setupIndexWallet = setupIndexWallet;
-    
-    // Initialize wallet connection setup
-    let walletSetupInitialized = false;
-    
-    function initializeWalletSetup() {
-      console.log('🎯 initializeWalletSetup called!');
-      console.log('🔍 walletSetupInitialized flag:', walletSetupInitialized);
-      
-      if (walletSetupInitialized) {
-        console.log('⏭️ Wallet setup already initialized, skipping...');
-        return;
+    function updateWalletDisplay() {
+      const walletBtnText = document.getElementById('walletBtnText');
+      if (walletBtnText && currentAddress) {
+        const shortAddress = currentAddress.substring(0, 6) + '...' + currentAddress.substring(currentAddress.length - 4);
+        walletBtnText.textContent = shortAddress;
       }
-      walletSetupInitialized = true;
-      console.log('✅ Setting walletSetupInitialized to true');
-      
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const delay = isMobile ? 1000 : 200;
-      
-      console.log(`📱 Mobile detected: ${isMobile}, using ${delay}ms delay`);
-      
-      setTimeout(() => {
-        console.log('🎯 Timeout reached, calling setupIndexWallet...');
-        setupIndexWallet();
-      }, delay);
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 DOM loaded, initializing index wallet setup...');
-      initializeWalletSetup();
-    });
-
-    // Fallback initialization in case DOM is already loaded
-    if (document.readyState === 'loading') {
-      // DOM not ready yet, listener above will handle it
-      console.log('⏳ DOM still loading, event listener will handle initialization');
-    } else {
-      // DOM already loaded, initialize immediately
-      console.log('🚀 DOM already loaded, initializing index wallet setup...');
-      initializeWalletSetup();
     }
   </script>
   <!-- GitHub Actions Uploader (core functionality) -->
