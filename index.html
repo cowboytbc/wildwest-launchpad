@@ -501,12 +501,48 @@
     let currentEvmProvider = null;
     let currentSolanaProvider = null;
 
-    function updateWalletDisplay() {
-      const walletBtnText = document.getElementById('walletBtnText');
-      if (walletBtnText && currentAddress) {
-        const shortAddress = currentAddress.substring(0, 6) + '...' + currentAddress.substring(currentAddress.length - 4);
-        walletBtnText.textContent = shortAddress;
+    // Make functions globally accessible
+    window.showDirectWalletModal = showDirectWalletModal;
+    window.setupIndexWallet = setupIndexWallet;
+    
+    // Initialize wallet connection setup
+    let walletSetupInitialized = false;
+    
+    function initializeWalletSetup() {
+      console.log('🎯 initializeWalletSetup called!');
+      console.log('🔍 walletSetupInitialized flag:', walletSetupInitialized);
+      
+      if (walletSetupInitialized) {
+        console.log('⏭️ Wallet setup already initialized, skipping...');
+        return;
       }
+      walletSetupInitialized = true;
+      console.log('✅ Setting walletSetupInitialized to true');
+      
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const delay = isMobile ? 1000 : 200;
+      
+      console.log(`📱 Mobile detected: ${isMobile}, using ${delay}ms delay`);
+      
+      setTimeout(() => {
+        console.log('🎯 Timeout reached, calling setupIndexWallet...');
+        setupIndexWallet();
+      }, delay);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM loaded, initializing index wallet setup...');
+      initializeWalletSetup();
+    });
+
+    // Fallback initialization in case DOM is already loaded
+    if (document.readyState === 'loading') {
+      // DOM not ready yet, listener above will handle it
+      console.log('⏳ DOM still loading, event listener will handle initialization');
+    } else {
+      // DOM already loaded, initialize immediately
+      console.log('🚀 DOM already loaded, initializing index wallet setup...');
+      initializeWalletSetup();
     }
   </script>
   <!-- GitHub Actions Uploader (core functionality) -->
