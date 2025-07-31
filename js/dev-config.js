@@ -12,11 +12,71 @@
   
   console.log('🔧 Loading development configuration for local testing');
   
+  // External endpoint fetcher for QuickNode endpoints
+  async function fetchQuickNodeEndpoints() {
+    // Direct QuickNode endpoints as immediate fallback
+    const directEndpoints = {
+      solana: 'https://withered-divine-spring.solana-mainnet.quiknode.pro/0ef60836be4b1b1fea3b948cf28c518322a18147/',
+      base: 'https://responsive-omniscient-model.base-mainnet.quiknode.pro/aa86b92100862c55985ff1d322a9ff07d9ab236f/'
+    };
+    
+    const sources = [
+      // Google Drive public file (you'll need to create this)
+      'https://drive.google.com/uc?export=download&id=YOUR_DRIVE_FILE_ID',
+      // GitHub Gist fallback
+      'https://gist.githubusercontent.com/cowboytbc/YOUR_GIST_ID/raw/quicknode-endpoints.json',
+      // Pastebin fallback
+      'https://pastebin.com/raw/YOUR_PASTE_ID'
+    ];
+    
+    // Try external sources first
+    for (const source of sources) {
+      if (source.includes('YOUR_')) continue; // Skip placeholder URLs
+      
+      try {
+        console.log(`🔍 Trying to fetch QuickNode endpoints from: ${source.substring(0, 50)}...`);
+        const response = await fetch(source, { 
+          method: 'GET',
+          cache: 'no-cache',
+          headers: {
+            'Accept': 'application/json,text/plain,*/*'
+          }
+        });
+        
+        if (response.ok) {
+          const text = await response.text();
+          const data = JSON.parse(text);
+          
+          if (data.solana && data.base) {
+            console.log('✅ QuickNode endpoints loaded from external source');
+            return data;
+          }
+        }
+      } catch (error) {
+        console.log(`⚠️ Failed to fetch from ${source.substring(0, 30)}...:`, error.message);
+      }
+    }
+    
+    // Use direct endpoints as immediate fallback
+    console.log('� Using direct QuickNode endpoints');
+    return directEndpoints;
+  }
+  
+  // Helper function for endpoint decoding (simple base64 + reverse)
+  function decodeEndpoint(encoded) {
+    try {
+      return atob(encoded.split('').reverse().join(''));
+    } catch (e) {
+      return null;
+    }
+  }
+  
   // Enhanced development configuration with working endpoints
   window.DEV_CONFIG = {
     solana: {
-      // Free public endpoints that work for testing
+      // Will be populated from external source
       rpc: 'https://api.mainnet-beta.solana.com',
+      quicknode: null, // Will be loaded externally
       fallbacks: [
         'https://rpc.ankr.com/solana',
         'https://solana-api.projectserum.com',
@@ -28,6 +88,7 @@
     },
     base: {
       rpc: 'https://mainnet.base.org',
+      quicknode: null, // Will be loaded externally
       fallbacks: [
         'https://base-rpc.publicnode.com',
         'https://base.blockpi.network/v1/rpc/public'
@@ -37,14 +98,57 @@
       enableLogging: true,
       enableTestMode: true,
       skipSecurityChecks: false
+    },
+    
+    // Load QuickNode endpoints dynamically
+    loadQuickNodeEndpoints: async function() {
+      const endpoints = await fetchQuickNodeEndpoints();
+      if (endpoints) {
+        this.solana.quicknode = endpoints.solana;
+        this.solana.rpc = endpoints.solana; // Use QuickNode as primary
+        this.base.quicknode = endpoints.base;
+        this.base.rpc = endpoints.base; // Use QuickNode as primary
+        
+        console.log('✅ QuickNode endpoints integrated into DEV_CONFIG');
+        return true;
+      }
+      return false;
     }
   };
   
-  // Override RPC_CONFIG for development
+  // Auto-load QuickNode endpoints
+  window.DEV_CONFIG.loadQuickNodeEndpoints().then((loaded) => {
+    if (loaded) {
+      console.log('🚀 Using QuickNode endpoints from external source');
+      
+      // Update RPC_CONFIG after endpoints are loaded
+      if (window.RPC_CONFIG) {
+        window.RPC_CONFIG.SOLANA.PRIMARY = window.DEV_CONFIG.solana.rpc;
+        window.RPC_CONFIG.BASE.PRIMARY = window.DEV_CONFIG.base.rpc;
+        
+        // Override the getSolanaEndpoint and getBaseEndpoint functions
+        window.RPC_CONFIG.getSolanaEndpoint = async function() {
+          return window.DEV_CONFIG.solana.rpc;
+        };
+        
+        window.RPC_CONFIG.getBaseEndpoint = function() {
+          return window.DEV_CONFIG.base.rpc;
+        };
+        
+        console.log('✅ RPC_CONFIG updated with QuickNode endpoints');
+        console.log('🔍 Solana endpoint:', window.RPC_CONFIG.SOLANA.PRIMARY);
+        console.log('🔍 Base endpoint:', window.RPC_CONFIG.BASE.PRIMARY);
+      }
+    } else {
+      console.log('🔄 Using public RPC endpoints as fallback');
+    }
+  });
+  
+  // Initial RPC_CONFIG setup for immediate use
   if (window.RPC_CONFIG) {
-    console.log('🔄 Overriding RPC_CONFIG for development');
+    console.log('🔄 Setting up initial RPC_CONFIG for development');
     
-    // Update Solana endpoints
+    // Set initial endpoints (will be updated after QuickNode endpoints load)
     window.RPC_CONFIG.SOLANA.PRIMARY = window.DEV_CONFIG.solana.rpc;
     window.RPC_CONFIG.SOLANA.FALLBACKS = window.DEV_CONFIG.solana.fallbacks;
     
@@ -55,10 +159,6 @@
     window.RPC_CONFIG.getDevSolanaEndpoint = function() {
       return window.DEV_CONFIG.solana.rpc;
     };
-    
-    console.log('✅ Development RPC configuration applied');
-    console.log('🔍 Solana endpoint:', window.RPC_CONFIG.SOLANA.PRIMARY);
-    console.log('🔍 Base endpoint:', window.RPC_CONFIG.BASE.PRIMARY);
   }
   
   // Add development helpers
