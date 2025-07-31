@@ -63,7 +63,7 @@ const RPC_CONFIG = {
   },
 
   // Helper functions to get endpoints
-  getSolanaEndpoint: async function() {
+  getSolanaEndpoint: function() {
     // ONLY use QuickNode from GitHub Secrets
     if (window.PRODUCTION_CONFIG?.rpc?.solana) {
       console.log('🔐 Using QuickNode Solana endpoint from GitHub Secrets');
