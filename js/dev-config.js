@@ -4,13 +4,15 @@
 (function() {
   'use strict';
   
-  // Only load in development (when PRODUCTION_CONFIG is using fallback)
-  if (window.PRODUCTION_CONFIG?.source !== 'fallback-development') {
-    console.log('🚀 Production mode detected, skipping dev config');
-    return;
-  }
-  
-  console.log('🔧 Loading development configuration for local testing');
+  // Function to load dev configuration
+  function loadDevConfig() {
+    // Only load in development (when PRODUCTION_CONFIG is using fallback)
+    if (window.PRODUCTION_CONFIG?.source !== 'fallback-development') {
+      console.log('🚀 Production mode detected, skipping dev config');
+      return;
+    }
+    
+    console.log('🔧 Loading development configuration for local testing');
   
   // External endpoint fetcher for QuickNode endpoints
   async function fetchQuickNodeEndpoints() {
@@ -246,5 +248,24 @@
   console.log('💡 Use DEV_HELPERS.showConfig() to see current settings');
   console.log('💡 Use DEV_HELPERS.testConnection() to test RPC endpoints');
   console.log('💡 Use DEV_HELPERS.enableTestMode() for enhanced testing');
+  
+  } // End loadDevConfig function
+  
+  // Try loading immediately in case production config is already set
+  loadDevConfig();
+  
+  // Also listen for the fallback event from production-config.js
+  window.addEventListener('production-config-fallback', function() {
+    console.log('🔄 Production config fallback detected, loading dev config...');
+    loadDevConfig();
+  });
+  
+  // Fallback: Try again after a delay in case event system fails
+  setTimeout(() => {
+    if (!window.DEV_CONFIG && window.PRODUCTION_CONFIG?.source === 'fallback-development') {
+      console.log('🔄 Delayed dev config load triggered');
+      loadDevConfig();
+    }
+  }, 200);
   
 })();
