@@ -82,6 +82,8 @@
 
     function showDirectWalletModal() {
       console.log('🚀 showDirectWalletModal called!');
+      console.log('📱 User agent:', navigator.userAgent);
+      console.log('🌐 Current URL:', window.location.href);
       
       // Remove any existing modal first
       const existingModal = document.getElementById('chainSelectionModal');
@@ -92,9 +94,11 @@
       
       // Mobile detection
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log('📱 Mobile detected:', isMobile);
       
       // Show loading modal for mobile immediately
       if (isMobile) {
+        console.log('📱 Showing loading modal for mobile...');
         showLoadingModal();
       }
       
@@ -523,18 +527,30 @@
         return;
       }
       
-      // Remove existing event listeners and set up new one
+      console.log('✅ Connect button found:', connectBtn);
+      console.log('📊 Button current onclick:', connectBtn.onclick);
+      console.log('📊 Button current event listeners count:', connectBtn.getEventListeners ? connectBtn.getEventListeners().length : 'unknown');
+      
+      // Remove ALL existing event listeners and onclick handlers
       const newButton = connectBtn.cloneNode(true);
       connectBtn.parentNode.replaceChild(newButton, connectBtn);
+      
+      // Clear any onclick handler
+      newButton.onclick = null;
+      
+      console.log('🧹 Button replaced and cleaned. Adding new event listener...');
       
       newButton.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔗 Connect button clicked, showing modal');
+        console.log('🔗 MOBILE-ENHANCED: Connect button clicked!');
+        console.log('🔗 Event target:', e.target);
+        console.log('🔗 Event type:', e.type);
+        console.log('🔗 Calling showDirectWalletModal...');
         showDirectWalletModal();
       });
       
-      console.log('✅ Index wallet setup complete');
+      console.log('✅ Index wallet setup complete - mobile-enhanced system active');
     }
 
     // Global variables for wallet state
@@ -552,11 +568,15 @@
     let walletSetupInitialized = false;
     
     function initializeWalletSetup() {
+      console.log('🎯 initializeWalletSetup called!');
+      console.log('🔍 walletSetupInitialized flag:', walletSetupInitialized);
+      
       if (walletSetupInitialized) {
         console.log('⏭️ Wallet setup already initialized, skipping...');
         return;
       }
       walletSetupInitialized = true;
+      console.log('✅ Setting walletSetupInitialized to true');
       
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const delay = isMobile ? 1000 : 200;
@@ -564,7 +584,7 @@
       console.log(`📱 Mobile detected: ${isMobile}, using ${delay}ms delay`);
       
       setTimeout(() => {
-        console.log('🎯 Calling setupIndexWallet...');
+        console.log('🎯 Timeout reached, calling setupIndexWallet...');
         setupIndexWallet();
       }, delay);
     }
@@ -3033,8 +3053,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }, 500);
   
-  // Override any unified wallet system calls to prevent network selection modal
+  // Override any unified wallet system calls to prevent conflicts
   window.addEventListener('load', () => {
+    console.log('🚫 Disabling conflicting wallet systems for mobile compatibility');
+    
+    // Disable unified wallet system
     if (window.wildWestWallet && window.wildWestWallet.connectWallet) {
       const originalConnectWallet = window.wildWestWallet.connectWallet;
       window.wildWestWallet.connectWallet = function(chain) {
@@ -3044,6 +3067,11 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       console.log('✅ Overrode wildWestWallet.connectWallet to use direct modal');
     }
+    
+    // Disable the initializeWalletConnection function
+    window.initializeWalletConnection = function() {
+      console.log('🚫 initializeWalletConnection disabled - using mobile-enhanced system');
+    };
   });
   
   // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
@@ -3306,7 +3334,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Initialize wallet connection when wallet.js is ready
+  // DISABLED: Initialize wallet connection when wallet.js is ready (conflicts with mobile-enhanced system)
+  console.log('🚫 Unified wallet initialization disabled - using mobile-enhanced direct modal system');
+  /*
   if (window.wildWestWallet) {
     console.log('🚀 wildWestWallet already available - initializing immediately');
     initializeWalletConnection();
@@ -3328,7 +3358,8 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(checkWalletInterval);
       }
     }, 10000);
-  } // End of disabled inline wallet code - using unified system instead
+  }
+  */
   
   // Initialize Secure Configuration System
   console.log('🔒 Initializing secure configuration...');
