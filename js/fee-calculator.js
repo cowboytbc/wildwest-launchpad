@@ -1,15 +1,20 @@
 // Fee calculation utilities for lock creation
-// $10 USD equivalent in native tokens (ETH for Base, SOL for Solana)
+// NOW FREE - $0 USD equivalent (was $30 USD)
 
 class LockingFeeCalculator {
   constructor() {
     // Use config if available, otherwise defaults
     const config = window.LOCK_FEE_CONFIG || {};
-    this.USD_FEE_AMOUNT = config.USD_FEE_AMOUNT || 10; // $10 USD
+    this.USD_FEE_AMOUNT = config.USD_FEE_AMOUNT || 0; // $0 USD - FREE!
     this.FALLBACK_ETH_PRICE = config.FALLBACK_ETH_PRICE || 3000; // Fallback if API fails
     this.FALLBACK_SOL_PRICE = config.FALLBACK_SOL_PRICE || 100; // Fallback if API fails
     this.priceCache = {};
     this.cacheTimeout = config.PRICE_CACHE_TIMEOUT || (5 * 60 * 1000); // 5 minutes
+  }
+
+  // Check if service is free (fee amount is 0)
+  isFreeService() {
+    return this.USD_FEE_AMOUNT === 0;
   }
 
   // Get current ETH price in USD
@@ -68,22 +73,33 @@ class LockingFeeCalculator {
     }
   }
 
-  // Calculate ETH amount for $10 USD
+  // Calculate ETH amount for fee (now $0 USD = 0 ETH)
   async getETHFeeAmount() {
+    if (this.isFreeService()) {
+      return ethers.utils.parseEther("0");
+    }
     const ethPrice = await this.getETHPrice();
     const ethAmount = this.USD_FEE_AMOUNT / ethPrice;
     return ethers.utils.parseEther(ethAmount.toString());
   }
 
-  // Calculate SOL amount for $10 USD (in lamports)
+  // Calculate SOL amount for fee (now $0 USD = 0 SOL)
   async getSOLFeeAmount() {
+    if (this.isFreeService()) {
+      return 0; // 0 lamports
+    }
     const solPrice = await this.getSOLPrice();
     const solAmount = this.USD_FEE_AMOUNT / solPrice;
     return Math.floor(solAmount * 1000000000); // Convert to lamports
   }
 
-  // Check if address is exempt from fees
+  // Check if address is exempt from fees (now everyone is exempt since it's free)
   isExemptFromFees(address, chain) {
+    // If service is free, everyone is effectively exempt
+    if (this.isFreeService()) {
+      return true;
+    }
+    
     const config = window.LOCK_FEE_CONFIG;
     if (!config || !config.EXEMPT_ADDRESSES) return false;
     
@@ -98,12 +114,18 @@ class LockingFeeCalculator {
 
   // Format fee amount for display
   async getFormattedETHFee() {
+    if (this.isFreeService()) {
+      return 'FREE - No fees required!';
+    }
     const ethPrice = await this.getETHPrice();
     const ethAmount = this.USD_FEE_AMOUNT / ethPrice;
     return `${ethAmount.toFixed(6)} ETH (~$${this.USD_FEE_AMOUNT})`;
   }
 
   async getFormattedSOLFee() {
+    if (this.isFreeService()) {
+      return 'FREE - No fees required!';
+    }
     const solPrice = await this.getSOLPrice();
     const solAmount = this.USD_FEE_AMOUNT / solPrice;
     return `${solAmount.toFixed(4)} SOL (~$${this.USD_FEE_AMOUNT})`;

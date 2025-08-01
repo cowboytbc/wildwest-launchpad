@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -68,6 +68,8 @@
   <script src="js/multi-wallet-manager.js"></script>
   <!-- Wallet Integration -->
   <script src="js/wallet.js"></script>
+  <!-- Unified wallet connection system (fixes all connection issues) -->
+  <script src="js/unified-wallet-connection.js"></script>
   <!-- Token Furnace Style Wallet Modal System -->
   <script>
     // Token Furnace Style Wallet Modal Implementation
@@ -2809,6 +2811,101 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   console.log('✅ Dropdowns fixed');
+  
+  // Mobile wallet guidance function for improved mobile experience
+  window.showMobileWalletGuidance = function() {
+    // Remove any existing guidance modal
+    const existingModal = document.getElementById('mobileGuidanceModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'mobileGuidanceModal';
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+      z-index: 10000; animation: fadeIn 0.2s ease-out;
+    `;
+    
+    modal.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 2px solid #00eaff;
+        border-radius: 16px;
+        box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+        max-width: 400px;
+        width: 90vw;
+        animation: slideUp 0.3s ease-out;
+        font-family: 'Orbitron', sans-serif;
+      ">
+        <div style="
+          padding: 1.5rem;
+          border-bottom: 1px solid rgba(0, 234, 255, 0.2);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        ">
+          <h3 style="margin: 0; color: #00eaff; font-size: 1.25rem; font-weight: 600;">📱 Mobile Connection</h3>
+          <button onclick="this.closest('#mobileGuidanceModal').remove()" style="
+            background: none; border: none; color: #00eaff; font-size: 1.5rem;
+            cursor: pointer; padding: 0; width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: background-color 0.2s;
+          ">×</button>
+        </div>
+        <div style="padding: 1.5rem; text-align: center;">
+          <div style="
+            background: rgba(0, 234, 255, 0.1);
+            border: 1px solid #00eaff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+          ">
+            <p style="margin: 0; color: #00eaff; font-weight: 600;">📱 Mobile User?</p>
+            <p style="margin: 0.5rem 0 0 0; color: #c0c0c0; font-size: 0.9rem;">
+              Open this site inside your wallet browser instead of your regular browser.
+            </p>
+          </div>
+          <div style="text-align: left; margin-bottom: 1rem;">
+            <h4 style="color: #00eaff; margin-bottom: 0.5rem;">Popular Wallet Apps:</h4>
+            <p style="margin: 0.25rem 0; color: #c0c0c0;"><a href="https://metamask.io/download/" target="_blank" style="color: #00eaff;">MetaMask</a> - For Base/Ethereum</p>
+            <p style="margin: 0.25rem 0; color: #c0c0c0;"><a href="https://phantom.app/" target="_blank" style="color: #00eaff;">Phantom</a> - For Solana + Ethereum</p>
+            <p style="margin: 0.25rem 0; color: #c0c0c0;"><a href="https://wallet.coinbase.com/" target="_blank" style="color: #00eaff;">Coinbase Wallet</a> - For Base/Ethereum</p>
+            <p style="margin: 0.25rem 0; color: #c0c0c0;"><a href="https://trustwallet.com/" target="_blank" style="color: #00eaff;">Trust Wallet</a> - Multi-chain</p>
+          </div>
+          <div style="
+            background: rgba(255, 174, 0, 0.1);
+            border: 1px solid #ffae00;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+            color: #ffae00;
+          ">
+            💡 <strong>Tip:</strong> Copy this URL and paste it in your wallet's browser to connect!
+          </div>
+          <button onclick="this.closest('#mobileGuidanceModal').remove()" style="
+            display: block; width: 100%; margin-top: 1rem; padding: 12px;
+            background: linear-gradient(135deg, #0052ff, #0041cc);
+            color: white; border: 1px solid rgba(0, 234, 255, 0.3); border-radius: 8px;
+            cursor: pointer; font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s ease;
+          ">
+            Got it!
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close when clicking outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  };
 });
 
 // Load more projects functionality
@@ -2863,55 +2960,96 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Note: Ad banner click functionality is now handled by banner-rotation.js
   
-  // Wallet connection delegated to unified-wallet-connection.js
-  console.log('🔗 Index page: Wallet connection system delegated to unified system');
+  // Wallet connection using unified-wallet-connection.js
+  console.log('🔗 Index page: Using unified wallet connection system');
   console.log('🔍 Index page: Checking wallet systems...');
   console.log('   - window.wildWestWallet exists:', !!window.wildWestWallet);
   console.log('   - window.unifiedWalletConnection exists:', !!window.unifiedWalletConnection);
   
-  // DISABLE unified wallet system for index page - we use direct wallet modal
-  if (window.unifiedWalletConnection) {
-    console.log('🚫 Disabling unified wallet system to prevent dual modals');
-    window.unifiedWalletConnection = null;
-  }
-  
-  // Give unified system a moment to initialize if needed, then disable it
-  setTimeout(() => {
-    console.log('🔄 Index page: Rechecking unified system after delay...');
-    console.log('   - window.unifiedWalletConnection exists:', !!window.unifiedWalletConnection);
-    console.log('   - wildWestWallet.connectWallet is unified:', 
-      window.wildWestWallet?.connectWallet?.toString?.().includes('unifiedConnect'));
-    
-    // DISABLE unified system to prevent network selection modal
+  // Initialize wallet connection when unified system is ready
+  const initializeWalletConnection = () => {
     if (window.unifiedWalletConnection) {
-      console.log('🚫 Disabling unified wallet system after delay to prevent dual modals');
-      window.unifiedWalletConnection = null;
+      console.log('✅ Unified wallet connection system is available');
+      
+      const connectBtn = document.getElementById('connectWalletBtn');
+      if (connectBtn) {
+        console.log('� Setting up wallet connect button with unified system');
+        
+        // Remove any existing event listeners
+        connectBtn.replaceWith(connectBtn.cloneNode(true));
+        const newConnectBtn = document.getElementById('connectWalletBtn');
+        
+        // Add click handler for unified wallet connection
+        newConnectBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          console.log('🔘 Unified wallet button clicked!');
+          
+          try {
+            if (window.wildWestWallet && window.wildWestWallet.isConnected) {
+              // Already connected, show disconnect option
+              const walletDropdown = document.getElementById('walletDropdownMenu');
+              if (walletDropdown) {
+                walletDropdown.style.display = walletDropdown.style.display === 'none' ? 'block' : 'none';
+              }
+            } else {
+              // Not connected, start connection process
+              console.log('� Starting unified wallet connection...');
+              await window.wildWestWallet.connectWallet();
+            }
+          } catch (error) {
+            console.error('❌ Wallet connection failed:', error);
+            
+            // Check if mobile device without wallet browser
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isWalletBrowser = /MetaMask|Trust|Coinbase|Rainbow|WalletConnect|Phantom/i.test(navigator.userAgent) || 
+                                   window.ethereum || window.solana;
+            
+            if (isMobile && !isWalletBrowser) {
+              // Mobile device but not in wallet browser - show guidance
+              console.log('📱 Mobile device detected - showing guidance instead of error');
+              window.showMobileWalletGuidance();
+            } else {
+              // Fallback to direct modal if unified system fails
+              if (typeof showDirectWalletModal === 'function') {
+                console.log('🔄 Falling back to direct wallet modal...');
+                showDirectWalletModal();
+              } else {
+                alert('Wallet connection failed. Please try again.');
+              }
+            }
+          }
+        });
+      }
+      
+      // Setup disconnect button
+      const disconnectBtn = document.getElementById('disconnectBtn');
+      if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', function() {
+          console.log('🔌 Disconnecting wallet...');
+          if (window.wildWestWallet && window.wildWestWallet.disconnectWallet) {
+            window.wildWestWallet.disconnectWallet();
+          }
+          const walletDropdown = document.getElementById('walletDropdownMenu');
+          if (walletDropdown) {
+            walletDropdown.style.display = 'none';
+          }
+        });
+      }
+      
     } else {
-      console.log('✅ Index page: Unified wallet system already disabled or not found');
+      console.log('⏳ Unified wallet system not ready yet, retrying...');
+      setTimeout(initializeWalletConnection, 100);
     }
-    
-    // Test if button click works with unified system
-    const connectBtn = document.getElementById('connectWalletBtn');
-    if (connectBtn) {
-      console.log('🔘 Index page: Connect button found, using direct wallet modal only');
-    }
-  }, 500);
+  };
   
-  // Override any unified wallet system calls to prevent network selection modal
-  window.addEventListener('load', () => {
-    if (window.wildWestWallet && window.wildWestWallet.connectWallet) {
-      const originalConnectWallet = window.wildWestWallet.connectWallet;
-      window.wildWestWallet.connectWallet = function(chain) {
-        console.log('🚫 Intercepted connectWallet call, using direct modal instead');
-        showDirectWalletModal();
-        return Promise.resolve();
-      };
-      console.log('✅ Overrode wildWestWallet.connectWallet to use direct modal');
-    }
-  });
-  
-  // NOTE: Wallet connection code removed - now using unified-wallet-connection.js system
-  console.log('🎯 Index page: Using unified wallet connection system');
+  // Start initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWalletConnection);
+  } else {
+    initializeWalletConnection();
+  }
   
   // Initialize Secure Configuration System
   console.log('🔒 Initializing secure configuration...');
@@ -3104,95 +3242,6 @@ document.addEventListener('DOMContentLoaded', function() {
       alert(`${walletName} connection failed: ${error.message}`);
     }
   };
-  
-  // Initialize Wallet Connection System
-  function initializeWalletConnection() {
-    const connectBtn = document.getElementById('connectWalletBtn');
-    const disconnectBtn = document.getElementById('disconnectBtn');
-    const walletDropdownMenu = document.getElementById('walletDropdownMenu');
-    
-    console.log('🔍 Wallet initialization debug:');
-    console.log('  - connectBtn found:', !!connectBtn);
-    console.log('  - disconnectBtn found:', !!disconnectBtn);
-    console.log('  - walletDropdownMenu found:', !!walletDropdownMenu);
-    console.log('  - window.wildWestWallet exists:', !!window.wildWestWallet);
-    
-    if (connectBtn && window.wildWestWallet) {
-      console.log('✅ Setting up wallet connection button...');
-      
-      // Setup wallet connection button
-      connectBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('🔘 Wallet button clicked! Current state:', {
-          isConnected: window.wildWestWallet.isConnected,
-          account: window.wildWestWallet.account
-        });
-        
-        if (window.wildWestWallet.isConnected) {
-          console.log('🔗 Wallet already connected, showing disconnect options');
-          // Show dropdown menu for disconnect option
-          walletDropdownMenu.style.display = 
-            walletDropdownMenu.style.display === 'none' || !walletDropdownMenu.style.display ? 'flex' : 'none';
-        } else {
-          // Show direct wallet selection modal (bypasses network selection)
-          try {
-            console.log('🔗 Showing wallet selection modal - USER APPROVAL REQUIRED...');
-            showDirectWalletModal();
-          } catch (error) {
-            console.error('❌ Wallet connection failed:', error);
-          }
-        }
-      });
-      
-      // Setup disconnect button
-      if (disconnectBtn) {
-        disconnectBtn.addEventListener('click', function() {
-          console.log('🔌 Disconnecting wallet...');
-          window.wildWestWallet.disconnectWallet();
-          walletDropdownMenu.style.display = 'none';
-        });
-      }
-      
-      // Close dropdown when clicking outside
-      document.addEventListener('click', function(e) {
-        if (!connectBtn.contains(e.target) && !walletDropdownMenu.contains(e.target)) {
-          walletDropdownMenu.style.display = 'none';
-        }
-      });
-      
-      // NOTE: NO AUTO-CONNECTION ON PAGE LOAD FOR SECURITY
-      // Users must explicitly click the wallet button to connect
-      console.log('� Wallet system ready - no auto-connection for security');
-    } else {
-      console.log('❌ Wallet initialization failed - missing elements or wildWestWallet');
-    }
-  }
-  
-  // Initialize wallet connection when wallet.js is ready
-  if (window.wildWestWallet) {
-    console.log('🚀 wildWestWallet already available - initializing immediately');
-    initializeWalletConnection();
-  } else {
-    console.log('⏳ Waiting for wildWestWallet to load...');
-    // Wait for wallet.js to load
-    const checkWalletInterval = setInterval(() => {
-      if (window.wildWestWallet) {
-        console.log('🚀 wildWestWallet now available - initializing');
-        clearInterval(checkWalletInterval);
-        initializeWalletConnection();
-      }
-    }, 100);
-    
-    // Add timeout to prevent infinite waiting
-    setTimeout(() => {
-      if (!window.wildWestWallet) {
-        console.error('❌ wildWestWallet failed to load after 10 seconds');
-        clearInterval(checkWalletInterval);
-      }
-    }, 10000);
-  } // End of disabled inline wallet code - using unified system instead
   
   // Initialize Secure Configuration System
   console.log('🔒 Initializing secure configuration...');

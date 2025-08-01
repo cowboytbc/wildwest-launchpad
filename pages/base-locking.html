@@ -906,9 +906,9 @@
       </div>
       
       <!-- Lock Creation Fee Display -->
-      <div id="feeDisplay" style="background:rgba(255,140,0,0.1);border:1px solid #ff8c00;border-radius:8px;padding:12px;margin:16px 0;text-align:center;">
-        <div style="color:#ff8c00;font-weight:600;margin-bottom:4px;">LOCK CREATION FEE</div>
-        <div id="feeAmount" style="font-size:1.1em;color:#e6eaf3;">Loading...</div>
+      <div id="feeDisplay" style="background:rgba(0,255,0,0.1);border:1px solid #00ff00;border-radius:8px;padding:12px;margin:16px 0;text-align:center;">
+        <div style="color:#00ff00;font-weight:600;margin-bottom:4px;">🎉 FREE TOKEN LOCKING</div>
+        <div id="feeAmount" style="font-size:1.1em;color:#e6eaf3;">No fees required!</div>
       </div>
       
       <button type="submit" style="display:block;margin:18px auto 0 auto;">LOCK TOKENS</button>
@@ -1321,18 +1321,31 @@
     // Load and display the lock creation fee
     async function loadLockCreationFee() {
       try {
-        // Check if current user is exempt
-        if (userAddress && lockingFeeCalculator.isExemptFromFees(userAddress, 'base')) {
-          document.getElementById('feeAmount').textContent = 'FREE (Exempt Address)';
+        if (lockingFeeCalculator.isFreeService()) {
+          // Service is now completely free for everyone!
+          document.getElementById('feeAmount').textContent = '🎉 Completely FREE!';
           document.getElementById('feeDisplay').style.background = 'rgba(0,255,0,0.1)';
           document.getElementById('feeDisplay').style.borderColor = '#00ff00';
+          document.querySelector('#feeDisplay div:first-child').textContent = '🎉 FREE TOKEN LOCKING';
+          document.querySelector('#feeDisplay div:first-child').style.color = '#00ff00';
         } else {
-          const feeAmount = await lockingFeeCalculator.getFormattedETHFee();
-          document.getElementById('feeAmount').textContent = feeAmount;
+          // Fallback logic (should not execute since fee is $0)
+          const isExempt = userAddress && lockingFeeCalculator.isExemptFromFees(userAddress, 'base');
+          if (isExempt) {
+            document.getElementById('feeAmount').textContent = 'FREE (Exempt Address)';
+            document.getElementById('feeDisplay').style.background = 'rgba(0,255,0,0.1)';
+            document.getElementById('feeDisplay').style.borderColor = '#00ff00';
+          } else {
+            const feeAmount = await lockingFeeCalculator.getFormattedETHFee();
+            document.getElementById('feeAmount').textContent = feeAmount;
+          }
         }
       } catch (error) {
         console.error('Failed to load fee:', error);
-        document.getElementById('feeAmount').textContent = '~0.0033 ETH (~$10)';
+        // Even on error, default to free since we set USD_FEE_AMOUNT to 0
+        document.getElementById('feeAmount').textContent = '🎉 FREE - No fees required!';
+        document.getElementById('feeDisplay').style.background = 'rgba(0,255,0,0.1)';
+        document.getElementById('feeDisplay').style.borderColor = '#00ff00';
       }
     }
 
@@ -1374,11 +1387,11 @@
         const approveTx = await erc20.approve(FACTORY_ADDRESS, amount);
         await approveTx.wait();
         
-        // Check if user is exempt from fees
-        const isExempt = lockingFeeCalculator.isExemptFromFees(userAddress, 'base');
+        // Check if user needs to pay fees (now always false since service is free)
+        const isExempt = lockingFeeCalculator.isFreeService() || lockingFeeCalculator.isExemptFromFees(userAddress, 'base');
         
         if (!isExempt) {
-          // Send the lock creation fee first
+          // This block should never execute since service is now free
           statusDiv.textContent = 'Sending lock creation fee...';
           const lockCreationFee = await lockingFeeCalculator.getETHFeeAmount();
           const feeTx = await signer.sendTransaction({
@@ -1387,7 +1400,7 @@
           });
           await feeTx.wait();
         } else {
-          statusDiv.textContent = 'Fee waived for exempt address...';
+          statusDiv.textContent = 'No fees required - Creating lock for free! 🎉';
         }
         
         // Call the factory to create a new lock
